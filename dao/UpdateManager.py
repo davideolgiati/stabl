@@ -1,4 +1,3 @@
-from common.costants import BUGFIX_UPDATE_TAG, SECURITY_UPDATE_TAG
 from dto.UpdateClassification import UpdateClassification
 
 
