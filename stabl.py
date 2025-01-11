@@ -4,15 +4,20 @@ from dao.DNFHelper import DNFHelper
 def process_update_list(noFilter):
         packageManager = DNFHelper()
         updateManager = UpdateManager(packageManager)
-        suggestedUpdates = updateManager.get_valid_update_list()
+
+        packagesByAdvisoryId = updateManager.get_updates_by_advisory_id()
+        suggestedAdvisoryIds = updateManager.get_suggested_advisory_ids()
         
-        
-        # if(addKey or noFilter):        
-        #         printBuffer += f"\t{package.packageName.ljust(60)} [ {', '.join(package.tags)} ]\n"
+        for advisoryId in suggestedAdvisoryIds:
+                printBuffer = ""
+                for package in packagesByAdvisoryId[advisoryId]:
+                        printBuffer += f"\t{package.packageName.ljust(60)}\n"
+                
+                print(f"Advisory Id: \"{advisoryId}\"\n{printBuffer}")
 
 
-        if(suggestedUpdates != []):
-                print(f"suggested updates: sudo dnf update --advisory={','.join(suggestedUpdates)}")
+        if(suggestedAdvisoryIds != []):
+                print(f"suggested updates: sudo dnf update --advisory={','.join(suggestedAdvisoryIds)}")
         else:
                 print(f"no suggested updates found") 
 

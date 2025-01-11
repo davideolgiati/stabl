@@ -7,8 +7,11 @@ class UpdateManager():
         def __init__(self, packageManager):
                 self.packageManager = packageManager
                 self.updatesByAdvisoryId = self.packageManager.get_updates()
+
+        def get_updates_by_advisory_id(self):
+                return self.updatesByAdvisoryId
         
-        def get_valid_update_list(self):
+        def get_suggested_advisory_ids(self):
                 suggestedUpdates = []
                 
                 for advisoryId, packagesList in self.updatesByAdvisoryId.items():
