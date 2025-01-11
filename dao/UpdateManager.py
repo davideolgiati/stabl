@@ -7,31 +7,27 @@ class UpdateManager():
 
         def __init__(self, packageManager):
                 self.packageManager = packageManager
+                self.updatesByAdvisoryId = self.packageManager.get_updates()
         
         def get_valid_update_list(self):
                 suggestedUpdates = []
-                updateGruops = self.packageManager.get_updates()
-
-                for key, packages in updateGruops.items():
-                        addKey = False
+                
+                for advisoryId, packagesList in self.updatesByAdvisoryId.items():
+                        allowedAdvisoryId = False
                         securityProblem = False
 
-                        for package in packages:
+                        for package in packagesList:
+                                # TODO: logica per valutare la priority
                                 if(not securityProblem):
-                                        if(SECURITY_UPDATE_TAG in package.tags):
-                                                securityProblem = True
-                                                addKey = True
-                                
-                                        if('no-priority' not in package.tags):
-                                                securityProblem = True
-                                                addKey = True
-
-                                        if(BUGFIX_UPDATE_TAG in package.tags or securityProblem):
-                                                addKey = True
+                                        if (package.updateType <= self.maxAllowedUpgrade):
+                                                allowedAdvisoryId = True
                                         else:
-                                                addKey = False
+                                                allowedAdvisoryId = False
+                                        
+                                        if (package.updateType == UpdateClassification.SECURITY):
+                                                securityProblem = True
                         
-                        if(addKey):
-                                suggestedUpdates.append(key)
+                        if(allowedAdvisoryId):
+                                suggestedUpdates.append(advisoryId)
                 
                 return suggestedUpdates

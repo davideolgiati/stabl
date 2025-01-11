@@ -1,7 +1,7 @@
 import json
 from common.costants import LIST_UPDATES_CMD
 from dao.ShellInterface import ShellInterface
-from dto.UpdateEntry import UpdateEntry
+from dto.DNFUpdateEntry import DNFUpdateEntry
 
 
 class DNFHelper:
@@ -14,7 +14,7 @@ class DNFHelper:
                 updateGruops = {}
 
                 for package in packages_list:
-                        current_package = UpdateEntry(package)
+                        current_package = DNFUpdateEntry(package)
                         if (current_package.key not in updateGruops):
                                 updateGruops[current_package.key] = [current_package]
                         else:
