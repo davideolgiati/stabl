@@ -1,8 +1,10 @@
+from dto.UpdateUrgency import UpdateUrgency
 from dto.UpdateClassification import UpdateClassification
 
 
 class UpdateManager():
         maxAllowedUpgrade = UpdateClassification.PATCH
+        maxSkippableUregency = UpdateUrgency.NONE
 
         def __init__(self, packageManager):
                 self.packageManager = packageManager
@@ -19,7 +21,10 @@ class UpdateManager():
                         securityProblem = False
 
                         for package in packagesList:
-                                # TODO: logica per valutare la priority
+                                if(self.maxSkippableUregency < package.updateUrgency):
+                                        securityProblem = True
+                                        allowedAdvisoryId = True
+
                                 if(not securityProblem):
                                         if (package.updateType <= self.maxAllowedUpgrade):
                                                 allowedAdvisoryId = True
