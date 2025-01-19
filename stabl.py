@@ -1,7 +1,7 @@
 from dao.UpdateManager import UpdateManager
 from dao.DNFHelper import DNFHelper
 
-def process_update_list(noFilter):
+def process_update_list():
         packageManager = DNFHelper()
         updateManager = UpdateManager(packageManager)
 
@@ -23,4 +23,4 @@ def process_update_list(noFilter):
 
 
 if __name__ == "__main__":
-        process_update_list(False)
+        process_update_list()
