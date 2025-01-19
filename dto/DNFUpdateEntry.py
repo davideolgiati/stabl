@@ -28,3 +28,15 @@ class DNFUpdateEntry:
 
                 self.updateType = updateTypeMapping[updateType]
                 self.updateUrgency = updateUrgencyMapping[updateUrgency]
+        
+        def __eq__(self, other): 
+                if self.__class__ is not other.__class__:
+                        raise TypeError
+                
+                return (
+                        self.key == other.key 
+                        and self.packageName == other.packageName
+                        and self.updateType == other.updateType
+                        and self.updateUrgency == other.updateUrgency
+                )
+                

@@ -1,4 +1,5 @@
 # classes to be tested 
+import pytest
 from dto.DNFUpdateEntry import DNFUpdateEntry
 from dto.UpdateClassification import UpdateClassification
 from dto.UpdateUrgency import UpdateUrgency
@@ -41,5 +42,17 @@ def test_DNFUpdateEntry_happy_path():
                         assert(output.packageName == input["nevra"])
                         assert(output.updateType == expected_cassification[index])
                         assert(output.updateUrgency == enumUrgency)
+
+def test_DNFUpdateEntry_compare():
+        test1 = DNFUpdateEntry(RawJSONEntries.valid_entry_major_no_severity)
+        test2 = DNFUpdateEntry(RawJSONEntries.valid_entry_minor_no_severity)
+        test3 = DNFUpdateEntry(RawJSONEntries.valid_entry_major_no_severity)
+
+        assert test1 != test2
+        assert test1 == test3
+
+        with pytest.raises(TypeError):
+                assert("test" != test1)
+
 
 # TODO: mancano i test nel caso la struttura sia differente --> JSON schema validator
