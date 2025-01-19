@@ -1,14 +1,8 @@
-from enum import Enum
-from functools import total_ordering
+from dto.OrderedEnum import OrderedEnum
 
-@total_ordering
-class UpdateClassification(Enum):
+
+class UpdateClassification(OrderedEnum):
         SECURITY = 0
         PATCH = 1
         MINOR = 2
         MAJOR = 3
-
-        def __lt__(self, other):
-                if self.__class__ is other.__class__:
-                        return self.value < other.value
-                return NotImplemented

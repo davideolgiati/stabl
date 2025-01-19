@@ -1,0 +1,10 @@
+[tool.coverage.report]
+omit = [
+        "**/__init__.py",
+        "stabl.py",
+        "**/tests/**"
+]
+fail_under = 90
+
+[tool.coverage.run]
+branch = true
