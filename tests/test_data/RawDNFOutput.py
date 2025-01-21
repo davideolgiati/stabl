@@ -8,7 +8,7 @@ validDNFOutput = """
     "buildtime":"2025-01-16 01:58:44"
   },
   {
-    "name":"FEDORA-2025-7d33ae20c8",
+    "name":"FEDORA-2025-0353c74078",
     "type":"enhancement",
     "severity":"None",
     "nevra":"xxd-2:9.1.1000-1.fc41.x86_64",
