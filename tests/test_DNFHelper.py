@@ -19,7 +19,7 @@ def test_get_data_valid(mock_run):
                 "FEDORA-2025-0353c74078" : [
                         DNFUpdateEntry({
                                 "name":"FEDORA-2025-0353c74078",
-                                "type":"unspecified",
+                                "type":"security",
                                 "severity":"None",
                                 "nevra":"xorg-x11-xinit-1.4.3-1.fc41.x86_64",
                                 "buildtime":"2025-01-16 01:58:44"
@@ -37,7 +37,7 @@ def test_get_data_valid(mock_run):
                 "FEDORA-2025-5c56962500" : [
                         DNFUpdateEntry({
                                 "name":"FEDORA-2025-5c56962500",
-                                "type":"enhancement",
+                                "type":"bugfix",
                                 "severity":"None",
                                 "nevra":"xxhash-libs-0.8.3-1.fc41.x86_64",
                                 "buildtime":"2025-01-07 02:44:33"
@@ -47,14 +47,14 @@ def test_get_data_valid(mock_run):
                         DNFUpdateEntry({
                                 "name":"FEDORA-2025-fb8c11bf7d",
                                 "type":"unspecified",
-                                "severity":"None",
+                                "severity":"low",
                                 "nevra":"zlib-ng-compat-2.2.3-1.fc41.x86_64",
                                 "buildtime":"2025-01-16 01:58:44"
                         }),
                         DNFUpdateEntry({
                                 "name":"FEDORA-2025-fb8c11bf7d",
                                 "type":"unspecified",
-                                "severity":"None",
+                                "severity":"moderate",
                                 "nevra":"zlib-ng-compat-2.2.3-1.fc41.i686",
                                 "buildtime":"2025-01-16 01:58:44"
                         })

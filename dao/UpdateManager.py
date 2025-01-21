@@ -21,18 +21,14 @@ class UpdateManager():
                         securityProblem = False
 
                         for package in packagesList:
-                                if(self.maxSkippableUregency < package.updateUrgency):
+                                if(package.updateUrgency > self.maxSkippableUregency):
                                         securityProblem = True
                                         allowedAdvisoryId = True
 
-                                if(not securityProblem):
-                                        if (package.updateType <= self.maxAllowedUpgrade):
-                                                allowedAdvisoryId = True
-                                        else:
-                                                allowedAdvisoryId = False
+                                if(not securityProblem
+                                   and package.updateType <= self.maxAllowedUpgrade):
+                                        allowedAdvisoryId = True
                                         
-                                        if (package.updateType == UpdateClassification.SECURITY):
-                                                securityProblem = True
                         
                         if(allowedAdvisoryId):
                                 suggestedUpdates.append(advisoryId)
