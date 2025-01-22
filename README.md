@@ -12,4 +12,6 @@ A DNF wrapper to selectively choose what packages to upgrade
 - errors on subprocess error
 - validation on subprocess output
 - validation on dnf update entry
-- better indexing for updates 
+- better indexing for updates
+- log what is going on
+- use a singleton logger class
