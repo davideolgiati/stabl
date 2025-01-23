@@ -8,3 +8,6 @@ fail_under = 90
 
 [tool.coverage.run]
 branch = true
+
+[tool.pytest.ini_options]
+addopts = "--cov --cov-report term-missing"
