@@ -1,13 +1,15 @@
 # stabl
 A DNF wrapper to selectively choose what packages to upgrade
 
+# v0.0.2
+- errors on wrong dnf entry format
+
 # v0.0.1
 - initial release
 - unit tests
 
 ### TODOs:
 
-- errors on wrong dnf entry format
 - manage errors on wrong dnf entry formats
 - errors on subprocess error
 - validation on subprocess output

@@ -9,9 +9,10 @@ from dto.DNFUpdateEntry import DNFUpdateEntry
 @patch("dao.ShellInterface.subprocess.run")
 def test_get_data_valid(mock_run):
         mock_stdout = MagicMock()
-        mock_stdout.configure_mock(
-        **{"stdout.decode.return_value": RawDNFOutput.validDNFOutput}
-        )
+        mock_stdout.configure_mock(**{
+                "returncode": 0,
+                "stdout.decode.return_value": RawDNFOutput.validDNFOutput
+        })
 
         mock_run.return_value = mock_stdout
 

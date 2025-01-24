@@ -1,7 +1,7 @@
 # classes to be tested 
 import pytest
 from dto.DNFUpdateEntry import DNFUpdateEntry
-from dto.ManagedException import ManagedException
+from dto.ManagedDNFException import ManagedException
 from dto.UpdateClassification import UpdateClassification
 from dto.UpdateUrgency import UpdateUrgency
 

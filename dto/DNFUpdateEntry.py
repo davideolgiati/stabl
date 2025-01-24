@@ -1,5 +1,5 @@
 import json
-from dto.ManagedException import ManagedException
+from dto.ManagedDNFException import ManagedException
 from dto.UpdateUrgency import UpdateUrgency
 from dto.UpdateClassification import UpdateClassification
 
