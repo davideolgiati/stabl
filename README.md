@@ -3,6 +3,7 @@ A DNF wrapper to selectively choose what packages to upgrade
 
 # v0.0.2
 - errors on wrong dnf entry format
+- errors on subprocess error
 
 # v0.0.1
 - initial release
@@ -11,7 +12,6 @@ A DNF wrapper to selectively choose what packages to upgrade
 ### TODOs:
 
 - manage errors on wrong dnf entry formats
-- errors on subprocess error
 - validation on subprocess output
 - validation on dnf update entry
 - better indexing for updates
