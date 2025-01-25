@@ -1,13 +1,19 @@
 import json
 import os
 import re
-from common.costants import LIST_UPDATES_CMD
+from common.costants import LIST_UPDATES_CMD, DOWNLOAD_UPGRADE
 from dao.ShellInterface import ShellInterface
 from dto.DNFUpdateEntry import DNFUpdateEntry
 
 
 class DNFHelper:
-        sh = ShellInterface()
+        def __init__(self):
+                self.sh = ShellInterface()
+                if(not os.path.isdir("/tmp/stabl/")):
+                       os.mkdir("/tmp/stabl/")
+
+                # Buon usecase per la tie
+                local_rpm_cache = [file for file in os.listdir("/tmp/stabl/") if is_valid_rpm_file_path(file)]
 
         # TODO: rinominami per specificare si tratta delle pratizioni di aggiornamento
         def get_updates(self):
@@ -25,13 +31,15 @@ class DNFHelper:
                 
                 return updateGruops
         
-        def download_package(self, package_entry):
-                # TODO: 
-                # 1) scarica l'rpm 
-                # 2) verifica che il pacchetto ci sia
-                # 3) verifica che l'hash sia corretto
-                # 4) se falliscono o 2) o 3) riprova (max 3 volte)
-                pass
+        def download_package(self, package_name):
+                if(f"{package_name}.rpm" in self.local_rpm_cache):
+                        return
+                
+                self.sh.run(DOWNLOAD_UPGRADE(package_name))
+                
+                if(os.path.isfile(f"/tmp/stabl/{package_name}.rpm")):
+                        # TODO: specific error
+                        raise FileNotFoundError
 
         
         def query_downloaded_package(self, package_path):
