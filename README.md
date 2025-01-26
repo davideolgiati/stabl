@@ -2,6 +2,9 @@
 A DNF wrapper to selectively choose what packages to upgrade
 
 # v0.0.2
+- add method to download only rpms
+- add method to inspect installed pkgs
+- add method to inspect downloaded pkgs
 - errors on wrong dnf entry format
 - errors on subprocess error
 
