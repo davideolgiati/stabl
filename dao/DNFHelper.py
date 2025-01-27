@@ -15,7 +15,7 @@ class DNFHelper:
                        os.mkdir("/tmp/stabl/") #TODO: da mockare nei test
 
                 # Buon usecase per la tie
-                local_rpm_cache = [file for file in os.listdir("/tmp/stabl/") if is_valid_rpm_file_path(file)]
+                self.local_rpm_cache = [file for file in os.listdir("/tmp/stabl/") if is_valid_rpm_file_path(file)]
 
         # TODO: rinominami per specificare si tratta delle partizioni di aggiornamento
         def get_updates(self):
@@ -33,20 +33,9 @@ class DNFHelper:
                 
                 return updateGruops
         
-        def download_package(self, package_name):
-                if(f"{package_name}.rpm" in self.local_rpm_cache):
-                        return
-                
-                self.sh.run(DOWNLOAD_UPGRADE(package_name)) #TODO: da mockare nei test
-                
-                rpm_pkg_path = f"/tmp/stabl/{package_name}.rpm"
-
-                if(os.path.isfile(rpm_pkg_path)): #TODO: da mockare nei test
-                        # TODO: specific error
-                        raise FileNotFoundError
-                
-                return rpm_pkg_path
-
+        def download_updates(self):
+                self.sh.run(DOWNLOAD_UPGRADE)
+        
         
         def query_downloaded_package(self, package_path):
                 if (package_path is None):
@@ -61,7 +50,7 @@ class DNFHelper:
 
                 if(not os.path.isfile(sanitized_pkg_path)):
                         # TODO: specific error
-                        raise ValueError                    
+                        raise ValueError(sanitized_pkg_path)                    
 
                 if(not is_file_rpm(sanitized_pkg_path)):
                         # TODO: specific error
@@ -83,11 +72,12 @@ class DNFHelper:
                 return self.query_package_info(sanitized_pkg_name)
 
         def query_package_info(self, package_entry):
+                # TODO: https://docs.python.org/3/library/multiprocessing.html#exchanging-objects-between-processes
                 raw_rpm_output = self.sh.run(INSPECT_PKG(package_entry))
                 rpm_pkg_property_dict = json.loads(raw_rpm_output)
 
                 required_properties = [
-                        "Name", "Version", "Release", "Buildtime","Arch"
+                        "Name", "Version", "Release" #, "Buildtime","Arch"
                 ]
 
                 output_dictionary = {} # TODO: questo va reso una classe
