@@ -41,9 +41,6 @@ class UpdateManager():
                 for rpm_path in rpm_files:
                         self.evaluateRpmPackage(rpm_path)
 
-                print(self.packages.items())
-                pass
-
         def evaluateRpmPackage(self, rpm_path):
                 assert rpm_path is not None, "the rpm packet file path must be valorized"
                 assert isinstance(rpm_path, str), "the rpm packet file path must be a string"
@@ -115,8 +112,13 @@ class UpdateManager():
                                 securityProblem = True
                                 allowedAdvisoryId = True
 
-                        if( not securityProblem
-                        and package.updateType <= self.maxAllowedUpgrade):
+                        is_patch = any([package.packageName.startswith(pkg) for pkg in self.packages['patch']])
+                        is_release = any([package.packageName.startswith(pkg) for pkg in self.packages['release']])
+
+                        if( not securityProblem and (
+                                package.updateType <= self.maxAllowedUpgrade
+                                or (is_patch or is_release)
+                        )):
                                 allowedAdvisoryId = True
 
                 return allowedAdvisoryId
