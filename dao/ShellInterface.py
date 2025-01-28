@@ -26,3 +26,23 @@ class ShellInterface:
                         )
 
                 return result.stdout.decode('utf-8', errors='replace')
+        
+        def run_unmanaged(self, command_array):
+                try:
+                        result = subprocess.run(
+                                command_array,
+                                stdout=subprocess.PIPE,
+                                stderr=subprocess.PIPE,
+                        )
+                except OSError as e:
+                        raise ManagedShellException(
+                                str(e),
+                                ' '.join(command_array),
+                                -1
+                        ) from e
+                
+                return {
+                        "code": result.returncode,
+                        "error": result.stderr.decode('utf-8', errors='replace'),
+                        "info": result.stdout.decode('utf-8', errors='replace')
+                }

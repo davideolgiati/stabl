@@ -30,71 +30,75 @@ class UpdateManager():
                         "patch": [],
                         "release": []
                 }
-                
+
                 self.packageManager.download_updates()
 
                 rpm_files = [join("/tmp/stabl/", f) for f in listdir("/tmp/stabl/") if isfile(join("/tmp/stabl/", f))]
 
                 for rpm_path in rpm_files:
-                        assert(rpm_path is not None)
-                        assert(isinstance(rpm_path, str))
-                        assert(rpm_path != "")
-
-                        try: 
-                                update_info = self.packageManager.query_downloaded_package(rpm_path)
-
-                                assert(update_info is not None)
-                                assert(isinstance(update_info, dict))
-                                assert("Name" in update_info)
-                                assert("Version" in update_info)
-                                assert("Release" in update_info)
-                                assert(isinstance(update_info["Name"], str))
-                                assert(isinstance(update_info["Version"], str))
-                                assert(isinstance(update_info["Release"], str))
-
-                                pkg_name = update_info["Name"]
-                                installed_info = self.packageManager.query_installed_package(pkg_name)
-
-                                assert(installed_info is not None)
-                                assert(isinstance(installed_info, dict))
-                                assert("Name" in installed_info)
-                                assert("Version" in installed_info)
-                                assert("Release" in installed_info)
-                                assert(isinstance(installed_info["Name"], str))
-                                assert(isinstance(installed_info["Version"], str))
-                                assert(isinstance(installed_info["Release"], str))
-
-                                assert(installed_info != update_info)
-
-                                installed_version_raw = f"{installed_info["Version"]}.0.0".split('.')
-                                update_version_raw = f"{update_info["Version"]}.0.0".split('.')
-
-                                assert(len(installed_version_raw) > 3)
-                                assert(len(update_version_raw) > 3)
-
-                                major_update = installed_version_raw[0] != update_version_raw[0]
-                                minor_update = installed_version_raw[1] != update_version_raw[1]
-                                patch_update = installed_version_raw[2] != update_version_raw[2]
-                                release_update = installed_info["Release"] != update_info["Release"]
-
-                                assert(any([
-                                        major_update, minor_update,
-                                        patch_update, release_update
-                                ]))
-
-                                if (major_update):
-                                        self.packages["major"].append(pkg_name)
-                                elif (minor_update):
-                                        self.packages["minor"].append(pkg_name)
-                                elif (patch_update):
-                                        self.packages["patch"].append(pkg_name)
-                                else:
-                                        self.packages["release"].append(pkg_name)
-                        except:
-                                pass
+                        self.evaluateRpmPackage(rpm_path)
 
                 print(self.packages.items())
                 pass
+
+        def evaluateRpmPackage(self, rpm_path):
+            assert(rpm_path is not None)
+            assert(isinstance(rpm_path, str))
+            assert(rpm_path != "")
+
+            update_info = self.packageManager.query_downloaded_package(rpm_path)
+
+            assert(update_info is not None)
+            assert(isinstance(update_info, dict))
+            assert("Name" in update_info)
+            assert("Version" in update_info)
+            assert("Release" in update_info)
+            assert(isinstance(update_info["Name"], str))
+            assert(isinstance(update_info["Version"], str))
+            assert(isinstance(update_info["Release"], str))
+
+            pkg_name = update_info["Name"]
+            pkg_arch = update_info["Arch"]
+            installed_info = self.packageManager.query_installed_package(f"{pkg_name}.{pkg_arch}")
+
+            if(installed_info is None):
+                    return
+
+            assert(installed_info is not None)
+            assert(isinstance(installed_info, dict))
+            assert("Name" in installed_info)
+            assert("Version" in installed_info)
+            assert("Release" in installed_info)
+            assert(isinstance(installed_info["Name"], str))
+            assert(isinstance(installed_info["Version"], str))
+            assert(isinstance(installed_info["Release"], str))
+
+            assert installed_info != update_info, f"{installed_info}\n{update_info}"
+
+            installed_version_raw = f"{installed_info["Version"]}.0.0".split('.')
+            update_version_raw = f"{update_info["Version"]}.0.0".split('.')
+
+            assert(len(installed_version_raw) >= 3)
+            assert(len(update_version_raw) >= 3)
+
+            major_update = installed_version_raw[0] != update_version_raw[0]
+            minor_update = installed_version_raw[1] != update_version_raw[1]
+            patch_update = installed_version_raw[2] != update_version_raw[2]
+            release_update = installed_info["Release"] != update_info["Release"]
+
+            assert(any([
+                                major_update, minor_update,
+                                patch_update, release_update
+                        ]))
+
+            if (major_update):
+                    self.packages["major"].append(pkg_name)
+            elif (minor_update):
+                    self.packages["minor"].append(pkg_name)
+            elif (patch_update):
+                    self.packages["patch"].append(pkg_name)
+            else:
+                    self.packages["release"].append(pkg_name)
 
         def get_suggested_advisory_ids(self):
                 assert(self.updatesByAdvisoryId is not None)

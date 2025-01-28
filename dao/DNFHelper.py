@@ -37,7 +37,7 @@ class DNFHelper:
                 for package in packages_list:
                         assert(package is not None)
                         assert(isinstance(package, dict))
-                        
+
                         current_package = DNFUpdateEntry(package)
                         if (current_package.key not in updateGruops):
                                 updateGruops[current_package.key] = [current_package]
@@ -82,13 +82,21 @@ class DNFHelper:
                 assert(isinstance(package_entry, str))
                 assert(package_entry != "")
 
-                pkg_name_regex = r'^[A-Za-z0-1]+(\-[A-Za-z0-1]+)*$'
-                pkg_version_regex = r'^\d+(\.\d+){0,2}$'
+                pkg_name_regex = r'^[A-Za-z0-9]+(\-[A-Za-z0-9]+)*$'
+                pkg_version_regex = r'^[a-zA-Z0-9]+(\.[a-zA-Z0-9]+){0,}$'
                 
-                raw_rpm_output = self.sh.run(INSPECT_PKG(package_entry))
-                rpm_pkg_property_dict = json.loads(raw_rpm_output)
+                raw_rpm_output = self.sh.run_unmanaged(INSPECT_PKG(package_entry))
 
-                required_properties = [ "Name", "Version", "Release" ]
+                if(raw_rpm_output["code"] != 0):
+                        return
+
+                try:
+                        rpm_pkg_property_dict = json.loads(raw_rpm_output["info"])
+                except Exception as e:
+                        print(e)
+                        print(INSPECT_PKG(package_entry))
+
+                required_properties = [ "Name", "Version", "Release", "Arch" ]
                 output_dictionary = {} # TODO: questo va reso una classe
 
                 for key in required_properties:
@@ -99,8 +107,14 @@ class DNFHelper:
                        
                        output_dictionary[key] = current_value
 
-                assert(re.search(pkg_name_regex, output_dictionary["Name"]))
-                assert(re.search(pkg_version_regex, output_dictionary["Version"]))                
+                tokenized_version = re.split(r'\~|\^', output_dictionary["Version"])
+
+                if(len(tokenized_version) > 1):
+                        output_dictionary["Version"] = tokenized_version[0]
+                        output_dictionary["Release"] = f"{''.join(tokenized_version[1:])}-{output_dictionary["Release"]}"
+
+                assert(re.findall(pkg_name_regex, output_dictionary["Name"]) != [])
+                assert re.findall(pkg_version_regex, output_dictionary["Version"]) != [], output_dictionary["Version"]             
 
                 return output_dictionary
         
