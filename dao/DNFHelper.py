@@ -19,12 +19,25 @@ class DNFHelper:
 
         # TODO: rinominami per specificare si tratta delle partizioni di aggiornamento
         def get_updates(self):
-                output = self.sh.run(LIST_UPDATES_CMD)
-                packages_list = json.loads(output)
+                assert(LIST_UPDATES_CMD is not None)
+                assert(isinstance(LIST_UPDATES_CMD, list))
+
+                raw_json_output = self.sh.run(LIST_UPDATES_CMD)
+                
+                assert(raw_json_output is not None)
+                assert(isinstance(raw_json_output, str))
+                assert(raw_json_output != "")
+
+                packages_list = json.loads(raw_json_output)
+
+                assert(isinstance(packages_list, list))
 
                 updateGruops = {}
 
                 for package in packages_list:
+                        assert(package is not None)
+                        assert(isinstance(package, dict))
+                        
                         current_package = DNFUpdateEntry(package)
                         if (current_package.key not in updateGruops):
                                 updateGruops[current_package.key] = [current_package]
@@ -34,72 +47,78 @@ class DNFHelper:
                 return updateGruops
         
         def download_updates(self):
+                assert(DOWNLOAD_UPGRADE is not None)
+                assert(isinstance(DOWNLOAD_UPGRADE, list))
+
                 self.sh.run(DOWNLOAD_UPGRADE)
         
         
         def query_downloaded_package(self, package_path):
-                if (package_path is None):
-                        # TODO: specific error
-                        raise ValueError
-                
-                sanitized_pkg_path = package_path.strip()
+                assert(package_path is not None)
+                assert(isinstance(package_path, str))
+                assert(is_valid_rpm_file_path(package_path))
 
-                if(not is_valid_rpm_file_path(sanitized_pkg_path)):
-                        # TODO: specific error
-                        raise ValueError
+                # TODO: specific errors
+                if(not os.path.isfile(package_path)):
+                        raise ValueError(f"{package_path} doesn't exist")                    
 
-                if(not os.path.isfile(sanitized_pkg_path)):
-                        # TODO: specific error
-                        raise ValueError(sanitized_pkg_path)                    
+                if(not is_file_rpm(package_path)):
+                        raise ValueError(f"RPM validation failed on {package_path}") 
 
-                if(not is_file_rpm(sanitized_pkg_path)):
-                        # TODO: specific error
-                        raise ValueError 
+                return self.query_package_info(package_path)
 
-                return self.query_package_info(sanitized_pkg_path)
 
-        def query_installed_package(self, package_name):
-                if (package_name is None):
-                        # TODO: specific error
-                        raise ValueError
+        def query_installed_package(self, package_name: str):
+                assert(package_name is not None)
+                assert(package_name != "")
+                assert(isinstance(package_name, str))
 
-                sanitized_pkg_name = package_name.strip()
+                return self.query_package_info(package_name)
 
-                if(sanitized_pkg_name == ""):
-                        # TODO: specific error
-                        raise ValueError
 
-                return self.query_package_info(sanitized_pkg_name)
-
+        # TODO: https://docs.python.org/3/library/multiprocessing.html#exchanging-objects-between-processes
         def query_package_info(self, package_entry):
-                # TODO: https://docs.python.org/3/library/multiprocessing.html#exchanging-objects-between-processes
+                assert(package_entry is not None)
+                assert(isinstance(package_entry, str))
+                assert(package_entry != "")
+
+                pkg_name_regex = r'^[A-Za-z0-1]+(\-[A-Za-z0-1]+)*$'
+                pkg_version_regex = r'^\d+(\.\d+){0,2}$'
+                
                 raw_rpm_output = self.sh.run(INSPECT_PKG(package_entry))
                 rpm_pkg_property_dict = json.loads(raw_rpm_output)
 
-                required_properties = [
-                        "Name", "Version", "Release" #, "Buildtime","Arch"
-                ]
-
+                required_properties = [ "Name", "Version", "Release" ]
                 output_dictionary = {} # TODO: questo va reso una classe
 
                 for key in required_properties:
                        current_value = rpm_pkg_property_dict.get(key)
-                       if current_value is None:
-                              # TODO: specific error
-                              raise ValueError
+                       assert(current_value is not None)
+                       assert(isinstance(current_value, str))
+                       assert(current_value != "")
                        
                        output_dictionary[key] = current_value
+
+                assert(re.search(pkg_name_regex, output_dictionary["Name"]))
+                assert(re.search(pkg_version_regex, output_dictionary["Version"]))                
 
                 return output_dictionary
         
 
 def is_valid_rpm_file_path(path):
-    if re.search(r'\.rpm$', path, re.IGNORECASE):
-        return True
-    else:
-        return False
+        assert(path is not None)
+        assert(isinstance(path, str))
+
+        if re.search(r'\.rpm$', path, re.IGNORECASE):
+                return True
+        else:
+                return False
 
 def is_file_rpm(path):
+        assert(path is not None)
+        assert(isinstance(path, str))
+        assert(path != "")
+
         rpm_magic_bytes = b'\xed\xab\xee\xdb'
         with open(path, 'rb') as fp:
                 file_magic_bytes = fp.read(4)

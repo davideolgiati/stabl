@@ -3,8 +3,6 @@ from dto.ManagedDNFException import ManagedException
 from dto.UpdateUrgency import UpdateUrgency
 from dto.UpdateClassification import UpdateClassification
 
-# (?<name>.*)[-:](?<major>\d+)\.(?<minor>\d*)\.?(?<patch>\d*)-(?<revision>.*)\.fc\d{2}\.(?<arch>.*)
-
 updateTypeMapping = {
         'security':    UpdateClassification.SECURITY,
         'bugfix':      UpdateClassification.PATCH,
@@ -32,6 +30,21 @@ class DNFUpdateEntry:
 
                 self.updateType = updateTypeMapping[updateType]
                 self.updateUrgency = updateUrgencyMapping[updateUrgency]
+
+                assert(self.key is not None)
+                assert(isinstance(self.key, str))
+                assert(self.key != "")
+
+                assert(self.packageName is not None)
+                assert(isinstance(self.packageName, str))
+                assert(self.packageName != "")
+
+                assert(self.updateType is not None)
+                assert(isinstance(self.updateType, UpdateClassification))
+                
+                assert(self.updateUrgency is not None)
+                assert(isinstance(self.updateUrgency, UpdateUrgency))
+
         
         @staticmethod
         def validate_record(dnf_update_enrty):
@@ -42,7 +55,7 @@ class DNFUpdateEntry:
                         )
                 
                 required_keys = ['name', 'nevra', 'type', 'severity']
-                object_keys = dnf_update_enrty.keys()
+                object_keys = set(dnf_update_enrty.keys())
 
                 evaluation_fn = lambda key: validate_key(object_keys, key) 
 
@@ -68,6 +81,13 @@ class DNFUpdateEntry:
                 )
                 
 
-def validate_key(dictionaty, key):
-        if key not in dictionaty:
+def validate_key(test_keys, key):
+        assert(key is not None)
+        assert(isinstance(key, str))
+        assert(key != "")
+
+        assert(test_keys is not None)
+        assert(isinstance(test_keys, set))
+
+        if key not in test_keys:
                 return f"key '{key}' is missing in provided record"
