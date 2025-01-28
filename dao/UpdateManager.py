@@ -51,24 +51,21 @@ class UpdateManager():
 
                 pkg_name = update_info["Name"]
                 pkg_arch = update_info["Arch"]
-                installed_info = self.packageManager.query_installed_package(f"{pkg_name}.{pkg_arch}")
+                pkg_signature = f"{pkg_name}.{pkg_arch}"
+
+                installed_info = self.packageManager.query_installed_package(pkg_signature)
 
                 if(installed_info is None):
                         return
 
                 assert installed_info != update_info, "installed package info and update info must be different"
 
-                current_version_raw = f"{installed_info["Version"]}.0.0".split('.')
-                update_version_raw = f"{update_info["Version"]}.0.0".split('.')
-                current_version_check = len(current_version_raw) >= 3
-                update_version_check = len(update_version_raw) >= 3
+                current_version = self.split_version_string(installed_info)
+                update_version = self.split_version_string(update_info)
 
-                assert current_version_check, "Installed package version must be composed by 3 digits"
-                assert update_version_check, "Update package version must be composed by 3 digits"
-
-                major_update = current_version_raw[0] != update_version_raw[0]
-                minor_update = current_version_raw[1] != update_version_raw[1]
-                patch_update = current_version_raw[2] != update_version_raw[2]
+                major_update = current_version[0] != update_version[0]
+                minor_update = current_version[1] != update_version[1]
+                patch_update = current_version[2] != update_version[2]
                 release_update = installed_info["Release"] != update_info["Release"]
 
                 version_check = any([major_update, minor_update,patch_update, release_update])
@@ -82,6 +79,14 @@ class UpdateManager():
                         self.packages["patch"].append(pkg_name)
                 else:
                         self.packages["release"].append(pkg_name)
+
+        def split_version_string(self, package_info):
+            version_list = f"{package_info["Version"]}.0.0".split('.')
+            version_check = len(version_list) >= 3
+
+            assert version_check, "Package version must be composed by 3 digits"
+            
+            return version_list
 
         def get_suggested_advisory_ids(self):
                 assert self.updatesByAdvisoryId is not None, "updatesByAdvisoryId must be valorized"
