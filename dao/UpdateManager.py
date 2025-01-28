@@ -38,7 +38,7 @@ class UpdateManager():
                 assert isdir("/tmp/stabl/"), "\"/tmp/stabl\" must exist on the system"
                 rpm_files = [join("/tmp/stabl/", f) for f in listdir("/tmp/stabl/") if isfile(join("/tmp/stabl/", f))]
 
-                for rpm_path in rpm_files:
+                for rpm_path in rpm_files: #BUG: cleanup cache before
                         self.evaluateRpmPackage(rpm_path)
 
         def evaluateRpmPackage(self, rpm_path):
@@ -82,9 +82,7 @@ class UpdateManager():
 
         def split_version_string(self, package_info):
             version_list = f"{package_info["Version"]}.0.0".split('.')
-            version_check = len(version_list) >= 3
-
-            assert version_check, "Package version must be composed by 3 digits"
+            assert len(version_list) >= 3, "Package version must be composed by 3 digits"
             
             return version_list
 
