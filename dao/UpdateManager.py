@@ -1,6 +1,7 @@
 from os import listdir
-from os.path import isfile, join
+from os.path import isfile, join, isdir
 
+from dao.DNFHelper import DNFHelper
 from dto.DNFUpdateEntry import DNFUpdateEntry
 from dto.UpdateUrgency import UpdateUrgency
 from dto.UpdateClassification import UpdateClassification
@@ -11,15 +12,16 @@ class UpdateManager():
         maxSkippableUregency = UpdateUrgency.NONE
 
         def __init__(self, packageManager):
-                assert(packageManager is not None)
+                assert packageManager is not None, "packageManager must be valorized"
+                assert isinstance(packageManager, DNFHelper), "packageManager must be instance of DNFHelper"
 
                 self.packageManager = packageManager
                 self.updatesByAdvisoryId = self.packageManager.get_updates() # Questo cambiera' nome
                 self.compare_updates_and_installed_packages()
 
         def get_updates_by_advisory_id(self):
-                assert(self.updatesByAdvisoryId is not None)
-                assert(isinstance(self.updatesByAdvisoryId, dict))
+                assert self.updatesByAdvisoryId is not None, "updatesByAdvisoryId must be valorized"
+                assert isinstance(self.updatesByAdvisoryId, dict), "updatesByAdvisoryId must be a dictionary"
 
                 return self.updatesByAdvisoryId
         
@@ -33,6 +35,7 @@ class UpdateManager():
 
                 self.packageManager.download_updates()
 
+                assert isdir("/tmp/stabl/"), "\"/tmp/stabl\" must exist on the system"
                 rpm_files = [join("/tmp/stabl/", f) for f in listdir("/tmp/stabl/") if isfile(join("/tmp/stabl/", f))]
 
                 for rpm_path in rpm_files:
@@ -42,97 +45,78 @@ class UpdateManager():
                 pass
 
         def evaluateRpmPackage(self, rpm_path):
-            assert(rpm_path is not None)
-            assert(isinstance(rpm_path, str))
-            assert(rpm_path != "")
+                assert rpm_path is not None, "the rpm packet file path must be valorized"
+                assert isinstance(rpm_path, str), "the rpm packet file path must be a string"
+                assert rpm_path != "", "the rpm packet file path must contain a value"
+                assert rpm_path.startswith("/tmp/stabl/"), "the rpm packet file path must start with the agreed prefix"
 
-            update_info = self.packageManager.query_downloaded_package(rpm_path)
+                update_info = self.packageManager.query_downloaded_package(rpm_path)
 
-            assert(update_info is not None)
-            assert(isinstance(update_info, dict))
-            assert("Name" in update_info)
-            assert("Version" in update_info)
-            assert("Release" in update_info)
-            assert(isinstance(update_info["Name"], str))
-            assert(isinstance(update_info["Version"], str))
-            assert(isinstance(update_info["Release"], str))
+                pkg_name = update_info["Name"]
+                pkg_arch = update_info["Arch"]
+                installed_info = self.packageManager.query_installed_package(f"{pkg_name}.{pkg_arch}")
 
-            pkg_name = update_info["Name"]
-            pkg_arch = update_info["Arch"]
-            installed_info = self.packageManager.query_installed_package(f"{pkg_name}.{pkg_arch}")
+                if(installed_info is None):
+                        return
 
-            if(installed_info is None):
-                    return
+                assert installed_info != update_info, "installed package info and update info must be different"
 
-            assert(installed_info is not None)
-            assert(isinstance(installed_info, dict))
-            assert("Name" in installed_info)
-            assert("Version" in installed_info)
-            assert("Release" in installed_info)
-            assert(isinstance(installed_info["Name"], str))
-            assert(isinstance(installed_info["Version"], str))
-            assert(isinstance(installed_info["Release"], str))
+                current_version_raw = f"{installed_info["Version"]}.0.0".split('.')
+                update_version_raw = f"{update_info["Version"]}.0.0".split('.')
+                current_version_check = len(current_version_raw) >= 3
+                update_version_check = len(update_version_raw) >= 3
 
-            assert installed_info != update_info, f"{installed_info}\n{update_info}"
+                assert current_version_check, "Installed package version must be composed by 3 digits"
+                assert update_version_check, "Update package version must be composed by 3 digits"
 
-            installed_version_raw = f"{installed_info["Version"]}.0.0".split('.')
-            update_version_raw = f"{update_info["Version"]}.0.0".split('.')
+                major_update = current_version_raw[0] != update_version_raw[0]
+                minor_update = current_version_raw[1] != update_version_raw[1]
+                patch_update = current_version_raw[2] != update_version_raw[2]
+                release_update = installed_info["Release"] != update_info["Release"]
 
-            assert(len(installed_version_raw) >= 3)
-            assert(len(update_version_raw) >= 3)
+                version_check = any([major_update, minor_update,patch_update, release_update])
+                assert version_check, "Update version must be in at least one category"
 
-            major_update = installed_version_raw[0] != update_version_raw[0]
-            minor_update = installed_version_raw[1] != update_version_raw[1]
-            patch_update = installed_version_raw[2] != update_version_raw[2]
-            release_update = installed_info["Release"] != update_info["Release"]
-
-            assert(any([
-                                major_update, minor_update,
-                                patch_update, release_update
-                        ]))
-
-            if (major_update):
-                    self.packages["major"].append(pkg_name)
-            elif (minor_update):
-                    self.packages["minor"].append(pkg_name)
-            elif (patch_update):
-                    self.packages["patch"].append(pkg_name)
-            else:
-                    self.packages["release"].append(pkg_name)
+                if (major_update):
+                        self.packages["major"].append(pkg_name)
+                elif (minor_update):
+                        self.packages["minor"].append(pkg_name)
+                elif (patch_update):
+                        self.packages["patch"].append(pkg_name)
+                else:
+                        self.packages["release"].append(pkg_name)
 
         def get_suggested_advisory_ids(self):
-                assert(self.updatesByAdvisoryId is not None)
+                assert self.updatesByAdvisoryId is not None, "updatesByAdvisoryId must be valorized"
 
                 suggestedUpdates = []
                 
                 for advisoryId, packagesList in self.updatesByAdvisoryId.items():
-                        assert(advisoryId is not None)
-                        assert(isinstance(advisoryId, str))
-                        assert(packagesList is not None)
-                        assert(isinstance(packagesList, list))
-                        assert(packagesList != [])
-
+                        assert advisoryId is not None, "advisoryId must be valorized"
+                        assert isinstance(advisoryId, str), "advisoryId must be a string"
+                        
                         if(self.evaluateUpdatePartition(packagesList)):
                                 suggestedUpdates.append(advisoryId)
                 
                 return suggestedUpdates
 
         def evaluateUpdatePartition(self, packagesList):
-            assert(packagesList is not None)
-            assert(isinstance(packagesList, list))
-            
-            allowedAdvisoryId = False
-            securityProblem = False
+                assert packagesList is not None, "packagesList must be valorized"
+                assert isinstance(packagesList, list), "packagesList must be a list"
+                assert packagesList != [], "packagesList must not be empty"
 
-            for package in packagesList:
-                    assert(isinstance(package, DNFUpdateEntry))
+                allowedAdvisoryId = False
+                securityProblem = False
+
+                for package in packagesList:
+                        assert(isinstance(package, DNFUpdateEntry))
                                 
-                    if(package.updateUrgency > self.maxSkippableUregency):
-                            securityProblem = True
-                            allowedAdvisoryId = True
+                        if(package.updateUrgency > self.maxSkippableUregency):
+                                securityProblem = True
+                                allowedAdvisoryId = True
 
-                    if( not securityProblem
+                        if( not securityProblem
                         and package.updateType <= self.maxAllowedUpgrade):
-                            allowedAdvisoryId = True
+                                allowedAdvisoryId = True
 
-            return allowedAdvisoryId
+                return allowedAdvisoryId

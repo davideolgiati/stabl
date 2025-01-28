@@ -113,8 +113,19 @@ class DNFHelper:
                         output_dictionary["Version"] = tokenized_version[0]
                         output_dictionary["Release"] = f"{''.join(tokenized_version[1:])}-{output_dictionary["Release"]}"
 
-                assert(re.findall(pkg_name_regex, output_dictionary["Name"]) != [])
-                assert re.findall(pkg_version_regex, output_dictionary["Version"]) != [], output_dictionary["Version"]             
+
+                assert output_dictionary is not None, "output_dictionary must be valorized"
+                assert isinstance(output_dictionary, dict), "output_dictionary must be a dictionary"
+                assert "Name" in output_dictionary, "\"Name\" must be in dictionary keys"
+                assert "Version" in output_dictionary, "\"Version\" must be in dictionary keys"
+                assert "Release" in output_dictionary,"\"Release\" must be in dictionary keys"
+                assert "Arch" in output_dictionary,"\"Arch\" must be in dictionary keys"
+                assert isinstance(output_dictionary["Name"], str), f"\"Name\" has a wring type: {type(output_dictionary["Name"])}"
+                assert isinstance(output_dictionary["Version"], str), f"\"Version\" has a wring type: {type(output_dictionary["Version"])}"
+                assert isinstance(output_dictionary["Release"], str), f"\"Release\" has a wring type: {type(output_dictionary["Release"])}"
+                assert isinstance(output_dictionary["Arch"], str), f"\"Arch\" has a wring type: {type(output_dictionary["Arch"])}"
+                assert re.findall(pkg_name_regex, output_dictionary["Name"]) != [], f"{output_dictionary["Name"]} does not match {pkg_name_regex}"
+                assert re.findall(pkg_version_regex, output_dictionary["Version"]) != [], f"{output_dictionary["Version"]} does not match {pkg_version_regex}"         
 
                 return output_dictionary
         
