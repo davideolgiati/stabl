@@ -1,6 +1,7 @@
 from os import listdir
 import os
-from os.path import isfile, join, isdir
+from os.path import isfile, join
+import threading
 import time
 
 from dao.DNFHelper import DNFHelper
@@ -23,6 +24,7 @@ class UpdateManager():
                         "release": []
                 }
 
+                self.lock = threading.Lock()
                 self.packageManager = packageManager
                 self.updatesByAdvisoryId = self.packageManager.get_updates_by_partition_id()
                 self.compare_updates_and_installed_packages()
@@ -47,8 +49,15 @@ class UpdateManager():
                 
                 print("[i] Cleaning environment ...", end='', flush=True)
                 start = time.time()
+                thread_list = []
+
                 for file in os.listdir(self.packageManager.cache_dir):
-                        self.evaluate_file_for_deletion(file)
+                        thread = threading.Thread(target=self.evaluate_file_for_deletion, args=(file,))
+                        thread_list.append(thread)
+                        thread.start()
+                
+                for thread in thread_list:
+                        thread.join()
 
                 print(f"done ({time.time() - start:.2f}s)")
 
@@ -60,8 +69,14 @@ class UpdateManager():
 
                 rpm_files = [join(working_dir, file) for file in file_list if full_path_is_file(file)]
 
+                thread_list = []
                 for rpm_path in rpm_files:
-                        self.evaluateRpmPackage(rpm_path)
+                        thread = threading.Thread(target=self.evaluateRpmPackage, args=(rpm_path,))
+                        thread_list.append(thread)
+                        thread.start()
+                
+                for thread in thread_list:
+                        thread.join()
 
         def evaluate_file_for_deletion(self, file):
                 assert isinstance(file, str)
@@ -125,14 +140,15 @@ class UpdateManager():
 
                 assert any([major_update, minor_update, patch_update, release_update])
 
-                if (major_update):
-                        self.packages["major"].append(pkg_name)
-                elif (minor_update):
-                        self.packages["minor"].append(pkg_name)
-                elif (patch_update):
-                        self.packages["patch"].append(pkg_name)
-                else:
-                        self.packages["release"].append(pkg_name)
+                with self.lock:
+                        if (major_update):
+                                self.packages["major"].append(pkg_name)
+                        elif (minor_update):
+                                self.packages["minor"].append(pkg_name)
+                        elif (patch_update):
+                                self.packages["patch"].append(pkg_name)
+                        else:
+                                self.packages["release"].append(pkg_name)
 
         def split_version_string(self, package_info):
             version_list = f"{package_info["Version"]}.0.0".split('.')
