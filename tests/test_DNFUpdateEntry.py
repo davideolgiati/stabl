@@ -6,15 +6,15 @@ from dto.UpdateClassification import UpdateClassification
 from dto.UpdateUrgency import UpdateUrgency
 
 # test data
-import tests.test_data.RawJSONEntries as RawJSONEntries
+import tests.test_data.sample_json_dnf_update_output as sample_json_dnf_update_output
 
 
 def test_DNFUpdateEntry_happy_path():
         test_cases = [
-                RawJSONEntries.valid_entry_major_no_severity,
-                RawJSONEntries.valid_entry_minor_no_severity,
-                RawJSONEntries.valid_entry_patch_no_severity,
-                RawJSONEntries.valid_entry_security_no_severity
+                sample_json_dnf_update_output.valid_entry_major_no_severity,
+                sample_json_dnf_update_output.valid_entry_minor_no_severity,
+                sample_json_dnf_update_output.valid_entry_patch_no_severity,
+                sample_json_dnf_update_output.valid_entry_security_no_severity
         ]
 
         expected_cassification = [
@@ -45,9 +45,9 @@ def test_DNFUpdateEntry_happy_path():
                         assert(output.updateUrgency == enumUrgency)
 
 def test_DNFUpdateEntry_compare():
-        test1 = DNFUpdateEntry(RawJSONEntries.valid_entry_major_no_severity)
-        test2 = DNFUpdateEntry(RawJSONEntries.valid_entry_minor_no_severity)
-        test3 = DNFUpdateEntry(RawJSONEntries.valid_entry_major_no_severity)
+        test1 = DNFUpdateEntry(sample_json_dnf_update_output.valid_entry_major_no_severity)
+        test2 = DNFUpdateEntry(sample_json_dnf_update_output.valid_entry_minor_no_severity)
+        test3 = DNFUpdateEntry(sample_json_dnf_update_output.valid_entry_major_no_severity)
 
         assert test1 != test2
         assert test1 == test3
@@ -57,21 +57,8 @@ def test_DNFUpdateEntry_compare():
 
 
 def test_DNFUpdateEntry_wrong_structure():
-        with pytest.raises(ManagedException) as e:
+        with pytest.raises(AssertionError) as e:
                 test1 = DNFUpdateEntry("pippo")
-        assert str(e.value) == "A Runtime error occurred while running stabl.py"
-        assert e.value.record == '\"pippo\"'
-        assert e.value.errors == ["Provided value is not an object"]
         
-        with pytest.raises(ManagedException) as e:
+        with pytest.raises(AssertionError) as e:
                 test2 = DNFUpdateEntry({'ciao': 'test'})
-        assert str(e.value) == "A Runtime error occurred while running stabl.py"
-        assert e.value.record == '{"ciao": "test"}'
-        assert e.value.errors == [
-                "key 'name' is missing in provided record",
-                "key 'nevra' is missing in provided record",
-                "key 'type' is missing in provided record",
-                "key 'severity' is missing in provided record"
-        ]
-
-# TODO: mancano i test nel caso la struttura sia differente --> JSON schema validator
