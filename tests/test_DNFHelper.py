@@ -62,7 +62,7 @@ def test_get_data_valid(mock_run):
 
         myDNFHelper = DNFHelper()
 
-        result = myDNFHelper.get_updates()
+        result = myDNFHelper.get_updates_by_partition_id()
         assert result.keys() == expected_output.keys()
 
         for k, v in result.items():

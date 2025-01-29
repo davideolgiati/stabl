@@ -12,8 +12,7 @@ class UpdateManager():
         maxSkippableUregency = UpdateUrgency.NONE
 
         def __init__(self, packageManager):
-                assert packageManager is not None, "packageManager must be valorized"
-                assert isinstance(packageManager, DNFHelper), "packageManager must be instance of DNFHelper"
+                assert isinstance(packageManager, DNFHelper)
 
                 self.packages = {
                         "major": [],
@@ -23,34 +22,43 @@ class UpdateManager():
                 }
 
                 self.packageManager = packageManager
-                self.updatesByAdvisoryId = self.packageManager.get_updates() # Questo cambiera' nome
+                self.updatesByAdvisoryId = self.packageManager.get_updates_by_partition_id()
                 self.compare_updates_and_installed_packages()
 
+                print(f"Major updates   : {len(self.packages['major'])}")
+                print(f"Minor updates   : {len(self.packages['minor'])}")
+                print(f"Patch updates   : {len(self.packages['patch'])}")
+                print(f"Release updates : {len(self.packages['release'])}\n")
+
         def get_updates_by_advisory_id(self):
-                assert self.updatesByAdvisoryId is not None, "updatesByAdvisoryId must be valorized"
-                assert isinstance(self.updatesByAdvisoryId, dict), "updatesByAdvisoryId must be a dictionary"
+                assert isinstance(self.updatesByAdvisoryId, dict)
 
                 return self.updatesByAdvisoryId
         
         def compare_updates_and_installed_packages(self):
-                assert isdir("/tmp/stabl/"), "\"/tmp/stabl\" must exist on the system"
-                assert isinstance(self.packages, dict), "self.packages must be a dictionary"
-                assert self.packages.get("major") == [], "self.packages[\"major\"] must be an empty list"
-                assert self.packages.get("minor") == [], "self.packages[\"minor\"] must be an empty list"
-                assert self.packages.get("patch") == [], "self.packages[\"patch\"] must be an empty list"
-                assert self.packages.get("release") == [], "self.packages[\"release\"] must be an empty list"
+                assert isinstance(self.packages, dict)
+                assert self.packages.get("major") == []
+                assert self.packages.get("minor") == []
+                assert self.packages.get("patch") == []
+                assert self.packages.get("release") == []
 
+                #BUG: cleanup cache before downloading updates
                 self.packageManager.download_updates()
 
-                rpm_files = [join("/tmp/stabl/", f) for f in listdir("/tmp/stabl/") if isfile(join("/tmp/stabl/", f))]
-                for rpm_path in rpm_files: #BUG: cleanup cache before
+                working_dir = self.packageManager.cache_dir
+                file_list = listdir(working_dir)
+                full_path_is_file = lambda file: isfile(join(working_dir, file)) and file.endswith(".rpm")
+
+                rpm_files = [join(working_dir, file) for file in file_list if full_path_is_file(file)]
+
+                for rpm_path in rpm_files:
                         self.evaluateRpmPackage(rpm_path)
 
         def evaluateRpmPackage(self, rpm_path):
-                assert rpm_path is not None, "the rpm packet file path must be valorized"
-                assert isinstance(rpm_path, str), "the rpm packet file path must be a string"
-                assert rpm_path != "", "the rpm packet file path must contain a value"
-                assert rpm_path.startswith("/tmp/stabl/"), "the rpm packet file path must start with the agreed prefix"
+                assert isinstance(rpm_path, str)
+                assert rpm_path != ""
+                assert rpm_path.startswith(self.packageManager.cache_dir)
+                assert rpm_path.endswith(".rpm"), rpm_path
 
                 update_info = self.packageManager.query_downloaded_package(rpm_path)
 
@@ -63,7 +71,7 @@ class UpdateManager():
                 if(installed_info is None):
                         return
 
-                assert installed_info != update_info, "installed package info and update info must be different"
+                assert installed_info != update_info
 
                 current_version = self.split_version_string(installed_info)
                 update_version = self.split_version_string(update_info)
@@ -73,8 +81,7 @@ class UpdateManager():
                 patch_update = current_version[2] != update_version[2]
                 release_update = installed_info["Release"] != update_info["Release"]
 
-                version_check = any([major_update, minor_update,patch_update, release_update])
-                assert version_check, "Update version must be in at least one category"
+                assert any([major_update, minor_update,patch_update, release_update])
 
                 if (major_update):
                         self.packages["major"].append(pkg_name)

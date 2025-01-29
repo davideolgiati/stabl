@@ -25,7 +25,7 @@ class DNFHelper:
                 self.local_rpm_cache = [file for file in os.listdir(self.cache_dir) if is_valid_rpm_file_path(file)]
 
         # TODO: rinominami per specificare si tratta delle partizioni di aggiornamento
-        def get_updates(self):
+        def get_updates_by_partition_id(self):
                 assert(LIST_UPDATES_CMD is not None)
                 assert(isinstance(LIST_UPDATES_CMD, list))
 

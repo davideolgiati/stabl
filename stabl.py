@@ -13,7 +13,7 @@ def process_update_list():
                 for package in packagesByAdvisoryId[advisoryId]:
                         printBuffer += f"\t{package.packageName.ljust(60)}\n"
                 
-                print(f"Advisory Id: \"{advisoryId}\"\n{printBuffer}")
+                print(f"Advisory Id: \"{advisoryId}\" () \n{printBuffer}")
 
 
         if(suggestedAdvisoryIds != []):
