@@ -1,4 +1,5 @@
 # Commands
 LIST_UPDATES_CMD = ["dnf", "updateinfo", "list", "--updates", "--json"]
-DOWNLOAD_UPGRADE = ["dnf", "upgrade", "-y", "--downloadonly", "--destdir=/tmp/stabl/"]
+DOWNLOAD_UPGRADE = lambda path: ["dnf", "upgrade", "-y", "--downloadonly", f"--destdir={path}"]
 INSPECT_PKG = lambda pkg: ["rpm", "-q", pkg, "--json"]
+GET_SYSTEM_CONFIG = ["dnf", "--dump-main-config"]

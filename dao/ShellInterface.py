@@ -4,30 +4,21 @@ from dto.ManagedShellException import ManagedShellException
 
 class ShellInterface:
         def run(self, command_array):
-                try:
-                        result = subprocess.run(
-                                command_array,
-                                stdout=subprocess.PIPE,
-                                stderr=subprocess.PIPE,
-                        )
-                except OSError as e:
-                        raise ManagedShellException(
-                                str(e),
-                                ' '.join(command_array),
-                                -1
-                        ) from e
+                result = self.run_unmanaged(command_array)
 
-                if result.returncode != 0:
-                        stderr_msg = result.stderr.decode('utf-8', errors='replace')
+                if result["code"] != 0:
                         raise ManagedShellException(
-                                stderr_msg.strip(),
+                                result["error"].strip(),
                                 ' '.join(command_array),
-                                result.returncode
+                                result["code"]
                         )
 
-                return result.stdout.decode('utf-8', errors='replace')
+                return result["info"]
         
         def run_unmanaged(self, command_array):
+                assert isinstance(command_array, list), "command_array must be a list"
+                assert all(isinstance(elem, str) for elem in command_array), "command_array must be a list of strings"
+
                 try:
                         result = subprocess.run(
                                 command_array,

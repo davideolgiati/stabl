@@ -15,6 +15,13 @@ class UpdateManager():
                 assert packageManager is not None, "packageManager must be valorized"
                 assert isinstance(packageManager, DNFHelper), "packageManager must be instance of DNFHelper"
 
+                self.packages = {
+                        "major": [],
+                        "minor": [],
+                        "patch": [],
+                        "release": []
+                }
+
                 self.packageManager = packageManager
                 self.updatesByAdvisoryId = self.packageManager.get_updates() # Questo cambiera' nome
                 self.compare_updates_and_installed_packages()
@@ -26,18 +33,16 @@ class UpdateManager():
                 return self.updatesByAdvisoryId
         
         def compare_updates_and_installed_packages(self):
-                self.packages = {
-                        "major": [],
-                        "minor": [],
-                        "patch": [],
-                        "release": []
-                }
+                assert isdir("/tmp/stabl/"), "\"/tmp/stabl\" must exist on the system"
+                assert isinstance(self.packages, dict), "self.packages must be a dictionary"
+                assert self.packages.get("major") == [], "self.packages[\"major\"] must be an empty list"
+                assert self.packages.get("minor") == [], "self.packages[\"minor\"] must be an empty list"
+                assert self.packages.get("patch") == [], "self.packages[\"patch\"] must be an empty list"
+                assert self.packages.get("release") == [], "self.packages[\"release\"] must be an empty list"
 
                 self.packageManager.download_updates()
 
-                assert isdir("/tmp/stabl/"), "\"/tmp/stabl\" must exist on the system"
                 rpm_files = [join("/tmp/stabl/", f) for f in listdir("/tmp/stabl/") if isfile(join("/tmp/stabl/", f))]
-
                 for rpm_path in rpm_files: #BUG: cleanup cache before
                         self.evaluateRpmPackage(rpm_path)
 
@@ -92,7 +97,6 @@ class UpdateManager():
                 suggestedUpdates = []
                 
                 for advisoryId, packagesList in self.updatesByAdvisoryId.items():
-                        assert advisoryId is not None, "advisoryId must be valorized"
                         assert isinstance(advisoryId, str), "advisoryId must be a string"
                         
                         if(self.evaluateUpdatePartition(packagesList)):
@@ -115,6 +119,7 @@ class UpdateManager():
                                 securityProblem = True
                                 allowedAdvisoryId = True
 
+                        # TODO: questo fa schifo a livello di performances
                         is_patch = any([package.packageName.startswith(pkg) for pkg in self.packages['patch']])
                         is_release = any([package.packageName.startswith(pkg) for pkg in self.packages['release']])
 

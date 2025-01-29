@@ -5,17 +5,24 @@ import re
 from dao.ShellInterface import ShellInterface
 from dto.DNFUpdateEntry import DNFUpdateEntry
 
-from common.costants import LIST_UPDATES_CMD, DOWNLOAD_UPGRADE, INSPECT_PKG
+from common.costants import LIST_UPDATES_CMD, DOWNLOAD_UPGRADE, INSPECT_PKG, GET_SYSTEM_CONFIG
+import common.regex as regex
 
 
 class DNFHelper:
         def __init__(self):
                 self.sh = ShellInterface()
-                if(not os.path.isdir("/tmp/stabl/")): #TODO: da mockare nei test
-                       os.mkdir("/tmp/stabl/") #TODO: da mockare nei test
+                system_config = self.sh.run(GET_SYSTEM_CONFIG).split('\n')
+                filtered_config = [line for line in system_config if line.startswith("cachedir")]
+
+                assert len(filtered_config) == 1
+
+                self.cache_dir = filtered_config[0].split(" = ")[1]
+
+                assert self.cache_dir is not None
 
                 # Buon usecase per la tie
-                self.local_rpm_cache = [file for file in os.listdir("/tmp/stabl/") if is_valid_rpm_file_path(file)]
+                self.local_rpm_cache = [file for file in os.listdir(self.cache_dir) if is_valid_rpm_file_path(file)]
 
         # TODO: rinominami per specificare si tratta delle partizioni di aggiornamento
         def get_updates(self):
@@ -24,7 +31,6 @@ class DNFHelper:
 
                 raw_json_output = self.sh.run(LIST_UPDATES_CMD)
                 
-                assert(raw_json_output is not None)
                 assert(isinstance(raw_json_output, str))
                 assert(raw_json_output != "")
 
@@ -47,100 +53,81 @@ class DNFHelper:
                 return updateGruops
         
         def download_updates(self):
-                assert(DOWNLOAD_UPGRADE is not None)
-                assert(isinstance(DOWNLOAD_UPGRADE, list))
+                download_updates_cmd = DOWNLOAD_UPGRADE(self.cache_dir)
+                assert(isinstance(download_updates_cmd, list))
 
-                self.sh.run(DOWNLOAD_UPGRADE)
+                self.sh.run(download_updates_cmd)
         
         
         def query_downloaded_package(self, package_path):
-                assert(package_path is not None)
-                assert(isinstance(package_path, str))
-                assert(is_valid_rpm_file_path(package_path))
-
-                # TODO: specific errors
-                if(not os.path.isfile(package_path)):
-                        raise ValueError(f"{package_path} doesn't exist")                    
-
-                if(not is_file_rpm(package_path)):
-                        raise ValueError(f"RPM validation failed on {package_path}") 
+                assert isinstance(package_path, str)
+                assert is_valid_rpm_file_path(package_path)
+                assert os.path.isfile(package_path)                    
+                assert is_file_rpm(package_path) 
 
                 return self.query_package_info(package_path)
 
 
         def query_installed_package(self, package_name: str):
-                assert(package_name is not None)
-                assert(package_name != "")
                 assert(isinstance(package_name, str))
+                assert(package_name != "")
 
                 return self.query_package_info(package_name)
 
 
         # TODO: https://docs.python.org/3/library/multiprocessing.html#exchanging-objects-between-processes
-        def query_package_info(self, package_entry):
-                assert(package_entry is not None)
-                assert(isinstance(package_entry, str))
-                assert(package_entry != "")
+        def query_package_info(self, package_signature):
+                assert(isinstance(package_signature, str))
+                assert(package_signature != "")
 
-                pkg_name_regex = r'^[A-Za-z0-9]+(\-[A-Za-z0-9]+)*$'
-                pkg_version_regex = r'^[a-zA-Z0-9]+(\.[a-zA-Z0-9]+){0,}$'
-                
-                raw_rpm_output = self.sh.run_unmanaged(INSPECT_PKG(package_entry))
+                inspect_command = INSPECT_PKG(package_signature)
+                shell_output = self.sh.run_unmanaged(inspect_command)
+                assert isinstance(shell_output, dict)
+                assert isinstance(shell_output.get("code"), int)
+                assert isinstance(shell_output.get("info"), str)
 
-                if(raw_rpm_output["code"] != 0):
+                if(shell_output["code"] != 0):
                         return
 
-                try:
-                        rpm_pkg_property_dict = json.loads(raw_rpm_output["info"])
-                except Exception as e:
-                        print(e)
-                        print(INSPECT_PKG(package_entry))
+                rpm_properties = json.loads(shell_output["info"])
 
-                required_properties = [ "Name", "Version", "Release", "Arch" ]
-                output_dictionary = {} # TODO: questo va reso una classe
+                assert isinstance(rpm_properties, dict)
+                assert isinstance(rpm_properties.get("Name"), str)
+                assert isinstance(rpm_properties.get("Version"), str)
+                assert isinstance(rpm_properties.get("Release"), str)
+                assert isinstance(rpm_properties.get("Arch"), str)
+                assert rpm_properties.get("Name") != ""
+                assert rpm_properties.get("Version") != ""
+                assert rpm_properties.get("Release") != ""
+                assert rpm_properties.get("Arch") != ""
 
-                for key in required_properties:
-                       current_value = rpm_pkg_property_dict.get(key)
-                       assert(current_value is not None)
-                       assert(isinstance(current_value, str))
-                       assert(current_value != "")
-                       
-                       output_dictionary[key] = current_value
+                assert re.findall(regex.package_name, rpm_properties["Name"]) != []
 
-                tokenized_version = re.split(r'\~|\^', output_dictionary["Version"])
+                tokenized_version = re.split(
+                        regex.valid_separator, 
+                        rpm_properties["Version"]
+                )
 
                 if(len(tokenized_version) > 1):
-                        output_dictionary["Version"] = tokenized_version[0]
-                        output_dictionary["Release"] = f"{''.join(tokenized_version[1:])}-{output_dictionary["Release"]}"
+                        rpm_properties["Version"] = tokenized_version[0]
+                        additional_info = ''.join(tokenized_version[1:])
+                        rpm_properties["Release"] += f"-{additional_info}"
 
 
-                assert output_dictionary is not None, "output_dictionary must be valorized"
-                assert isinstance(output_dictionary, dict), "output_dictionary must be a dictionary"
-                assert "Name" in output_dictionary, "\"Name\" must be in dictionary keys"
-                assert "Version" in output_dictionary, "\"Version\" must be in dictionary keys"
-                assert "Release" in output_dictionary,"\"Release\" must be in dictionary keys"
-                assert "Arch" in output_dictionary,"\"Arch\" must be in dictionary keys"
-                assert isinstance(output_dictionary["Name"], str), f"\"Name\" has a wring type: {type(output_dictionary["Name"])}"
-                assert isinstance(output_dictionary["Version"], str), f"\"Version\" has a wring type: {type(output_dictionary["Version"])}"
-                assert isinstance(output_dictionary["Release"], str), f"\"Release\" has a wring type: {type(output_dictionary["Release"])}"
-                assert isinstance(output_dictionary["Arch"], str), f"\"Arch\" has a wring type: {type(output_dictionary["Arch"])}"
-                assert re.findall(pkg_name_regex, output_dictionary["Name"]) != [], f"{output_dictionary["Name"]} does not match {pkg_name_regex}"
-                assert re.findall(pkg_version_regex, output_dictionary["Version"]) != [], f"{output_dictionary["Version"]} does not match {pkg_version_regex}"         
+                assert re.findall(regex.package_version, rpm_properties["Version"]) != []        
 
-                return output_dictionary
+                return rpm_properties
         
 
 def is_valid_rpm_file_path(path):
-        assert(path is not None)
         assert(isinstance(path, str))
 
-        if re.search(r'\.rpm$', path, re.IGNORECASE):
+        if re.search(regex.valid_rpm_file, path, re.IGNORECASE):
                 return True
         else:
                 return False
 
 def is_file_rpm(path):
-        assert(path is not None)
         assert(isinstance(path, str))
         assert(path != "")
 
@@ -148,5 +135,8 @@ def is_file_rpm(path):
         with open(path, 'rb') as fp:
                 file_magic_bytes = fp.read(4)
 
-        return file_magic_bytes == rpm_magic_bytes
+        magic_bytes_check = file_magic_bytes == rpm_magic_bytes
+        assert isinstance(magic_bytes_check, bool)
+
+        return magic_bytes_check
         
