@@ -28,20 +28,18 @@ class DNFUpdateEntry:
                 assert all(isinstance(dnf_update_enrty[key],str) for key in object_keys)
 
                 self.key = dnf_update_enrty['name'] 
-                assert(self.key != "")
+                assert self.key != ""
 
                 self.packageName = dnf_update_enrty['nevra']
-                assert(self.packageName != "")
+                assert self.packageName != ""
 
                 updateType = dnf_update_enrty['type'].lower()
                 self.updateType = updateTypeMapping[updateType]
-                assert(self.updateType is not None)
-                assert(isinstance(self.updateType, UpdateClassification))
+                assert isinstance(self.updateType, UpdateClassification)
                 
                 updateUrgency = dnf_update_enrty['severity'].lower()
                 self.updateUrgency = updateUrgencyMapping[updateUrgency]
-                assert(self.updateUrgency is not None)
-                assert(isinstance(self.updateUrgency, UpdateUrgency))
+                assert isinstance(self.updateUrgency, UpdateUrgency)
                         
 
         def __eq__(self, other): 

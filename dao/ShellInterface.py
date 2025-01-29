@@ -6,6 +6,11 @@ class ShellInterface:
         def run(self, command_array):
                 result = self.run_unmanaged(command_array)
 
+                assert isinstance(result, dict)
+                assert isinstance(result.get("code"), int)
+                assert isinstance(result.get("info"), str)
+                assert isinstance(result.get("error"), str)
+
                 if result["code"] != 0:
                         raise ManagedShellException(
                                 result["error"].strip(),
@@ -16,8 +21,8 @@ class ShellInterface:
                 return result["info"]
         
         def run_unmanaged(self, command_array):
-                assert isinstance(command_array, list), "command_array must be a list"
-                assert all(isinstance(elem, str) for elem in command_array), "command_array must be a list of strings"
+                assert isinstance(command_array, list)
+                assert all(isinstance(elem, str) for elem in command_array)
 
                 try:
                         result = subprocess.run(
@@ -27,9 +32,7 @@ class ShellInterface:
                         )
                 except OSError as e:
                         raise ManagedShellException(
-                                str(e),
-                                ' '.join(command_array),
-                                -1
+                                str(e), ' '.join(command_array), -1
                         ) from e
                 
                 return {

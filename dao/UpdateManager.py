@@ -94,17 +94,21 @@ class UpdateManager():
 
         def split_version_string(self, package_info):
             version_list = f"{package_info["Version"]}.0.0".split('.')
-            assert len(version_list) >= 3, "Package version must be composed by 3 digits"
+            assert len(version_list) >= 3
             
             return version_list
 
         def get_suggested_advisory_ids(self):
-                assert self.updatesByAdvisoryId is not None, "updatesByAdvisoryId must be valorized"
+                assert isinstance(self.updatesByAdvisoryId, dict)
+                assert self.updatesByAdvisoryId != {}
 
                 suggestedUpdates = []
                 
                 for advisoryId, packagesList in self.updatesByAdvisoryId.items():
-                        assert isinstance(advisoryId, str), "advisoryId must be a string"
+                        assert isinstance(advisoryId, str)
+                        assert isinstance(packagesList, list)
+                        assert packagesList != []
+                        assert advisoryId != ""
                         
                         if(self.evaluateUpdatePartition(packagesList)):
                                 suggestedUpdates.append(advisoryId)
@@ -112,9 +116,8 @@ class UpdateManager():
                 return suggestedUpdates
 
         def evaluateUpdatePartition(self, packagesList):
-                assert packagesList is not None, "packagesList must be valorized"
-                assert isinstance(packagesList, list), "packagesList must be a list"
-                assert packagesList != [], "packagesList must not be empty"
+                assert isinstance(packagesList, list)
+                assert packagesList != []
 
                 allowedAdvisoryId = False
                 securityProblem = False
