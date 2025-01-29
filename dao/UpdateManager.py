@@ -1,4 +1,5 @@
 from os import listdir
+import os
 from os.path import isfile, join, isdir
 
 from dao.DNFHelper import DNFHelper
@@ -41,8 +42,13 @@ class UpdateManager():
                 assert self.packages.get("minor") == []
                 assert self.packages.get("patch") == []
                 assert self.packages.get("release") == []
+                
+                # TODO: use threads here
+                for f in os.listdir(self.packageManager.cache_dir):
+                        if f.endswith(".rpm"):
+                                full_path = os.path.join(self.packageManager.cache_dir, f)
+                                os.remove(full_path)
 
-                #BUG: cleanup cache before downloading updates
                 self.packageManager.download_updates()
 
                 working_dir = self.packageManager.cache_dir
@@ -81,7 +87,7 @@ class UpdateManager():
                 patch_update = current_version[2] != update_version[2]
                 release_update = installed_info["Release"] != update_info["Release"]
 
-                assert any([major_update, minor_update,patch_update, release_update])
+                assert any([major_update, minor_update, patch_update, release_update])
 
                 if (major_update):
                         self.packages["major"].append(pkg_name)
