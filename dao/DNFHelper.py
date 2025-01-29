@@ -1,6 +1,7 @@
 import json
 import os
 import re
+import time
 
 from dao.ShellInterface import ShellInterface
 from dto.DNFUpdateEntry import DNFUpdateEntry
@@ -12,6 +13,9 @@ import common.regex as regex
 class DNFHelper:
         def __init__(self):
                 self.sh = ShellInterface()
+
+                print("[i] Reading DNF configuration ... ", end='', flush=True)
+                start = time.time()
                 system_config = self.sh.run(GET_SYSTEM_CONFIG).split('\n')
                 filtered_config = [line for line in system_config if line.startswith("cachedir")]
 
@@ -20,12 +24,11 @@ class DNFHelper:
                 self.cache_dir = filtered_config[0].split(" = ")[1]
 
                 assert self.cache_dir is not None
+                print(f"done ({time.time() - start:.2f}s)")
 
-                # Buon usecase per la tie
-                self.local_rpm_cache = [file for file in os.listdir(self.cache_dir) if is_valid_rpm_file_path(file)]
-
-        # TODO: rinominami per specificare si tratta delle partizioni di aggiornamento
         def get_updates_by_partition_id(self):
+                print("[i] Getting updates partition list ... ", end='', flush=True)
+                start = time.time()
                 assert(LIST_UPDATES_CMD is not None)
                 assert(isinstance(LIST_UPDATES_CMD, list))
 
@@ -37,9 +40,12 @@ class DNFHelper:
                 packages_list = json.loads(raw_json_output)
 
                 assert(isinstance(packages_list, list))
+                print(f"done ({time.time() - start:.2f}s)")
 
                 updateGruops = {}
 
+                print("[i] Parsing updates ... ", end='', flush=True)
+                start = time.time()
                 for package in packages_list:
                         assert(package is not None)
                         assert(isinstance(package, dict))
@@ -49,6 +55,7 @@ class DNFHelper:
                                 updateGruops[current_package.key] = [current_package]
                         else:
                                 updateGruops[current_package.key].append(current_package)
+                print(f"done ({time.time() - start:.2f}s)")
                 
                 return updateGruops
         
@@ -56,7 +63,10 @@ class DNFHelper:
                 download_updates_cmd = DOWNLOAD_UPGRADE(self.cache_dir)
                 assert(isinstance(download_updates_cmd, list))
 
+                print("[i] Downloading RPMs from remote ... ", end='', flush=True)
+                start = time.time()
                 self.sh.run(download_updates_cmd)
+                print(f"done ({time.time() - start:.2f}s)")
         
         
         def query_downloaded_package(self, package_path):

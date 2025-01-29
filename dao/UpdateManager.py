@@ -1,6 +1,7 @@
 from os import listdir
 import os
 from os.path import isfile, join, isdir
+import time
 
 from dao.DNFHelper import DNFHelper
 from dto.DNFUpdateEntry import DNFUpdateEntry
@@ -26,6 +27,7 @@ class UpdateManager():
                 self.updatesByAdvisoryId = self.packageManager.get_updates_by_partition_id()
                 self.compare_updates_and_installed_packages()
 
+                print("\n")
                 print(f"Major updates   : {len(self.packages['major'])}")
                 print(f"Minor updates   : {len(self.packages['minor'])}")
                 print(f"Patch updates   : {len(self.packages['patch'])}")
@@ -43,11 +45,12 @@ class UpdateManager():
                 assert self.packages.get("patch") == []
                 assert self.packages.get("release") == []
                 
-                # TODO: use threads here
-                for f in os.listdir(self.packageManager.cache_dir):
-                        if f.endswith(".rpm"):
-                                full_path = os.path.join(self.packageManager.cache_dir, f)
-                                os.remove(full_path)
+                print("[i] Cleaning environment ...", end='', flush=True)
+                start = time.time()
+                for file in os.listdir(self.packageManager.cache_dir):
+                        self.evaluate_file_for_deletion(file)
+
+                print(f"done ({time.time() - start:.2f}s)")
 
                 self.packageManager.download_updates()
 
@@ -59,6 +62,39 @@ class UpdateManager():
 
                 for rpm_path in rpm_files:
                         self.evaluateRpmPackage(rpm_path)
+
+        def evaluate_file_for_deletion(self, file):
+                assert isinstance(file, str)
+                assert file != ""
+
+                if not file.endswith(".rpm"):
+                        return
+                
+                full_path = os.path.join(self.packageManager.cache_dir, file)
+                rpm_properties =self.packageManager.query_downloaded_package(full_path)
+                
+                assert isinstance(rpm_properties, dict)
+                assert rpm_properties != {}
+                assert "Name" in rpm_properties
+                assert "Arch" in rpm_properties
+                assert "Version" in rpm_properties
+                assert "Release" in rpm_properties
+
+                pkg_signature = f"{rpm_properties["Name"]}.{rpm_properties["Arch"]}"
+                installed_info = self.packageManager.query_installed_package(pkg_signature)
+
+                assert isinstance(installed_info, dict)
+                assert installed_info != {}
+                assert "Version" in installed_info
+                assert "Release" in installed_info
+
+                same_version = installed_info["Version"] == rpm_properties["Version"]
+                same_release = installed_info["Release"] == rpm_properties["Release"]
+
+                if not (same_version and same_release):
+                        return
+                        
+                os.remove(full_path)
 
         def evaluateRpmPackage(self, rpm_path):
                 assert isinstance(rpm_path, str)
