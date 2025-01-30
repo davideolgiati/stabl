@@ -161,7 +161,9 @@ class UpdateManager():
                 assert self.updatesByAdvisoryId != {}
 
                 suggestedUpdates = []
-                
+
+                suggestedUpdates.append()
+
                 for advisoryId, packagesList in self.updatesByAdvisoryId.items():
                         assert isinstance(advisoryId, str)
                         assert isinstance(packagesList, list)
