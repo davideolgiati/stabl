@@ -5,6 +5,7 @@ class Logger():
         def __new__(cls):
                 if not hasattr(cls, 'instance'):
                         cls.instance = super(Logger, cls).__new__(cls)
+                        cls.start = None
                 return cls.instance
         
         def start_timing(self):
@@ -20,19 +21,19 @@ class Logger():
         def info(self, msg, end='\n'):
                 assert msg is not None
                 assert msg != ""
-                print(f"[i] {msg}", end, flush=True)
+                print(f"[i] {msg}", end=end, flush=True)
 
         def debug(self, msg, end='\n'):
                 assert msg is not None
                 assert msg != ""
-                print(f"[*] {msg}", end, flush=True)
+                print(f"[*] {msg}", end=end, flush=True)
 
         def warn(self, msg, end='\n'):
                 assert msg is not None
                 assert msg != ""
-                print(f"[?] {msg}", end, flush=True)
+                print(f"[?] {msg}", end=end, flush=True)
 
         def error(self, msg, end='\n'):
                 assert msg is not None
                 assert msg != ""
-                print(f"[!] {msg}", end, flush=True)
+                print(f"[!] {msg}", end=end, flush=True)
