@@ -7,16 +7,6 @@ class Logger():
                         cls.instance = super(Logger, cls).__new__(cls)
                         cls.start = None
                 return cls.instance
-        
-        def start_timing(self):
-                assert self.start is None
-                self.start = time.time()
-
-        def stop_timing(self, msg):
-                assert self.start is not None
-                print(f"{msg} ({time.time() - self.start:.2f}s)")
-
-                self.start = None
 
         def info(self, msg, end='\n'):
                 assert msg is not None
@@ -37,3 +27,15 @@ class Logger():
                 assert msg is not None
                 assert msg != ""
                 print(f"[!] {msg}", end=end, flush=True)
+
+
+def log_timed_execution(description):
+        def decorator(func):
+                def wrapper(*args, **kwargs):
+                        print(f"[i] {description} ... ", end='', flush=True)
+                        start = time.time()
+                        function_result = func(*args, **kwargs)
+                        print(f"done ({time.time() - start:.2f}s)")
+                        return function_result
+                return wrapper
+        return decorator

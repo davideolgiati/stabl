@@ -133,11 +133,12 @@ class UpdateManager():
                 assert installed_info != update_info
 
                 current_version = self.split_version_string(installed_info)
+
                 update_version = self.split_version_string(update_info)
 
                 major_update = current_version[0] != update_version[0]
                 minor_update = current_version[1] != update_version[1]
-                patch_update = current_version[2] != update_version[2]
+                patch_update = '.'.join(current_version[2:]) != '.'.join(update_version[2:])
                 release_update = installed_info["Release"] != update_info["Release"]
 
                 assert any([major_update, minor_update, patch_update, release_update])

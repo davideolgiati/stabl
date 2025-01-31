@@ -3,7 +3,7 @@ import os
 import re
 import time
 
-from common.logger import Logger
+from common.logger import log_timed_execution
 from dao.ShellInterface import ShellInterface
 from dto.DNFUpdateEntry import DNFUpdateEntry
 
@@ -12,67 +12,73 @@ import common.regex as regex
 
 
 class DNFHelper:
+        
         def __init__(self):
                 self.sh = ShellInterface()
-                self.logger = Logger()
+                self.load_dnf_configuration()
 
-                self.logger.info("Reading DNF configuration ... ", end='')
-                self.logger.start_timing()
+        @log_timed_execution("Reading DNF configuration")
+        def load_dnf_configuration(self):
+            system_config = self.sh.run(GET_SYSTEM_CONFIG).split('\n')
 
-                system_config = self.sh.run(GET_SYSTEM_CONFIG).split('\n')
-                filtered_config = [line for line in system_config if line.startswith("cachedir")]
+            cache_config = [line for line in system_config if line.startswith("cachedir")]
+            assert len(cache_config) == 1
 
-                assert len(filtered_config) == 1
+            self.cache_dir = cache_config[0].split(" = ")[1]
+            assert self.cache_dir is not None
 
-                self.cache_dir = filtered_config[0].split(" = ")[1]
-
-                assert self.cache_dir is not None
-                self.logger.stop_timing("done")
 
         def get_updates_by_partition_id(self):
-                self.logger.info("Getting updates partition list ... ", end='')
-                self.logger.start_timing()
-
-                assert(LIST_UPDATES_CMD is not None)
-                assert(isinstance(LIST_UPDATES_CMD, list))
-
-                raw_json_output = self.sh.run(LIST_UPDATES_CMD)
-
-                assert(isinstance(raw_json_output, str))
-                assert(raw_json_output != "")
-
-                packages_list = json.loads(raw_json_output)
-
-                assert(isinstance(packages_list, list))
-                self.logger.stop_timing("done")
-
-                updateGruops = {}
-
-                self.logger.info("Parsing updates ... ", end='')
-                self.logger.start_timing()
-                for package in packages_list:
-                        assert(package is not None)
-                        assert(isinstance(package, dict))
-
-                        current_package = DNFUpdateEntry(package)
-                        if (current_package.key not in updateGruops):
-                                updateGruops[current_package.key] = [current_package]
-                        else:
-                                updateGruops[current_package.key].append(current_package)
-                self.logger.stop_timing(f"done")
+                updates = self.read_available_update_list()
+                partitions = self.group_updates_by_partition_id(updates)
                 
-                return updateGruops
+                return partitions
+
+
+        @log_timed_execution("Parsing updates")
+        def group_updates_by_partition_id(self, packages):
+                assert isinstance(packages, list)
+
+                partitions = {}
+
+                for package in packages:
+                        assert(isinstance(package, DNFUpdateEntry))
+                        partition_id = package.key
+                        assert isinstance(partition_id, str)
+
+                        if (partition_id not in partitions):
+                                partitions[partition_id] = [ package ]
+                        else:
+                                partitions[partition_id].append(package)
+                        
+                return partitions
+
+
+        @log_timed_execution("Getting updates list")
+        def read_available_update_list(self):
+            assert(LIST_UPDATES_CMD is not None)
+            assert(isinstance(LIST_UPDATES_CMD, list))
+
+            dnf_output = self.sh.run(LIST_UPDATES_CMD)
+            assert(isinstance(dnf_output, str))
+            assert(dnf_output != "")
+
+            json_data = json.loads(dnf_output)
+            assert(isinstance(json_data, list))
+
+            updates = [DNFUpdateEntry(package) for package in json_data]
+
+            return updates
         
+
+        @log_timed_execution("Downloading RPMs from remote")
         def download_updates(self):
                 download_updates_cmd = DOWNLOAD_UPGRADE(self.cache_dir)
                 assert(isinstance(download_updates_cmd, list))
 
-                self.logger.info("Downloading RPMs from remote ... ", end='')
-                self.logger.start_timing()
                 self.sh.run(download_updates_cmd)
-                self.logger.stop_timing("done")
         
-        
+
         def query_downloaded_package(self, package_path):
                 assert isinstance(package_path, str)
                 assert is_valid_rpm_file_path(package_path)
@@ -103,7 +109,13 @@ class DNFHelper:
                 if(shell_output["code"] != 0):
                         return
 
-                rpm_properties = json.loads(shell_output["info"])
+                shell_output["info"] = shell_output["info"].replace("}\n{", "},\n{")
+                shell_output["info"] = f"[{shell_output["info"]}]"
+                rpms_properties_list = json.loads(shell_output["info"])
+
+                rpm_sort_function = lambda rpm: rpm["Buildtime"]
+                rpms_properties_list.sort(key=rpm_sort_function)
+                rpm_properties = rpms_properties_list[-1]
 
                 assert isinstance(rpm_properties, dict)
                 assert isinstance(rpm_properties.get("Name"), str)
