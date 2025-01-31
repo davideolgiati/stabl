@@ -81,6 +81,8 @@ class UpdateManager():
         def evaluate_file_for_deletion(self, file):
                 assert isinstance(file, str)
                 assert file != ""
+                assert isinstance(self.packageManager.cache_dir, str)
+                assert self.packageManager.cache_dir != ""
 
                 if not file.endswith(".rpm"):
                         return
@@ -151,7 +153,11 @@ class UpdateManager():
                                 self.packages["release"].append(pkg_name)
 
         def split_version_string(self, package_info):
+            assert isinstance(package_info, dict)
+            assert isinstance(package_info.get("Version"), str)
+
             version_list = f"{package_info["Version"]}.0.0".split('.')
+            
             assert len(version_list) >= 3
             
             return version_list
