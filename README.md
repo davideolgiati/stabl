@@ -2,12 +2,17 @@
 A DNF wrapper to selectively choose what packages to upgrade
 
 # v0.0.2
-- better version check for updates
-- add method to download only rpms
-- add method to inspect installed pkgs
-- add method to inspect downloaded pkgs
-- errors on wrong dnf entry format
-- errors on subprocess error
+### Features
+- Improved version checking system for package updates
+- Added functionality to download RPM packages only
+- Added package inspection capabilities:
+  - Inspect installed packages
+  - Inspect downloaded packages
+
+### Bug Fixes
+- Added error handling for malformed DNF entry formats
+- Added error handling for subprocess failures
+- Improved code quality and error handling
 
 # v0.0.1
 - initial release
@@ -15,9 +20,6 @@ A DNF wrapper to selectively choose what packages to upgrade
 
 ### TODOs:
 
-- manage errors on wrong dnf entry formats
-- validation on subprocess output
-- validation on dnf update entry
 - better indexing for updates
-- log what is going on
-- use a singleton logger class
+- use bodhi api to get update info instead of downloading rpms
+- add debug option

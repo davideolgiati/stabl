@@ -13,13 +13,13 @@ def process_update_list():
                 for package in packagesByAdvisoryId[advisoryId]:
                         printBuffer += f"\t{package.packageName.ljust(60)}\n"
                 
-                print(f"Advisory Id: \"{advisoryId}\" () \n{printBuffer}")
+                print(f"Advisory Id: \"{advisoryId}\" \n{printBuffer}")
 
 
         if(suggestedAdvisoryIds != []):
-                print(f"suggested updates: sudo dnf update --advisory={','.join(suggestedAdvisoryIds)}")
+                print(f"\nsuggested updates: sudo dnf update --advisory={','.join(suggestedAdvisoryIds)}\n")
         else:
-                print(f"no suggested updates found") 
+                print(f"\nno suggested updates found\n") 
 
 
 if __name__ == "__main__":
