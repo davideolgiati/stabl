@@ -186,23 +186,19 @@ class UpdateManager():
                 assert packagesList != []
 
                 allowedAdvisoryId = False
-                securityProblem = False
 
                 for package in packagesList:
                         assert(isinstance(package, DNFUpdateEntry))
                                 
                         if(package.updateUrgency > self.maxSkippableUregency):
-                                securityProblem = True
                                 allowedAdvisoryId = True
 
                         # TODO: questo fa schifo a livello di performances
-                        is_patch = any([package.packageName.startswith(pkg) for pkg in self.packages['patch']])
-                        is_release = any([package.packageName.startswith(pkg) for pkg in self.packages['release']])
+                        is_patch = any([pkg in package.packageName for pkg in self.packages['patch']])
+                        is_release = any([pkg in package.packageName for pkg in self.packages['release']])
 
-                        if( not securityProblem and (
-                                package.updateType <= self.maxAllowedUpgrade
-                                or (is_patch or is_release)
-                        )):
+                        if(package.updateType <= self.maxAllowedUpgrade
+                           or (is_patch or is_release)):
                                 allowedAdvisoryId = True
 
                 return allowedAdvisoryId
