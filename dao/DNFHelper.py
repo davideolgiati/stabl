@@ -42,15 +42,22 @@ class DNFHelper:
                 partitions = {}
 
                 for package in packages:
-                        assert(isinstance(package, DNFUpdateEntry))
-                        partition_id = package.key
-                        assert isinstance(partition_id, str)
-
-                        if (partition_id not in partitions):
-                                partitions[partition_id] = [ package ]
-                        else:
-                                partitions[partition_id].append(package)
+                        partitions = self.add_package_to_partition(partitions, package)
                         
+                return partitions
+
+        def add_package_to_partition(self, partitions, package):
+                assert isinstance(package, DNFUpdateEntry)
+                assert isinstance(package.key, str)
+                assert isinstance(partitions, dict)
+                
+                partition_id = package.key
+
+                if (partition_id not in partitions):
+                        partitions[partition_id] = []
+            
+                partitions[partition_id].append(package)
+
                 return partitions
 
 
@@ -118,16 +125,20 @@ class DNFHelper:
                 rpm_properties = rpms_properties_list[-1]
 
                 assert isinstance(rpm_properties, dict)
-                assert isinstance(rpm_properties.get("Name"), str)
-                assert isinstance(rpm_properties.get("Version"), str)
-                assert isinstance(rpm_properties.get("Release"), str)
-                assert isinstance(rpm_properties.get("Arch"), str)
-                assert rpm_properties.get("Name") != ""
-                assert rpm_properties.get("Version") != ""
-                assert rpm_properties.get("Release") != ""
-                assert rpm_properties.get("Arch") != ""
+                for key in ["Name", "Version", "Release", "Arch"]:
+                        assert isinstance(rpm_properties.get(key), str)
+                        assert rpm_properties.get(key) != ""
 
                 assert re.findall(regex.package_name, rpm_properties["Name"]) != []
+
+                self.standardize_rpm_version_structure(rpm_properties)        
+
+                return rpm_properties
+
+        def standardize_rpm_version_structure(self, rpm_properties):
+                assert isinstance(rpm_properties, dict)
+                assert isinstance(rpm_properties.get("Version"), str)
+                assert rpm_properties.get("Version") != ""
 
                 tokenized_version = re.split(
                         regex.valid_separator, 
@@ -140,9 +151,10 @@ class DNFHelper:
                         rpm_properties["Release"] += f"-{additional_info}"
 
 
-                assert re.findall(regex.package_version, rpm_properties["Version"]) != []        
-
-                return rpm_properties
+                assert re.findall(
+                        regex.package_version, 
+                        rpm_properties["Version"]
+                ) != []
         
 
 def is_valid_rpm_file_path(path):
