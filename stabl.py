@@ -1,8 +1,8 @@
 from dao.UpdateManager import UpdateManager
-from dao.DNFHelper import DNFHelper
+from dao.DNF import DNF
 
 def process_update_list():
-        packageManager = DNFHelper()
+        packageManager = DNF()
         updateManager = UpdateManager(packageManager)
 
         packagesByAdvisoryId = updateManager.get_updates_by_advisory_id()

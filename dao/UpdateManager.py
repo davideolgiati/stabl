@@ -5,7 +5,7 @@ import threading
 import time
 
 from common.logger import log_timed_execution
-from dao.DNFHelper import DNFHelper
+from dao.DNF import DNF
 from dto.DNFUpdateEntry import DNFUpdateEntry
 from dto.UpdateUrgency import UpdateUrgency
 from dto.UpdateClassification import UpdateClassification
@@ -16,7 +16,7 @@ class UpdateManager():
         maxSkippableUregency = UpdateUrgency.NONE
 
         def __init__(self, packageManager):
-                assert isinstance(packageManager, DNFHelper)
+                assert isinstance(packageManager, DNF)
 
                 self.packages = {
                         "major": [],

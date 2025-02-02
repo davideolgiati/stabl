@@ -2,7 +2,7 @@ import subprocess
 
 from dto.ManagedShellException import ManagedShellException
 
-class ShellInterface:
+class Shell:
         def run(self, command_array):
                 result = self.run_unmanaged(command_array)
 

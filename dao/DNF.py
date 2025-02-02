@@ -4,69 +4,50 @@ import re
 import time
 
 from common.logger import log_timed_execution
-from dao.ShellInterface import ShellInterface
+from dao.Shell import Shell
 from dto.DNFUpdateEntry import DNFUpdateEntry
 
 from common.costants import LIST_UPDATES_CMD, DOWNLOAD_UPGRADE, INSPECT_PKG, GET_SYSTEM_CONFIG
 import common.regex as regex
+from dto.UpdatesPartitions import UpdatesPartitions
 
+cache_filter = lambda line: line.startswith("cachedir")
 
-class DNFHelper:
-        
-        def __init__(self):
-                self.sh = ShellInterface()
-                self.load_dnf_configuration()
-
+class DNF:
         @log_timed_execution("Reading DNF configuration")
-        def load_dnf_configuration(self):
-            system_config = self.sh.run(GET_SYSTEM_CONFIG).split('\n')
+        def __init__(self):
+                self.shell = Shell()
 
-            cache_config = [line for line in system_config if line.startswith("cachedir")]
-            assert len(cache_config) == 1
+                dnf_output = self.shell.run(GET_SYSTEM_CONFIG)
+                assert isinstance(dnf_output, str)
 
-            self.cache_dir = cache_config[0].split(" = ")[1]
-            assert self.cache_dir is not None
+                dnf_config = dnf_output.split('\n')
+                assert len(dnf_config) > 1
 
+                filtered_config = filter(cache_filter, dnf_config)
+                assert len(filtered_config) == 1
 
-        def get_updates_by_partition_id(self):
-                updates = self.read_available_update_list()
-                partitions = self.group_updates_by_partition_id(updates)
-                
-                return partitions
+                cache_config = filtered_config[0].split(" = ")
+                assert len(cache_config) == 2
 
+                self.cache_dir = cache_config[1]
+                assert self.cache_dir is not None
+
+                self.partition_manager = UpdatesPartitions()
 
         @log_timed_execution("Parsing updates")
-        def group_updates_by_partition_id(self, packages):
-                assert isinstance(packages, list)
-
-                partitions = {}
-
-                for package in packages:
-                        partitions = self.add_package_to_partition(partitions, package)
-                        
-                return partitions
-
-        def add_package_to_partition(self, partitions, package):
-                assert isinstance(package, DNFUpdateEntry)
-                assert isinstance(package.key, str)
-                assert isinstance(partitions, dict)
+        def get_updates_by_partition_id(self):
+                updates = self.read_available_update_list()
+                self.partition_manager.add_packages(updates)
                 
-                partition_id = package.key
-
-                if (partition_id not in partitions):
-                        partitions[partition_id] = []
-            
-                partitions[partition_id].append(package)
-
-                return partitions
-
+                return self.partition_manager.get_partitions()
 
         @log_timed_execution("Getting updates list")
         def read_available_update_list(self):
             assert(LIST_UPDATES_CMD is not None)
             assert(isinstance(LIST_UPDATES_CMD, list))
 
-            dnf_output = self.sh.run(LIST_UPDATES_CMD)
+            dnf_output = self.shell.run(LIST_UPDATES_CMD)
             assert(isinstance(dnf_output, str))
             assert(dnf_output != "")
 
@@ -83,7 +64,7 @@ class DNFHelper:
                 download_updates_cmd = DOWNLOAD_UPGRADE(self.cache_dir)
                 assert(isinstance(download_updates_cmd, list))
 
-                self.sh.run(download_updates_cmd)
+                self.shell.run(download_updates_cmd)
         
 
         def query_downloaded_package(self, package_path):
@@ -108,7 +89,7 @@ class DNFHelper:
                 assert(package_signature != "")
 
                 inspect_command = INSPECT_PKG(package_signature)
-                shell_output = self.sh.run_unmanaged(inspect_command)
+                shell_output = self.shell.run_unmanaged(inspect_command)
                 assert isinstance(shell_output, dict)
                 assert isinstance(shell_output.get("code"), int)
                 assert isinstance(shell_output.get("info"), str)
