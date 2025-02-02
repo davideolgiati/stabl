@@ -3,6 +3,12 @@ import subprocess
 from dto.ManagedShellException import ManagedShellException
 
 class Shell:
+        def __new__(cls):
+                if not hasattr(cls, 'instance'):
+                        cls.instance = super(Shell, cls).__new__(cls)
+                        cls.start = None
+                return cls.instance
+
         def run(self, command_array):
                 result = self.run_unmanaged(command_array)
 
