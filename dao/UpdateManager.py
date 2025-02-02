@@ -4,6 +4,7 @@ from os.path import isfile, join
 import threading
 import time
 
+from common.logger import log_timed_execution
 from dao.DNFHelper import DNFHelper
 from dto.DNFUpdateEntry import DNFUpdateEntry
 from dto.UpdateUrgency import UpdateUrgency
@@ -47,20 +48,8 @@ class UpdateManager():
                 assert self.packages.get("patch") == []
                 assert self.packages.get("release") == []
                 
-                print("[i] Cleaning environment ...", end='', flush=True)
-                start = time.time()
-                thread_list = []
 
-                for file in os.listdir(self.packageManager.cache_dir):
-                        thread = threading.Thread(target=self.evaluate_file_for_deletion, args=(file,))
-                        thread_list.append(thread)
-                        thread.start()
-                
-                for thread in thread_list:
-                        thread.join()
-
-                print(f"done ({time.time() - start:.2f}s)")
-
+                self.cleanup_environment()
                 self.packageManager.download_updates()
 
                 working_dir = self.packageManager.cache_dir
@@ -77,6 +66,18 @@ class UpdateManager():
                 
                 for thread in thread_list:
                         thread.join()
+
+        @log_timed_execution("Cleaning environment")
+        def cleanup_environment(self):
+            thread_list = []
+
+            for file in os.listdir(self.packageManager.cache_dir):
+                    thread = threading.Thread(target=self.evaluate_file_for_deletion, args=(file,))
+                    thread_list.append(thread)
+                    thread.start()
+                
+            for thread in thread_list:
+                    thread.join()
 
         def evaluate_file_for_deletion(self, file):
                 assert isinstance(file, str)
