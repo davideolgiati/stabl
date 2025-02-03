@@ -1,3 +1,4 @@
+from common.logger import log_timed_execution
 from dao.ds.Tie import Tie
 from dto.DNFUpdateEntry import DNFUpdateEntry
 
@@ -7,6 +8,7 @@ class UpdatesPartitions():
                self.index = Tie()
                self.partitions = {}
 
+        @log_timed_execution("Parsing updates")
         def add_packages(self, packages_list):
                 assert isinstance(packages_list, list)
                 for package in packages_list:

@@ -1,28 +1,28 @@
 from unittest.mock import MagicMock, patch
 import pytest
 
-from dao.ShellInterface import ShellInterface, ManagedShellException
+from dao.Shell import Shell, ManagedShellException
 from common.costants import LIST_UPDATES_CMD
 
 from tests.unit_tests_utils import mock_shell_run
 from tests.test_data.test_valid_updates_partition import given
 
 
-@patch("dao.ShellInterface.subprocess.run")
+@patch("dao.Shell.subprocess.run")
 def test_get_data_valid(mock_run):
     mock_run.side_effect = mock_shell_run
 
-    myShell = ShellInterface()
+    myShell = Shell()
     result = myShell.run(LIST_UPDATES_CMD)
     
     assert result == given
 
 
-@patch("dao.ShellInterface.subprocess.run")
+@patch("dao.Shell.subprocess.run")
 def test_run_os_error(mock_run):
     mock_run.side_effect = mock_shell_run
 
-    myShell = ShellInterface()
+    myShell = Shell()
     
     with pytest.raises(ManagedShellException) as exc_info:
         myShell.run(["invalid_cmd"])
@@ -34,11 +34,11 @@ def test_run_os_error(mock_run):
     assert isinstance(exc_info.value.__cause__, OSError)
 
 
-@patch("dao.ShellInterface.subprocess.run")
+@patch("dao.Shell.subprocess.run")
 def test_run_non_zero_exit(mock_run):
     mock_run.side_effect = mock_shell_run
 
-    myShell = ShellInterface()
+    myShell = Shell()
     
     with pytest.raises(ManagedShellException) as exc_info:
         myShell.run(["fake-package"])

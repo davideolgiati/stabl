@@ -22,7 +22,7 @@ def mock_shell_run(command_array, stdout, stderr):
 
         elif command_array == GET_SYSTEM_CONFIG:
                 return_obj = copy.deepcopy(base_mock_obj)
-                return_obj["stdout.decode.return_value"] = "cachedir = /var/cache/dnf"
+                return_obj["stdout.decode.return_value"] = "foo = bar\ncachedir = /var/cache/dnf"
                 mock_stdout.configure_mock(**return_obj)
 
         elif command_array[:-1] == DOWNLOAD_UPGRADE_CMD:

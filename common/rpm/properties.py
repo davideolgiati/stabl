@@ -6,7 +6,7 @@ from common.costants import INSPECT_PKG
 from dao.Shell import Shell
 
 
-def format_package_version(release, version):
+def format_package_version(version, release):
         assert isinstance(version, str)
         assert isinstance(release, str)
         assert version != ""

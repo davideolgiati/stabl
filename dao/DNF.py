@@ -37,7 +37,6 @@ class DNF:
                 self.partition_manager = UpdatesPartitions()
 
 
-        @log_timed_execution("Parsing updates")
         def get_updates_by_partition_id(self):
                 updates = self.read_available_update_list()
                 assert isinstance(updates, list)

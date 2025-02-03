@@ -1,18 +1,18 @@
 from unittest.mock import patch
 
 from dto.DNFUpdateEntry import DNFUpdateEntry
-from dao.DNFHelper import DNFHelper
+from dao.DNF import DNF
 from dao.UpdateManager import UpdateManager
 
 from tests.unit_tests_utils import mock_shell_run
 from tests.test_data.test_valid_updates_partition import expected
 
 
-@patch("dao.ShellInterface.subprocess.run")
+@patch("dao.Shell.subprocess.run")
 def test_get_data_valid(mock_run):
         mock_run.side_effect = mock_shell_run
 
-        packageManager = DNFHelper()
+        packageManager = DNF()
         updateManager = UpdateManager(packageManager)
 
         result = updateManager.get_updates_by_advisory_id()
