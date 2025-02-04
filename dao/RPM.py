@@ -1,10 +1,8 @@
-import json
+
 import os
-import re
-from common import regex
-from common.costants import INSPECT_PKG
+
 from common.rpm.files import is_file_rpm, is_valid_rpm_file_path
-from common.rpm.properties import format_package_version, process_rpm_json_output, run_rpm_query_command
+from common.rpm.properties import format_package_version, process_rpm_json_output, run_rpm_query_command, unpack_version_string
 from dao.Shell import Shell
 
 
@@ -55,7 +53,12 @@ class RPM():
                 assert isinstance(final_version.get("release"), str)
 
                 rpm_properties["Version"] = final_version["version"]
-                rpm_properties["Release"] = final_version["release"]        
+                rpm_properties["Release"] = final_version["release"]
+
+                rpm_properties = unpack_version_string(rpm_properties)
+                assert isinstance(rpm_properties.get("Major"), str)
+                assert isinstance(rpm_properties.get("Minor"), str)
+                assert isinstance(rpm_properties.get("Patch"), str)   
 
                 return rpm_properties
 

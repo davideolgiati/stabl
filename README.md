@@ -23,5 +23,3 @@ A DNF wrapper to selectively choose what packages to upgrade
 - better indexing for updates
 - use bodhi api to get update info instead of downloading rpms
 - add debug option
-- class to rapresent partitions
-- class to rapresent rpms

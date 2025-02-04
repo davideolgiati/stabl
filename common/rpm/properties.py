@@ -60,3 +60,17 @@ def run_rpm_query_command(package_signature):
                 raise ValueError
         
         return stdout_message
+
+def unpack_version_string(package_info):
+        assert isinstance(package_info, dict)
+        assert isinstance(package_info.get("Version"), str)
+
+        version_list = f"{package_info["Version"]}.0.0".split('.')
+        
+        assert len(version_list) >= 3
+        
+        package_info["Major"] = version_list[0]
+        package_info["Minor"] = version_list[1]
+        package_info["Patch"] = '.'.join(version_list[2:])
+
+        return package_info

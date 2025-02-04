@@ -133,13 +133,9 @@ class UpdateManager():
 
                 assert installed_info != update_info
 
-                current_version = self.split_version_string(installed_info)
-
-                update_version = self.split_version_string(update_info)
-
-                major_update = current_version[0] != update_version[0]
-                minor_update = current_version[1] != update_version[1]
-                patch_update = '.'.join(current_version[2:]) != '.'.join(update_version[2:])
+                major_update   = installed_info["Major"] != update_info["Major"]
+                minor_update   = installed_info["Minor"] != update_info["Minor"]
+                patch_update   = installed_info["Patch"] != update_info["Patch"]
                 release_update = installed_info["Release"] != update_info["Release"]
 
                 assert any([major_update, minor_update, patch_update, release_update])
@@ -153,16 +149,6 @@ class UpdateManager():
                                 self.packages["patch"].append(pkg_name)
                         else:
                                 self.packages["release"].append(pkg_name)
-
-        def split_version_string(self, package_info):
-            assert isinstance(package_info, dict)
-            assert isinstance(package_info.get("Version"), str)
-
-            version_list = f"{package_info["Version"]}.0.0".split('.')
-            
-            assert len(version_list) >= 3
-            
-            return version_list
 
         def get_suggested_advisory_ids(self):
                 assert isinstance(self.updatesByAdvisoryId, dict)
