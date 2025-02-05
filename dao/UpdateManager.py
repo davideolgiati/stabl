@@ -180,8 +180,8 @@ class UpdateManager():
                                 allowedAdvisoryId = True
 
                         # TODO: questo fa schifo a livello di performances
-                        is_patch = any([pkg in package.packageName for pkg in self.packages['patch']])
-                        is_release = any([pkg in package.packageName for pkg in self.packages['release']])
+                        is_patch = any([package.packageName.startswith(pkg) for pkg in self.packages['patch']])
+                        is_release = any([package.packageName.startswith(pkg) for pkg in self.packages['release']])
 
                         if(package.updateType <= self.maxAllowedUpgrade
                            or (is_patch or is_release)):

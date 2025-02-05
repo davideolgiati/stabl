@@ -2,7 +2,7 @@ import json
 import re
 
 from common import regex
-from common.costants import INSPECT_PKG
+from common.costants import GET_INFO_FROM_REPO, INSPECT_PKG
 from dao.Shell import Shell
 
 
@@ -44,6 +44,27 @@ def process_rpm_json_output(string):
 
         return rpm_properties
 
+def process_repoquery_output(string):
+        stage_1 = string.split('\n')
+        stage_2 = [line.split(':') for line in stage_1]
+        stage_3 = {k.strip(): v.strip() for [k, v] in stage_2}
+
+        rpm_properties = {
+               "Name": stage_3["Name"], 
+               "Version": stage_3["Version"], 
+               "Release": stage_3["Release"], 
+               "Arch": stage_3["Architecture"]
+        }
+
+        assert isinstance(rpm_properties, dict)
+        for key in ["Name", "Version", "Release", "Arch"]:
+                assert isinstance(rpm_properties.get(key), str)
+                assert rpm_properties.get(key) != ""
+
+        assert re.findall(regex.package_name, rpm_properties["Name"]) != []
+
+        return rpm_properties
+
 def run_rpm_query_command(package_signature):
         shell = Shell()
 
@@ -60,6 +81,24 @@ def run_rpm_query_command(package_signature):
                 raise ValueError
         
         return stdout_message
+
+def run_dnf_repoquery_command(package_signature):
+        shell = Shell()
+
+        inspect_command = GET_INFO_FROM_REPO(package_signature)
+        shell_outcome = shell.run_unmanaged(inspect_command)
+        assert isinstance(shell_outcome, dict)
+        assert isinstance(shell_outcome.get("code"), int)
+        assert isinstance(shell_outcome.get("info"), str)
+
+        return_code = shell_outcome["code"]
+        stdout_message = shell_outcome["info"]
+
+        if(return_code != 0):
+                raise ValueError
+        
+        return stdout_message
+
 
 def unpack_version_string(package_info):
         assert isinstance(package_info, dict)
