@@ -64,13 +64,15 @@ class DNFUpdateEntry:
                 assert any([major_update, minor_update, patch_update, release_update])
 
                 if (major_update):
-                        self.updateType = UpdateClassification.MAJOR
+                        new_update_type = UpdateClassification.MAJOR
                 elif (minor_update):
-                        self.updateType = UpdateClassification.MINOR
+                        new_update_type = UpdateClassification.MINOR
                 elif (patch_update):
-                        self.updateType = UpdateClassification.PATCH
+                        new_update_type = UpdateClassification.PATCH
                 else:
-                        self.updateType = UpdateClassification.RELEASE
+                        new_update_type = UpdateClassification.RELEASE
+                
+                self.updateType = new_update_type
 
         def __eq__(self, other): 
                 if self.__class__ is not other.__class__:

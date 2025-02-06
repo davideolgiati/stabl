@@ -8,7 +8,6 @@ class UpdatesPartitions():
                self.index = Tie()
                self.partitions = {}
 
-        @log_timed_execution("Parsing updates")
         def add_packages(self, packages_list):
                 assert isinstance(packages_list, list)
                 for package in packages_list:
