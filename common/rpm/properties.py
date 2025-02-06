@@ -46,8 +46,8 @@ def process_rpm_json_output(string):
 
 def process_repoquery_output(string):
         stage_1 = string.split('\n')
-        stage_2 = [line.split(':') for line in stage_1]
-        stage_3 = {k.strip(): v.strip() for [k, v] in stage_2}
+        stage_2 = [line.split(':') for line in stage_1 if ':' in line]
+        stage_3 = {entry[0].strip(): ':'.join(entry[1:]).strip() for entry in stage_2}
 
         rpm_properties = {
                "Name": stage_3["Name"], 
@@ -100,16 +100,17 @@ def run_dnf_repoquery_command(package_signature):
         return stdout_message
 
 
-def unpack_version_string(package_info):
-        assert isinstance(package_info, dict)
-        assert isinstance(package_info.get("Version"), str)
+def unpack_version_string(version):
+        assert isinstance(version, str)
 
-        version_list = f"{package_info["Version"]}.0.0".split('.')
+        version_list = f"{version}.0.0".split('.')
         
         assert len(version_list) >= 3
-        
-        package_info["Major"] = version_list[0]
-        package_info["Minor"] = version_list[1]
-        package_info["Patch"] = '.'.join(version_list[2:])
 
-        return package_info
+        version_info = {}
+        
+        version_info["Major"] = version_list[0]
+        version_info["Minor"] = version_list[1]
+        version_info["Patch"] = '.'.join(version_list[2:])
+
+        return version_info

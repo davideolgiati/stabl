@@ -1,8 +1,5 @@
 
-import os
-
-from common.rpm.files import is_file_rpm, is_valid_rpm_file_path
-from common.rpm.properties import format_package_version, process_rpm_json_output, run_dnf_repoquery_command, run_rpm_query_command, unpack_version_string
+from common.rpm.properties import format_package_version, process_repoquery_output, process_rpm_json_output, run_dnf_repoquery_command, run_rpm_query_command, unpack_version_string
 from dao.Shell import Shell
 
 
@@ -42,9 +39,9 @@ class RPM():
                         rpm_properties = process_rpm_json_output(stdout_message)
                 else:
                         stdout_message = run_dnf_repoquery_command(self.package_reference)
+                        if stdout_message == '':
+                                raise KeyError
                         rpm_properties = process_repoquery_output(stdout_message)
-
-                
 
                 rpm_version = rpm_properties["Version"]
                 rpm_release = rpm_properties["Release"]
@@ -55,12 +52,7 @@ class RPM():
                 assert isinstance(final_version.get("release"), str)
 
                 rpm_properties["Version"] = final_version["version"]
-                rpm_properties["Release"] = final_version["release"]
-
-                rpm_properties = unpack_version_string(rpm_properties)
-                assert isinstance(rpm_properties.get("Major"), str)
-                assert isinstance(rpm_properties.get("Minor"), str)
-                assert isinstance(rpm_properties.get("Patch"), str)   
+                rpm_properties["Release"] = final_version["release"] 
 
                 return rpm_properties
 

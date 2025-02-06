@@ -8,11 +8,9 @@ from dao.RPM import RPM
 from dao.Shell import Shell
 from dto.DNFUpdateEntry import DNFUpdateEntry
 
-from common.costants import LIST_UPDATES_CMD, DOWNLOAD_UPGRADE, INSPECT_PKG, GET_SYSTEM_CONFIG
+from common.costants import LIST_UPDATES_CMD, GET_SYSTEM_CONFIG
 import common.regex as regex
 from dao.UpdatesPartitions import UpdatesPartitions
-
-cache_filter = lambda line: line.startswith("cachedir")
 
 class DNF:
         @log_timed_execution("Reading DNF configuration")
@@ -25,18 +23,9 @@ class DNF:
                 dnf_config = dnf_output.split('\n')
                 assert len(dnf_config) > 1
 
-                filtered_config = list(filter(cache_filter, dnf_config))
-                assert len(filtered_config) == 1
-
-                cache_config = filtered_config[0].split(" = ")
-                assert len(cache_config) == 2
-
-                self.cache_dir = cache_config[1]
-                assert self.cache_dir is not None
-
                 self.partition_manager = UpdatesPartitions()
 
-
+        @log_timed_execution("Getting updates list")
         def get_updates_by_partition_id(self):
                 updates = self.read_available_update_list()
                 assert isinstance(updates, list)
@@ -44,38 +33,47 @@ class DNF:
                 self.partition_manager.add_packages(updates)
 
                 return self.partition_manager.get_partitions()
-
-
-        @log_timed_execution("Getting updates list")
+        
         def read_available_update_list(self):
-            assert(LIST_UPDATES_CMD is not None)
-            assert(isinstance(LIST_UPDATES_CMD, list))
+                assert(LIST_UPDATES_CMD is not None)
+                assert(isinstance(LIST_UPDATES_CMD, list))
 
-            dnf_output = self.shell.run(LIST_UPDATES_CMD)
-            assert(isinstance(dnf_output, str))
-            assert(dnf_output != "")
+                dnf_output = self.shell.run(LIST_UPDATES_CMD)
+                assert(isinstance(dnf_output, str))
+                assert(dnf_output != "")
 
-            json_data = json.loads(dnf_output)
-            assert(isinstance(json_data, list))
+                json_data = json.loads(dnf_output)
+                assert(isinstance(json_data, list))
 
-            updates = [DNFUpdateEntry(package) for package in json_data]
+                updates = [DNFUpdateEntry(package) for package in json_data]
+                updates_rpms = {}
 
-            return updates
-        
+                problematic_entries = []
 
-        @log_timed_execution("Downloading RPMs from remote")
-        def download_updates(self):
-                download_updates_cmd = DOWNLOAD_UPGRADE(self.cache_dir)
-                assert(isinstance(download_updates_cmd, list))
+                for update in updates:
+                        try:
+                                rpm_info = RPM.fromPackageSignature(update.packageName)
+                                updates_rpms[update.packageName] = rpm_info.query_package_info()
+                        except KeyError: #TODO: eccezione specifica
+                                problematic_entries.append(update)
+                                pass
+                
+                for update in problematic_entries:
+                        updates.remove(update)
 
-                self.shell.run(download_updates_cmd)
-        
+                installed_rpms = {id: RPM.fromPackageName(update["Name"]).query_package_info() for id, update in updates_rpms.items()}
 
-        def query_downloaded_package(self, package_path):
-                rpm_file = RPM.fromPackagePath(package_path)
-                return rpm_file.query_package_info()
-        
+                final_updates = []
 
-        def query_installed_package(self, package_name: str):
-                installed_package = RPM.fromPackageSignature(package_name)
-                return installed_package.query_package_info()
+                for update in updates:
+                        update_info = updates_rpms[update.packageName]
+                        installed_info = installed_rpms[update.packageName]
+
+                        update.set_new_version(update_info)
+                        update.set_current_version(installed_info)
+
+                        update.compute_update_type()
+
+                        final_updates.append(update)
+
+                return final_updates
