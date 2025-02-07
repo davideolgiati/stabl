@@ -1,7 +1,5 @@
 import json
-import os
-import re
-import time
+import concurrent.futures
 
 from common.logger import log_timed_execution
 from dao.RPM import RPM
@@ -9,7 +7,6 @@ from dao.Shell import Shell
 from dto.DNFUpdateEntry import DNFUpdateEntry
 
 from common.costants import LIST_UPDATES_CMD, GET_SYSTEM_CONFIG
-import common.regex as regex
 from dao.UpdatesPartitions import UpdatesPartitions
 
 class DNF:
@@ -46,17 +43,7 @@ class DNF:
                 assert(isinstance(json_data, list))
 
                 updates = [DNFUpdateEntry(package) for package in json_data]
-                updates_rpms = {}
-
-                problematic_entries = []
-
-                for update in updates:
-                        try:
-                                rpm_info = RPM.fromPackageSignature(update.packageName)
-                                updates_rpms[update.packageName] = rpm_info.query_package_info()
-                        except KeyError: #TODO: eccezione specifica
-                                problematic_entries.append(update)
-                                pass
+                updates_rpms, problematic_entries = query_upadets_info(updates)
                 
                 for update in problematic_entries:
                         updates.remove(update)
@@ -77,3 +64,28 @@ class DNF:
                         final_updates.append(update)
 
                 return final_updates
+
+def query_upadets_info(updates):
+        updates_rpms = {}
+        problematic_entries = []
+
+        with concurrent.futures.ThreadPoolExecutor(max_workers=20) as executor:
+                # Start the load operations and mark each future with its URL
+                future_to_update = {executor.submit(retrieve_info_for_update_entry, update): update for update in updates}
+                for future in concurrent.futures.as_completed(future_to_update):
+                        update = future_to_update[future]
+                        info, error = future.result()
+                        if error:
+                                problematic_entries.append(error)
+                        else:
+                                updates_rpms[update.packageName] = info      
+
+        return updates_rpms, problematic_entries
+
+def retrieve_info_for_update_entry(update):
+        try:
+                rpm_info = RPM.fromPackageSignature(update.packageName)
+                return rpm_info.query_package_info(), None
+        except KeyError: #TODO: eccezione specifica
+                return None, update
+        

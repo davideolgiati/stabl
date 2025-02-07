@@ -54,7 +54,7 @@ class DNFUpdateEntry:
                 update_info = unpack_version_string(self.current_version)
                 installed_info = unpack_version_string(self.new_version)
 
-                assert installed_info != update_info
+                assert installed_info != update_info or self.current_release != self.new_release
 
                 major_update   = installed_info["Major"] != update_info["Major"]
                 minor_update   = installed_info["Minor"] != update_info["Minor"]
