@@ -1,5 +1,5 @@
 
-from common.rpm.properties import format_package_version, process_repoquery_output, process_rpm_json_output, run_dnf_repoquery_command, run_rpm_query_command, unpack_version_string
+from common.rpm.properties import format_package_version, process_repoquery_output, process_rpm_json_output, run_dnf_repoquery_command, run_rpm_query_command
 from dao.Shell import Shell
 
 

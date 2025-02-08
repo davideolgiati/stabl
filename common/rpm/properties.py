@@ -98,19 +98,3 @@ def run_dnf_repoquery_command(package_signature):
                 raise ValueError
         
         return stdout_message
-
-
-def unpack_version_string(version):
-        assert isinstance(version, str)
-
-        version_list = f"{version}.0.0".split('.')
-        
-        assert len(version_list) >= 3
-
-        version_info = {}
-        
-        version_info["Major"] = version_list[0]
-        version_info["Minor"] = version_list[1]
-        version_info["Patch"] = '.'.join(version_list[2:])
-
-        return version_info
