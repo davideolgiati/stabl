@@ -1,8 +1,8 @@
 from common.logger import log_timed_execution
 from dao.DNF import DNF
 from dto.DNFUpdateEntry import DNFUpdateEntry
-from dto.UpdateUrgency import UpdateUrgency
-from dto.UpdateClassification import UpdateClassification
+from dto.enums.UpdateUrgency import UpdateUrgency
+from dto.enums.UpdateClassification import UpdateClassification
 
 
 class UpdateManager():

@@ -1,6 +1,6 @@
 from common.rpm.properties import unpack_version_string
-from dto.UpdateUrgency import UpdateUrgency
-from dto.UpdateClassification import UpdateClassification
+from dto.enums.UpdateUrgency import UpdateUrgency
+from dto.enums.UpdateClassification import UpdateClassification
 
 updateTypeMapping = {
         'security':    UpdateClassification.SECURITY,
