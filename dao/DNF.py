@@ -48,7 +48,7 @@ class DNF:
                 for update in problematic_entries:
                         updates.remove(update)
 
-                installed_rpms = {id: RPM.fromPackageName(update["Name"]).query_package_info() for id, update in updates_rpms.items()}
+                installed_rpms = {id: RPM.from_package_name(update["Name"]).query_package_info() for id, update in updates_rpms.items()}
 
                 final_updates = []
 
@@ -84,7 +84,7 @@ def query_upadets_info(updates):
 
 def retrieve_info_for_update_entry(update):
         try:
-                rpm_info = RPM.fromPackageSignature(update.packageName)
+                rpm_info = RPM.from_package_signature(update.packageName)
                 return rpm_info.query_package_info(), None
         except KeyError: #TODO: eccezione specifica
                 return None, update

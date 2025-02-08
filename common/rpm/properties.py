@@ -4,6 +4,7 @@ import re
 from common import regex
 from common.costants import GET_INFO_FROM_REPO, INSPECT_PKG
 from dao.Shell import Shell
+from dto.dataclass.SemanticVersion import SemanticVersion
 
 
 def format_package_version(version, release):
@@ -98,3 +99,39 @@ def run_dnf_repoquery_command(package_signature):
                 raise ValueError
         
         return stdout_message
+
+def query_installed_package_info(package_reference):
+        assert(isinstance(package_reference, str))
+        assert(package_reference != "")
+        
+        stdout_message = run_rpm_query_command(package_reference)
+        rpm_properties = process_rpm_json_output(stdout_message)
+
+        return generate_semantic_version_from_rpm_properties(rpm_properties)
+
+
+def query_package_info_from_signature(package_signature):
+        assert(isinstance(package_signature, str))
+        assert(package_signature != "")
+
+        stdout_message = run_dnf_repoquery_command(package_signature)
+        if stdout_message == '':
+                raise KeyError
+        rpm_properties = process_repoquery_output(stdout_message)
+
+        return generate_semantic_version_from_rpm_properties(rpm_properties)
+
+
+def generate_semantic_version_from_rpm_properties(rpm_properties):
+        rpm_version = rpm_properties["Version"]
+        rpm_release = rpm_properties["Release"]
+
+        final_version = format_package_version(rpm_version, rpm_release)
+        assert isinstance(final_version, dict)
+        assert isinstance(final_version.get("version"), str)
+        assert isinstance(final_version.get("release"), str)
+
+        return SemanticVersion.fromVersionAndRelease(
+                final_version["version"],
+                final_version["release"]
+        )
