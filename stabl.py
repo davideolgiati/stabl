@@ -1,39 +1,52 @@
 from dao.UpdateManager import UpdateManager
 from dao.DNF import DNF
 
-def display_message_to_user(suggestedAdvisoryIds):
-    print()
-    if(suggestedAdvisoryIds != []):
-            advisories_string = ','.join(suggestedAdvisoryIds)
-            print(f"suggested updates: sudo dnf update --advisory={advisories_string}")
-    else:
-            print(f"no suggested updates found") 
-    print()
+def display_message_to_user(suggested_update_partitions):
+        print()
+        if(suggested_update_partitions != []):
+                advisories_string = ','.join(suggested_update_partitions)
+                print(f"suggested updates: sudo dnf update --advisory={advisories_string}")
+        else:
+                print(f"no suggested updates found") 
+        print()
 
-def print_advisory_id_details(current_packages_list, advisoryId):
-        printBuffer = ""
+def display_advisory_id_details(current_packages_list, advisoryId):
+        stdout_buffer = ""
 
         for package in current_packages_list:
-                printBuffer += f"\t{package.packageName.ljust(60)}\n"
+                stdout_buffer += f"\t{package.packageName.ljust(60)}\n"
                 
-        print(f"Advisory Id: \"{advisoryId}\" \n{printBuffer}")
+        print(f"Advisory Id: \"{advisoryId}\"")
+        print(f"{stdout_buffer}")
+
+def display_update_summary(update_manager):
+        print()
+        print()
+        print(f"Major updates   : {update_manager.get_majors_count()}")
+        print(f"Minor updates   : {update_manager.get_minors_count()}")
+        print(f"Patch updates   : {update_manager.get_patches_count()}")
+        print(f"Release updates : {update_manager.get_releases_count()}")
+        print()
 
 def setup_package_mamager():
-        packageManager = DNF()
-        updateManager = UpdateManager(packageManager)
-        return updateManager
+        package_manager = DNF()
+        update_manager = UpdateManager(package_manager)
+        return update_manager
 
 def main():
-        updateManager = setup_package_mamager()
+        update_manager = setup_package_mamager()
 
-        packagesByAdvisoryId = updateManager.get_updates_by_advisory_id()
-        suggestedAdvisoryIds = updateManager.get_suggested_advisory_ids()
+        updates_list = update_manager.get_updates_list()
+        suggested_updates_partitions = update_manager.get_suggested_update_partitions()
+
+        display_update_summary(update_manager)
         
-        for advisoryId in suggestedAdvisoryIds:
-                current_packages_list = packagesByAdvisoryId[advisoryId]
-                print_advisory_id_details(current_packages_list, advisoryId)
+        for partition_id in suggested_updates_partitions:
+                current_packages_list = updates_list[partition_id]
+                display_advisory_id_details(current_packages_list, partition_id)
 
-        display_message_to_user(suggestedAdvisoryIds)
+        display_message_to_user(suggested_updates_partitions)
+
 
 if __name__ == "__main__":
         main()
