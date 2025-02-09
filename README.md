@@ -1,6 +1,19 @@
 # stabl
 A DNF wrapper to selectively choose what packages to upgrade
 
+# v0.0.3
+### Features
+- Improved version checking system using semantic versioning via the SemanticVersion class
+- Refactored DNF, RPM, and UpdateManager classes for better code clarity and maintainability
+- Enhanced RPM class with robust version parsing and package query logic
+- Implemented a singleton pattern in the Shell class to ensure consistent shell interactions
+- Optimized repoquery command usage for cached queries and reduced redundancy
+- Removed unused RPM-related files and simplified update handling logic
+
+### Bug Fixes
+- Added comprehensive error handling and exception management improvements
+- Fixed package name validation logic to prevent incorrect inputs
+
 # v0.0.2
 ### Features
 - Improved version checking system for package updates
@@ -21,5 +34,4 @@ A DNF wrapper to selectively choose what packages to upgrade
 ### TODOs:
 
 - better indexing for updates
-- use bodhi api to get update info instead of downloading rpms
 - add debug option
