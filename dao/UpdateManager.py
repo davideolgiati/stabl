@@ -1,6 +1,5 @@
 from common.logger import log_timed_execution
 from dao.DNF import DNF
-from dto.DNFUpdateEntry import DNFUpdateEntry
 from dto.enums.UpdateUrgency import UpdateUrgency
 from dto.enums.UpdateClassification import UpdateClassification
 
@@ -20,26 +19,6 @@ class UpdateManager():
                 self.package_manager = package_manager
 
 
-        def get_updates_list(self):
-                self.updates_partitions = self.package_manager.get_updates_by_partition_id()
-                assert isinstance(self.updates_partitions, dict)
-
-                return self.updates_partitions
-         
-
-        def get_suggested_update_partitions(self):
-                assert isinstance(self.updates_partitions, dict)
-                assert self.updates_partitions != {}
-
-                suggested_updates = []
-
-                for parttion_id, properties in self.updates_partitions.items():                        
-                        if(self.evaluate_update_partition(properties)):
-                                suggested_updates.append(parttion_id)
-                
-                return suggested_updates
-        
-        
         def get_majors_count(self):
                 return self.packages['major']
         
@@ -54,6 +33,26 @@ class UpdateManager():
         
         def get_releases_count(self):
                 return self.packages['release']
+        
+
+        def get_updates_list(self):
+                self.updates_partitions = self.package_manager.get_updates_by_partition_id()
+                assert isinstance(self.updates_partitions, dict)
+
+                return self.updates_partitions
+
+
+        def get_suggested_update_partitions(self):
+                assert isinstance(self.updates_partitions, dict)
+                assert self.updates_partitions != {}
+
+                suggested_updates = []
+
+                for parttion_id, properties in self.updates_partitions.items():                        
+                        if(self.evaluate_update_partition(properties)):
+                                suggested_updates.append(parttion_id)
+                
+                return suggested_updates
         
 
         def evaluate_update_partition(self, partition_property):
