@@ -1,4 +1,4 @@
-from dto.OrderedEnum import OrderedEnum
+from dto.enums.OrderedEnum import OrderedEnum
 
 
 class UpdateClassification(OrderedEnum):

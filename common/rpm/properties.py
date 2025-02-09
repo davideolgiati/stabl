@@ -117,9 +117,12 @@ def query_package_info_from_signature(package_signature):
         stdout_message = run_dnf_repoquery_command(package_signature)
         if stdout_message == '':
                 raise KeyError
+        
         rpm_properties = process_repoquery_output(stdout_message)
+        package_name = rpm_properties["Name"]
+        semantic_version = generate_semantic_version_from_rpm_properties(rpm_properties)
 
-        return generate_semantic_version_from_rpm_properties(rpm_properties)
+        return package_name, semantic_version
 
 
 def generate_semantic_version_from_rpm_properties(rpm_properties):

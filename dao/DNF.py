@@ -2,18 +2,17 @@ import json
 import concurrent.futures
 
 from common.logger import log_timed_execution
-from dao.RPM import RPM
+from dto.RPM import RPM, RPMUpdate
 from dao.Shell import Shell
-from dto.DNFUpdateEntry import DNFUpdateEntry
 
 from common.costants import LIST_UPDATES_CMD, GET_SYSTEM_CONFIG
 from dao.UpdatesPartitions import UpdatesPartitions
+from dto.enums.UpdateClassification import UpdateClassification
+from dto.enums.UpdateUrgency import UpdateUrgency
 
 class DNF:
         @log_timed_execution("Reading DNF configuration")
         def __init__(self):
-                self.shell = Shell()
-
                 dnf_output = self.shell.run(GET_SYSTEM_CONFIG)
                 assert isinstance(dnf_output, str)
 
@@ -31,61 +30,64 @@ class DNF:
 
                 return self.partition_manager.get_partitions()
         
+
         def read_available_update_list(self):
-                assert(LIST_UPDATES_CMD is not None)
-                assert(isinstance(LIST_UPDATES_CMD, list))
+                updates: list[dict] = read_updates_list()
+                updates_details: list[RPMUpdate] = get_update_details_from_repository(updates)
+                installed_details: dict = get_installed_details_from_updates(updates_details)
+                partition_index = {}
 
-                dnf_output = self.shell.run(LIST_UPDATES_CMD)
-                assert(isinstance(dnf_output, str))
-                assert(dnf_output != "")
+                for update in updates_details:
+                        current_partition = update.get_update_partition()
+                        current_urgency = update.get_urgency()
+                        current_package = update.get_package_name()
 
-                json_data = json.loads(dnf_output)
-                assert(isinstance(json_data, list))
+                        if current_partition not in partition_index:
+                                partition_index[current_partition] = {
+                                        "urgency" : UpdateUrgency.NONE,
+                                        "type" : UpdateClassification.MAJOR,
+                                        "packages" : {}
+                                }
+                        
+                        partition_urgency = partition_index[current_partition]["urgency"]
 
-                updates = [DNFUpdateEntry(package) for package in json_data]
-                updates_rpms, problematic_entries = query_upadets_info(updates)
-                
-                for update in problematic_entries:
-                        updates.remove(update)
+                        if current_urgency > partition_urgency:
+                                partition_urgency = current_urgency
 
-                installed_rpms = {id: RPM.from_package_name(update["Name"]).query_package_info() for id, update in updates_rpms.items()}
+                        partition_index[current_partition]["packages"][current_package] = {
+                                "installed" : installed_details[current_package],
+                                "update" : update
+                        }
 
-                final_updates = []
+                        # TODO: confronto versioni
 
-                for update in updates:
-                        update_info = updates_rpms[update.packageName]
-                        installed_info = installed_rpms[update.packageName]
 
-                        update.set_new_version(update_info)
-                        update.set_current_version(installed_info)
 
-                        update.compute_update_type()
 
-                        final_updates.append(update)
+def get_installed_details_from_updates(updates_details: list[RPMUpdate]) -> dict:
+        installed_details = {}
 
-                return final_updates
-
-def query_upadets_info(updates):
-        updates_rpms = {}
-        problematic_entries = []
-
-        with concurrent.futures.ThreadPoolExecutor(max_workers=20) as executor:
-                # Start the load operations and mark each future with its URL
-                future_to_update = {executor.submit(retrieve_info_for_update_entry, update): update for update in updates}
-                for future in concurrent.futures.as_completed(future_to_update):
-                        update = future_to_update[future]
-                        info, error = future.result()
-                        if error:
-                                problematic_entries.append(error)
-                        else:
-                                updates_rpms[update.packageName] = info      
-
-        return updates_rpms, problematic_entries
-
-def retrieve_info_for_update_entry(update):
-        try:
-                rpm_info = RPM.from_package_signature(update.packageName)
-                return rpm_info.query_package_info(), None
-        except KeyError: #TODO: eccezione specifica
-                return None, update
+        for update in updates_details:
+                update_package_name = update.get_package_name()
+                current_package = RPM.from_package_name(update_package_name)
+                installed_details[update_package_name] = current_package
         
+        return installed_details
+
+
+def get_update_details_from_repository(updates):
+        updates_details = []
+        for update in updates:
+                try:
+                        current_update = RPMUpdate.from_DNF_output(update)
+                        updates_details.append(current_update)
+                except:
+                        pass
+
+
+def read_updates_list():
+        shell = Shell()
+        dnf_output = shell.run(LIST_UPDATES_CMD)
+        json_data = json.loads(dnf_output)
+
+        return json_data
