@@ -1,67 +1,73 @@
 import json
-import concurrent.futures
 
 from common.logger import log_timed_execution
 from dto.RPM import RPM, RPMUpdate
 from dao.Shell import Shell
 
-from common.costants import LIST_UPDATES_CMD, GET_SYSTEM_CONFIG
-from dao.UpdatesPartitions import UpdatesPartitions
+from common.costants import LIST_UPDATES_CMD
 from dto.enums.UpdateClassification import UpdateClassification
 from dto.enums.UpdateUrgency import UpdateUrgency
 
 class DNF:
-        @log_timed_execution("Reading DNF configuration")
-        def __init__(self):
-                dnf_output = self.shell.run(GET_SYSTEM_CONFIG)
-                assert isinstance(dnf_output, str)
-
-                dnf_config = dnf_output.split('\n')
-                assert len(dnf_config) > 1
-
-                self.partition_manager = UpdatesPartitions()
-
         @log_timed_execution("Getting updates list")
         def get_updates_by_partition_id(self):
-                updates = self.read_available_update_list()
-                assert isinstance(updates, list)
-
-                self.partition_manager.add_packages(updates)
-
-                return self.partition_manager.get_partitions()
-        
-
-        def read_available_update_list(self):
                 updates: list[dict] = read_updates_list()
                 updates_details: list[RPMUpdate] = get_update_details_from_repository(updates)
-                installed_details: dict = get_installed_details_from_updates(updates_details)
+                installed_details: dict[str, RPM] = get_installed_details_from_updates(updates_details)
                 partition_index = {}
 
-                for update in updates_details:
-                        current_partition = update.get_update_partition()
-                        current_urgency = update.get_urgency()
-                        current_package = update.get_package_name()
+                for update_package in updates_details:
+                        update_partition = update_package.get_update_partition()
+                        update_urgency = update_package.get_urgency()
+                        update_name = update_package.get_package_name()
+                        update_version = update_package.get_version()
+                        
+                        installed_package = installed_details[update_name]
+                        installed_version = installed_package.get_version()
 
-                        if current_partition not in partition_index:
-                                partition_index[current_partition] = {
+                        current_update_type = UpdateClassification.RELEASE
+
+                        if update_partition not in partition_index:
+                                partition_index[update_partition] = {
                                         "urgency" : UpdateUrgency.NONE,
                                         "type" : UpdateClassification.MAJOR,
-                                        "packages" : {}
+                                        "packages" : []
                                 }
                         
-                        partition_urgency = partition_index[current_partition]["urgency"]
+                        partition_urgency = partition_index[update_partition]["urgency"]
+                        partition_type = partition_index[update_partition]["type"]
 
-                        if current_urgency > partition_urgency:
-                                partition_urgency = current_urgency
+                        if update_urgency > partition_urgency:
+                                partition_index[update_partition]["urgency"] = update_urgency
 
-                        partition_index[current_partition]["packages"][current_package] = {
-                                "installed" : installed_details[current_package],
-                                "update" : update
-                        }
+                        current_version_str = '.'.join([
+                                installed_version.major,
+                                installed_version.minor,
+                                installed_version.patch
+                        ]) + '-' + installed_version.release
 
-                        # TODO: confronto versioni
+                        update_version_str = '.'.join([
+                                update_version.major,
+                                update_version.minor,
+                                update_version.patch
+                        ]) + '-' + update_version.release
 
+                        update_details_str = f"{update_name.ljust(60)} {current_version_str} -> {update_version_str}"
 
+                        partition_index[update_partition]["packages"].append(update_details_str)
+
+                        if update_version.major != installed_version.major:
+                                current_update_type = UpdateClassification.MAJOR
+                        elif update_version.minor != installed_version.minor:
+                                current_update_type = UpdateClassification.MINOR
+                        elif update_version.patch != installed_version.patch:
+                                current_update_type = UpdateClassification.PATCH
+                        
+                        if current_update_type < partition_type:
+                                partition_index[update_partition]["type"] = current_update_type
+                                
+                return partition_index
+                        
 
 
 def get_installed_details_from_updates(updates_details: list[RPMUpdate]) -> dict:
@@ -83,6 +89,8 @@ def get_update_details_from_repository(updates):
                         updates_details.append(current_update)
                 except:
                         pass
+
+        return updates_details
 
 
 def read_updates_list():

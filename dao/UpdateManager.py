@@ -6,8 +6,8 @@ from dto.enums.UpdateClassification import UpdateClassification
 
 
 class UpdateManager():
-        maxAllowedUpgrade = UpdateClassification.PATCH
-        maxSkippableUregency = UpdateUrgency.NONE
+        max_allowed_version_jump = UpdateClassification.PATCH
+        max_skippable_uregency = UpdateUrgency.NONE
         packages = {
                 "major": 0,
                 "minor": 0,
@@ -33,14 +33,9 @@ class UpdateManager():
 
                 suggested_updates = []
 
-                for advisoryId, packagesList in self.updates_partitions.items():
-                        assert isinstance(advisoryId, str)
-                        assert isinstance(packagesList, list)
-                        assert packagesList != []
-                        assert advisoryId != ""
-                        
-                        if(self.evaluate_update_partition(packagesList)):
-                                suggested_updates.append(advisoryId)
+                for parttion_id, properties in self.updates_partitions.items():                        
+                        if(self.evaluate_update_partition(properties)):
+                                suggested_updates.append(parttion_id)
                 
                 return suggested_updates
         
@@ -61,29 +56,26 @@ class UpdateManager():
                 return self.packages['release']
         
 
-        def evaluate_update_partition(self, packagesList):
-                assert isinstance(packagesList, list)
-                assert packagesList != []
+        def evaluate_update_partition(self, partition_property):
+                urgency = partition_property["urgency"]
+                update_type = partition_property["type"]
+                package_count = len(partition_property["packages"])
 
-                allowedAdvisoryId = True
-                securityUpdate = False
+                allowed_partition = False
 
-                for package in packagesList:
-                        assert(isinstance(package, DNFUpdateEntry))
-                                
-                        if(package.updateUrgency > self.maxSkippableUregency):
-                                securityUpdate = True
+                if(urgency > self.max_skippable_uregency):
+                        allowed_partition = True
 
-                        if(package.updateType > self.maxAllowedUpgrade):
-                                allowedAdvisoryId = False or securityUpdate
+                if(update_type <= self.max_allowed_version_jump):
+                        allowed_partition = True
 
-                        if (package.updateType == UpdateClassification.MAJOR):
-                                self.packages['major'] += 1
-                        elif (package.updateType ==  UpdateClassification.MINOR):
-                                self.packages['minor'] += 1
-                        elif (package.updateType == UpdateClassification.PATCH):
-                                self.packages['patch'] += 1
-                        else:
-                                self.packages['release'] += 1
+                if (update_type == UpdateClassification.MAJOR):
+                        self.packages['major'] += package_count
+                elif (update_type ==  UpdateClassification.MINOR):
+                        self.packages['minor'] += package_count
+                elif (update_type == UpdateClassification.PATCH):
+                        self.packages['patch'] += package_count
+                else:
+                        self.packages['release'] += package_count
 
-                return allowedAdvisoryId
+                return allowed_partition

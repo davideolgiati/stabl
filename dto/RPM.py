@@ -68,4 +68,4 @@ class RPMUpdate(RPM):
                 return self._partition_id
         
         def get_urgency(self):
-                return self._package_signature
+                return self._update_urgency

@@ -10,13 +10,15 @@ def display_message_to_user(suggested_update_partitions):
                 print(f"no suggested updates found") 
         print()
 
-def display_advisory_id_details(current_packages_list, advisoryId):
+def display_partition_id_details(partition_properties, partition_id):
         stdout_buffer = ""
+        packages_list = partition_properties["packages"]
 
-        for package in current_packages_list:
-                stdout_buffer += f"\t{package.packageName.ljust(60)}\n"
+
+        for package in packages_list:
+                stdout_buffer += f"\t{package}\n"
                 
-        print(f"Advisory Id: \"{advisoryId}\"")
+        print(f"Advisory Id: \"{partition_id}\"")
         print(f"{stdout_buffer}")
 
 def display_update_summary(update_manager):
@@ -42,8 +44,8 @@ def main():
         display_update_summary(update_manager)
         
         for partition_id in suggested_updates_partitions:
-                current_packages_list = updates_list[partition_id]
-                display_advisory_id_details(current_packages_list, partition_id)
+                partition_properties = updates_list[partition_id]
+                display_partition_id_details(partition_properties, partition_id)
 
         display_message_to_user(suggested_updates_partitions)
 
