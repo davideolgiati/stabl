@@ -32,9 +32,9 @@ class Shell:
 
                 try:
                         result = subprocess.run(
-                                command_array,
+                                ' '.join(command_array),
                                 stdout=subprocess.PIPE,
-                                stderr=subprocess.PIPE,
+                                stderr=subprocess.PIPE
                         )
                 except OSError as e:
                         raise ManagedShellException(

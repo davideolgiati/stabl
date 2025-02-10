@@ -1,4 +1,5 @@
 import json
+import asyncio
 
 from common.logger import log_timed_execution
 from dto.RPM import RPM, RPMUpdate
@@ -12,7 +13,7 @@ class DNF:
         @log_timed_execution("Getting updates list")
         def get_updates_by_partition_id(self):
                 updates: list[dict] = read_updates_list()
-                updates_details: list[RPMUpdate] = get_update_details_from_repository(updates)
+                updates_details: list[RPMUpdate] = asyncio.run(get_update_details_from_repository(updates))
                 installed_details: dict[str, RPM] = get_installed_details_from_updates(updates_details)
                 partition_index = {}
 
@@ -81,16 +82,17 @@ def get_installed_details_from_updates(updates_details: list[RPMUpdate]) -> dict
         return installed_details
 
 
-def get_update_details_from_repository(updates):
-        updates_details = []
-        for update in updates:
-                try:
-                        current_update = RPMUpdate.from_DNF_output(update)
-                        updates_details.append(current_update)
-                except:
-                        pass
+async def get_update_details_from_repository(updates):
+        updates_details = await asyncio.gather(*[compose_new_rpm(update) for update in updates])
+        return [update for update in updates_details if update]
 
-        return updates_details
+
+async def compose_new_rpm(update):
+    try:
+            current_update = RPMUpdate.from_DNF_output(update)
+            return current_update
+    except:
+            pass
 
 
 def read_updates_list():
