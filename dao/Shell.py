@@ -32,7 +32,7 @@ class Shell:
 
                 try:
                         result = subprocess.run(
-                                ' '.join(command_array),
+                                command_array,
                                 stdout=subprocess.PIPE,
                                 stderr=subprocess.PIPE
                         )
