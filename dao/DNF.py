@@ -5,15 +5,22 @@ from common.logger import log_timed_execution
 from dto.RPM import RPM, RPMUpdate
 from dao.Shell import Shell
 
-from common.costants import LIST_UPDATES_CMD
+from common.costants import GET_UPDATE_DETAILS, LIST_UPDATES_CMD
 from dto.enums.UpdateClassification import UpdateClassification
 from dto.enums.UpdateUrgency import UpdateUrgency
 
 class DNF:
         @log_timed_execution("Getting updates list")
         def get_updates_by_partition_id(self):
-                updates: list[dict] = read_updates_list()
-                updates_details: list[RPMUpdate] = asyncio.run(get_update_details_from_repository(updates))
+                updates: dict = read_updates_list()
+
+                assert isinstance(updates, dict)
+                assert all([isinstance(update, dict) for _, update in updates.items()])
+                assert all([['partition_id', 'severity'] == list(update.keys()) for _, update in updates.items()])
+
+                updates_details: list[RPMUpdate] = get_update_details_from_repository(updates)
+
+                
                 installed_details: dict[str, RPM] = get_installed_details_from_updates(updates_details)
                 partition_index = {}
 
@@ -82,22 +89,74 @@ def get_installed_details_from_updates(updates_details: list[RPMUpdate]) -> dict
         return installed_details
 
 
-async def get_update_details_from_repository(updates):
-        updates_details = await asyncio.gather(*[compose_new_rpm(update) for update in updates])
+def get_update_details_from_repository(updates):
+        updates_signature_list: list[str] = list(updates.keys())
+        packages_details_from_repo: list[dict] = query_remote_repo_for_details(updates_signature_list)
+
+        for update in packages_details_from_repo:
+                key = update["signature"]
+                partition_details = updates[key]
+                partition_id = partition_details['partition_id']
+                severity = partition_details['severity']
+
+                update["partition_id"] = partition_id
+                update["severity"] = severity
+
+                assert ["name", "version", "release", "arch", "signature", "partition_id", "severity"] == list(update.keys())
+
+        updates_details = [RPMUpdate.from_DNF_output(update) for update in packages_details_from_repo]
         return [update for update in updates_details if update]
 
 
-async def compose_new_rpm(update):
-    try:
-            current_update = RPMUpdate.from_DNF_output(update)
-            return current_update
-    except:
-            pass
+def query_remote_repo_for_details(update_signature_list) -> list[dict]:
+        assert all([isinstance(pkg, str) for pkg in update_signature_list])
+        shell: Shell = Shell()
+        repo_query_cmd: list[str] = GET_UPDATE_DETAILS(update_signature_list)
+
+        assert all([isinstance(token, str) for token in repo_query_cmd])
+
+        repo_query_output: str = shell.run(repo_query_cmd)
+        valid_json_repoquery_output: str = f"[{repo_query_output}]"
+
+        parsed_json_repoquery_output: list[dict] = json.loads(valid_json_repoquery_output)
+
+        assert all([["name", "version", "release", "arch", "signature"] == list(pkg.keys()) for pkg in parsed_json_repoquery_output])
+
+        return parsed_json_repoquery_output
 
 
-def read_updates_list():
-        shell = Shell()
-        dnf_output = shell.run(LIST_UPDATES_CMD)
-        json_data = json.loads(dnf_output)
+def read_updates_list() -> dict:
+        json_data: list[dict] = get_dnf_updatelist_output()
+        updates_index: dict = compose_update_index_dictionary(json_data)
 
+        return updates_index
+
+def compose_update_index_dictionary(json_data: list[dict]) -> dict:
+        assert isinstance(json_data, list)
+        assert all(["nevra" in update.keys() for update in json_data])
+        assert all(["name" in update.keys() for update in json_data])
+        assert all(["severity" in update.keys() for update in json_data])
+
+        updates_index: dict = {}
+
+        for update in json_data:
+                key: str = update["nevra"]
+                severity: str  = update["severity"]
+                partition_id: str = update["name"]
+
+                updates_index[key] = {
+                        'partition_id': partition_id, 
+                        'severity': severity
+                }
+                
+        return updates_index
+
+def get_dnf_updatelist_output() -> dict:
+        shell: Shell = Shell()
+        dnf_output: str = shell.run(LIST_UPDATES_CMD)
+
+        assert isinstance(dnf_output, str)
+        assert dnf_output != ""
+
+        json_data: list[dict] = json.loads(dnf_output)
         return json_data

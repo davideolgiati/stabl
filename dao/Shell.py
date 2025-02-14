@@ -17,6 +17,8 @@ class Shell:
                 assert isinstance(result.get("info"), str)
                 assert isinstance(result.get("error"), str)
 
+                print(' '.join(command_array))
+
                 if result["code"] != 0:
                         raise ManagedShellException(
                                 result["error"].strip(),

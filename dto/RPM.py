@@ -50,17 +50,14 @@ class RPMUpdate(RPM):
 
         @staticmethod
         def from_DNF_output(dnf_output):
-                partition_id = dnf_output['name'] 
-                package_signature = dnf_output['nevra']
+                assert ["name", "version", "release", "arch", "signature", "partition_id", "severity"] == dnf_output.keys()
+                partition_id = dnf_output['partition_id'] 
+                package_signature = dnf_output['signature']
                 update_urgency = dnf_output['severity'].lower()
-                
-                # qui va chiamato dnf reqpoquery con la lista dei pacchetti e bisogna matchare il pacchetto con la signature
-                # come?
-                # sperando siano ordinati come da input
-                # facendo substr contains
-                # non so
+                name = dnf_output['name']
+                version = dnf_output['version']
 
-                new_obj = RPM().from_package_signature(package_signature)
+                new_obj = RPM().from_package_signature(package_signature, name, version)
                 new_obj.__class__ = RPMUpdate
                 new_obj._partition_id = partition_id
                 new_obj._package_signature = package_signature
