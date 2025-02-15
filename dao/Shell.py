@@ -17,8 +17,6 @@ class Shell:
                 assert isinstance(result.get("info"), str)
                 assert isinstance(result.get("error"), str)
 
-                print(' '.join(command_array))
-
                 if result["code"] != 0:
                         raise ManagedShellException(
                                 result["error"].strip(),
@@ -35,8 +33,7 @@ class Shell:
                 try:
                         result = subprocess.run(
                                 command_array,
-                                stdout=subprocess.PIPE,
-                                stderr=subprocess.PIPE
+                                capture_output=True
                         )
                 except OSError as e:
                         raise ManagedShellException(

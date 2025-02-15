@@ -50,12 +50,14 @@ class RPMUpdate(RPM):
 
         @staticmethod
         def from_DNF_output(dnf_output):
-                assert ["name", "version", "release", "arch", "signature", "partition_id", "severity"] == dnf_output.keys()
+                
+                assert ["name", "version", "release", "arch", "signature", "partition_id", "severity"] == list(dnf_output.keys())
+                
                 partition_id = dnf_output['partition_id'] 
                 package_signature = dnf_output['signature']
                 update_urgency = dnf_output['severity'].lower()
                 name = dnf_output['name']
-                version = dnf_output['version']
+                version = SemanticVersion.fromVersionAndRelease(dnf_output['version'], dnf_output['release'])
 
                 new_obj = RPM().from_package_signature(package_signature, name, version)
                 new_obj.__class__ = RPMUpdate

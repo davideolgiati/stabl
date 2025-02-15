@@ -94,15 +94,26 @@ def get_update_details_from_repository(updates):
         packages_details_from_repo: list[dict] = query_remote_repo_for_details(updates_signature_list)
 
         for update in packages_details_from_repo:
-                key = update["signature"]
-                partition_details = updates[key]
-                partition_id = partition_details['partition_id']
-                severity = partition_details['severity']
+                keys = update["signature"]
+                key = None
 
-                update["partition_id"] = partition_id
-                update["severity"] = severity
+                if keys[0] in updates_signature_list:
+                        key = keys[0]
+                elif keys[1] in updates_signature_list:
+                        key = keys[1]
+                
+                if key is not None:
+                        update["signature"] = key
+                        partition_details = updates[key]
+                        partition_id = partition_details['partition_id']
+                        severity = partition_details['severity']
 
-                assert ["name", "version", "release", "arch", "signature", "partition_id", "severity"] == list(update.keys())
+                        update["partition_id"] = partition_id
+                        update["severity"] = severity
+
+                        assert ["name", "version", "release", "arch", "signature", "partition_id", "severity"] == list(update.keys())
+                else:
+                        print(f"{key} is missing!")
 
         updates_details = [RPMUpdate.from_DNF_output(update) for update in packages_details_from_repo]
         return [update for update in updates_details if update]
@@ -116,7 +127,7 @@ def query_remote_repo_for_details(update_signature_list) -> list[dict]:
         assert all([isinstance(token, str) for token in repo_query_cmd])
 
         repo_query_output: str = shell.run(repo_query_cmd)
-        valid_json_repoquery_output: str = f"[{repo_query_output}]"
+        valid_json_repoquery_output: str = f"[{repo_query_output[:-1]}]"
 
         parsed_json_repoquery_output: list[dict] = json.loads(valid_json_repoquery_output)
 
