@@ -2,7 +2,7 @@ import json
 import asyncio
 
 from common.logger import log_timed_execution
-from dto.RPM import RPM, RPMUpdate
+from dto.RPM import Package, Update
 from dao.Shell import Shell
 
 from common.costants import GET_UPDATE_DETAILS, LIST_UPDATES_CMD
@@ -10,7 +10,6 @@ from dto.enums.UpdateClassification import UpdateClassification
 from dto.enums.UpdateUrgency import UpdateUrgency
 
 class DNF:
-        @log_timed_execution("Getting updates list")
         def get_updates_by_partition_id(self):
                 updates: dict = read_updates_list()
 
@@ -18,16 +17,16 @@ class DNF:
                 assert all([isinstance(update, dict) for _, update in updates.items()])
                 assert all([['partition_id', 'severity'] == list(update.keys()) for _, update in updates.items()])
 
-                updates_details: list[RPMUpdate] = get_update_details_from_repository(updates)
+                updates_details: list[Update] = get_update_details_from_repository(updates)
 
                 
-                installed_details: dict[str, RPM] = get_installed_details_from_updates(updates_details)
+                installed_details: dict[str, Package] = get_installed_details_from_updates(updates_details)
                 partition_index = {}
 
                 for update_package in updates_details:
-                        update_partition = update_package.get_update_partition()
+                        update_partition = update_package.get_partition()
                         update_urgency = update_package.get_urgency()
-                        update_name = update_package.get_package_name()
+                        update_name = update_package.get_name()
                         update_version = update_package.get_version()
                         
                         installed_package = installed_details[update_name]
@@ -77,18 +76,18 @@ class DNF:
                 return partition_index
                         
 
-
-def get_installed_details_from_updates(updates_details: list[RPMUpdate]) -> dict:
+@log_timed_execution("Getting installed packages details")
+def get_installed_details_from_updates(updates_details: list[Update]) -> dict:
         installed_details = {}
 
         for update in updates_details:
-                update_package_name = update.get_package_name()
-                current_package = RPM.from_package_name(update_package_name)
+                update_package_name = update.get_name()
+                current_package = Package.from_name(update_package_name)
                 installed_details[update_package_name] = current_package
         
         return installed_details
 
-
+@log_timed_execution("Getting updates details")
 def get_update_details_from_repository(updates):
         updates_signature_list: list[str] = list(updates.keys())
         packages_details_from_repo: list[dict] = query_remote_repo_for_details(updates_signature_list)
@@ -115,7 +114,7 @@ def get_update_details_from_repository(updates):
                 else:
                         print(f"{key} is missing!")
 
-        updates_details = [RPMUpdate.from_DNF_output(update) for update in packages_details_from_repo]
+        updates_details = [Update.from_DNF_output(update) for update in packages_details_from_repo]
         return [update for update in updates_details if update]
 
 
@@ -135,7 +134,7 @@ def query_remote_repo_for_details(update_signature_list) -> list[dict]:
 
         return parsed_json_repoquery_output
 
-
+@log_timed_execution("Getting updates partition list")
 def read_updates_list() -> dict:
         json_data: list[dict] = get_dnf_updatelist_output()
         updates_index: dict = compose_update_index_dictionary(json_data)

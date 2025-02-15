@@ -4,46 +4,53 @@ from dto.dataclass.SemanticVersion import SemanticVersion
 from dto.enums.UpdateUrgency import UpdateUrgency
 
 
-class RPM():
-        _package_name: str
-        _package_version: SemanticVersion
+class Package():
+        _name: str
+        _version: SemanticVersion
 
         @staticmethod
-        def from_package_signature(package_signature, name = None, version = None):
-                assert(isinstance(package_signature, str))
-                assert(package_signature != "")
+        def from_signature(signature, name = None, version = None):
+                assert(isinstance(signature, str))
+                assert(signature != "")
         
                 if not (name and version):
-                        name, version = query_package_info_from_signature(package_signature)
+                        name, version = query_package_info_from_signature(signature)
 
-                new_obj = RPM()
-                new_obj._package_name = name
-                new_obj._package_version = version
+                assert(isinstance(name, str))
+                assert(name != "")
 
-                return new_obj
+                assert(isinstance(version, SemanticVersion))
+
+                result = Package()
+                result._name = name
+                result._version = version
+
+                return result
         
         
         @staticmethod
-        def from_package_name(package_name):
-                assert isinstance(package_name, str)
-                assert package_name != ""
+        def from_name(name):
+                assert isinstance(name, str)
+                assert name != ""
                 
-                version_info = query_installed_package_info(package_name)
+                version = query_installed_package_info(name)
 
-                new_obj = RPM()
-                new_obj._package_name = package_name
-                new_obj._package_version = version_info
+                result = Package()
+                result._name = name
+                result._version = version
 
-                return new_obj
+                return result
+
 
         def get_version(self):
-                return self._package_version
+                return self._version
         
-        def get_package_name(self):
-                return self._package_name
+
+        def get_name(self):
+                return self._name
 
 
-class RPMUpdate(RPM):
+class Update(Package):
         _update_urgency: UpdateUrgency
         _partition_id: str
         _package_signature: str
@@ -59,33 +66,22 @@ class RPMUpdate(RPM):
                 name = dnf_output['name']
                 version = SemanticVersion.fromVersionAndRelease(dnf_output['version'], dnf_output['release'])
 
-                new_obj = RPM().from_package_signature(package_signature, name, version)
-                new_obj.__class__ = RPMUpdate
-                new_obj._partition_id = partition_id
-                new_obj._package_signature = package_signature
-                new_obj._update_urgency = UpdateUrgency.fromString(update_urgency)
+                result = Package().from_signature(package_signature, name, version)
+                result.__class__ = Update
+                result._partition_id = partition_id
+                result._package_signature = package_signature
+                result._update_urgency = UpdateUrgency.fromString(update_urgency)
 
-                return new_obj
+                return result
+
         
-        @staticmethod
-        def from_DNF_output_list(dnf_output):
-                partition_id = dnf_output['name'] 
-                package_signature = dnf_output['nevra']
-                update_urgency = dnf_output['severity'].lower()
-
-                new_obj = RPM().from_package_signature(package_signature)
-                new_obj.__class__ = RPMUpdate
-                new_obj._partition_id = partition_id
-                new_obj._package_signature = package_signature
-                new_obj._update_urgency = UpdateUrgency.fromString(update_urgency)
-
-                return new_obj
-        
-        def get_package_signature(self):
+        def get_signature(self):
                 return self._package_signature
-        
-        def get_update_partition(self):
+
+
+        def get_partition(self):
                 return self._partition_id
-        
+
+
         def get_urgency(self):
                 return self._update_urgency

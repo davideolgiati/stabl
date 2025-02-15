@@ -42,6 +42,7 @@ class UpdateManager():
                 return self.updates_partitions
 
 
+        @log_timed_execution("Evalueting partitions properties")
         def get_suggested_update_partitions(self):
                 assert isinstance(self.updates_partitions, dict)
                 assert self.updates_partitions != {}
