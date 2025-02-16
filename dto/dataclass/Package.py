@@ -8,31 +8,12 @@ class Package():
         _version: SemanticVersion
 
         @staticmethod
-        def from_signature(signature, name = None, version = None):
-                assert(isinstance(signature, str))
-                assert(signature != "")
-        
-                if not (name and version):
-                        name, version = query_package_info_from_signature(signature)
-
-                assert(isinstance(name, str))
-                assert(name != "")
-
-                assert(isinstance(version, SemanticVersion))
-
-                result = Package()
-                result._name = name
-                result._version = version
-
-                return result
-        
-        
-        @staticmethod
-        def from_name(name):
+        def from_details(name, version = None):
                 assert isinstance(name, str)
                 assert name != ""
                 
-                version = query_installed_package_info(name)
+                if not version:
+                        version = query_installed_package_info(name)
 
                 result = Package()
                 result._name = name

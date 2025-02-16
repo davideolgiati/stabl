@@ -83,7 +83,7 @@ def get_installed_details_from_updates(updates_details: list[Update]) -> dict:
 
         for update in updates_details:
                 update_package_name = update.get_name()
-                current_package = Package.from_name(update_package_name)
+                current_package = Package.from_details(update_package_name)
                 installed_details[update_package_name] = current_package
         
         return installed_details

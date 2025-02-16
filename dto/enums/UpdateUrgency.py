@@ -9,8 +9,11 @@ class UpdateUrgency(OrderedEnum):
         NONE = 0
 
         @staticmethod
-        def fromString(urgency_id):
-                update_urgency_mapping = {
+        def fromString(urgency):
+                assert isinstance(urgency, str)
+                assert urgency != ''
+                
+                mapping = {
                         'critical':    UpdateUrgency.CRITICAL, 
                         'important':   UpdateUrgency.IMPORTANT, 
                         'moderate':    UpdateUrgency.MODERATE, 
@@ -18,4 +21,8 @@ class UpdateUrgency(OrderedEnum):
                         'none':        UpdateUrgency.NONE
                 }
 
-                return update_urgency_mapping[urgency_id]
+                key = urgency.lower()
+                
+                assert key in mapping.keys()
+                
+                return mapping[key]

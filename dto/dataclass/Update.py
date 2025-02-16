@@ -4,13 +4,12 @@ from dto.enums.UpdateUrgency import UpdateUrgency
 
 
 class Update(Package):
-        _update_urgency: UpdateUrgency
+        _urgency: UpdateUrgency
         _partition_id: str
-        _package_signature: str
+        _signature: str
 
         @staticmethod
-        def from_repository_query(query):
-                
+        def from_repository_query(query):      
                 assert "name"         in query.keys()
                 assert "version"      in query.keys()
                 assert "release"      in query.keys()
@@ -31,28 +30,45 @@ class Update(Package):
                 assert query['name']         != ''
                 assert query['version']      != ''             
                 assert query['release']      != ''
-                assert query['arch']         != ''
+                assert query['arch']         != '' # Future use
                 assert query['signature']    != ''
                 assert query['partition_id'] != ''
                 assert query['severity']     != ''
                 
                 partition_id = query['partition_id'] 
-                package_signature = query['signature']
-                update_urgency = query['severity'].lower()
+                
+                signature = query['signature']
                 name = query['name']
-                version = SemanticVersion.fromVersionAndRelease(query['version'], query['release'])
+                
+                version = query['version']
+                release = query['release']
 
-                result = Package().from_signature(package_signature, name, version)
+                urgency = query['severity']
+                semantic_version = SemanticVersion.fromVersionAndRelease(
+                        version, release
+                )
+
+                result = Package().from_details(name, semantic_version)
                 result.__class__ = Update
                 result._partition_id = partition_id
-                result._package_signature = package_signature
-                result._update_urgency = UpdateUrgency.fromString(update_urgency)
+                result._signature = signature
+                result._urgency = UpdateUrgency.fromString(urgency)
+
+                assert isinstance(result._partition_id, str)
+                assert isinstance(result._signature, str)
+                assert isinstance(result._urgency, UpdateUrgency)
+                assert isinstance(result._name, str)
+                assert isinstance(result._version, SemanticVersion)
+
+                assert result._partition_id != ''
+                assert result._signature != ''
+                assert result._name != ''
 
                 return result
 
         
         def get_signature(self):
-                return self._package_signature
+                return self._signature
 
 
         def get_partition(self):
@@ -60,4 +76,4 @@ class Update(Package):
 
 
         def get_urgency(self):
-                return self._update_urgency
+                return self._urgency
