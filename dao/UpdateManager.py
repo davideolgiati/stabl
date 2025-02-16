@@ -1,12 +1,12 @@
 from common.logger import log_timed_execution
 from dao.DNF import DNF
-from dto.enums.UpdateUrgency import UpdateUrgency
-from dto.enums.UpdateClassification import UpdateClassification
+from dto.enum.SecurityClass import SecurityClass
+from dto.enum.UpdateClass import UpdateClass
 
 
 class UpdateManager():
-        _max_version_jump = UpdateClassification.PATCH
-        _min_uregency = UpdateUrgency.NONE
+        _max_version_jump = UpdateClass.PATCH
+        _min_uregency = SecurityClass.NONE
         _majors = 0
         _minors = 0
         _patches = 0
@@ -77,18 +77,18 @@ class UpdateManager():
                 assert "packages" in partition.keys()
                 assert "type" in partition.keys()
                 assert isinstance(partition["packages"], list)
-                assert isinstance(partition["type"], UpdateClassification)
+                assert isinstance(partition["type"], UpdateClass)
 
                 package_count = len(partition["packages"])
                 update_type = partition["type"]
 
-                if (update_type == UpdateClassification.MAJOR):
+                if (update_type == UpdateClass.MAJOR):
                         assert isinstance(self._majors, int)
                         self._majors += package_count
-                elif (update_type ==  UpdateClassification.MINOR):
+                elif (update_type ==  UpdateClass.MINOR):
                         assert isinstance(self._minors, int)
                         self._minors += package_count
-                elif (update_type == UpdateClassification.PATCH):
+                elif (update_type == UpdateClass.PATCH):
                         assert isinstance(self._patches, int)
                         self._patches += package_count
                 else:
@@ -100,8 +100,8 @@ class UpdateManager():
                 assert isinstance(partition, dict)
                 assert "urgency" in partition.keys()
                 assert "type" in partition.keys()
-                assert isinstance(partition["urgency"], UpdateUrgency)
-                assert isinstance(partition["type"], UpdateClassification)
+                assert isinstance(partition["urgency"], SecurityClass)
+                assert isinstance(partition["type"], UpdateClass)
 
                 urgency = partition["urgency"]
                 type = partition["type"]

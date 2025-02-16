@@ -1,7 +1,7 @@
-from dto.enums.OrderedEnum import OrderedEnum
+from dto.enum.OrderedEnum import OrderedEnum
 
 
-class UpdateClassification(OrderedEnum):
+class UpdateClass(OrderedEnum):
         SECURITY = 0
         RELEASE = 1
         PATCH = 2

@@ -7,8 +7,8 @@ from dto.dataclass.Update import Update
 from dao.Shell import Shell
 
 from common.costants import GET_UPDATE_DETAILS, LIST_UPDATES_CMD
-from dto.enums.UpdateClassification import UpdateClassification
-from dto.enums.UpdateUrgency import UpdateUrgency
+from dto.enum.UpdateClass import UpdateClass
+from dto.enum.SecurityClass import SecurityClass
 
 class DNF:
         def get_updates_by_partition_id(self):
@@ -33,12 +33,12 @@ class DNF:
                         installed_package = installed_details[update_name]
                         installed_version = installed_package.get_version()
 
-                        current_update_type = UpdateClassification.RELEASE
+                        current_update_type = UpdateClass.RELEASE
 
                         if update_partition not in partition_index:
                                 partition_index[update_partition] = {
-                                        "urgency" : UpdateUrgency.NONE,
-                                        "type" : UpdateClassification.MAJOR,
+                                        "urgency" : SecurityClass.NONE,
+                                        "type" : UpdateClass.MAJOR,
                                         "packages" : []
                                 }
                         
@@ -65,11 +65,11 @@ class DNF:
                         partition_index[update_partition]["packages"].append(update_details_str)
 
                         if update_version.major != installed_version.major:
-                                current_update_type = UpdateClassification.MAJOR
+                                current_update_type = UpdateClass.MAJOR
                         elif update_version.minor != installed_version.minor:
-                                current_update_type = UpdateClassification.MINOR
+                                current_update_type = UpdateClass.MINOR
                         elif update_version.patch != installed_version.patch:
-                                current_update_type = UpdateClassification.PATCH
+                                current_update_type = UpdateClass.PATCH
                         
                         if current_update_type < partition_type:
                                 partition_index[update_partition]["type"] = current_update_type

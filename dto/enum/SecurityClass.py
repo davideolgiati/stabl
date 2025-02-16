@@ -1,7 +1,7 @@
-from dto.enums.OrderedEnum import OrderedEnum
+from dto.enum.OrderedEnum import OrderedEnum
 
 
-class UpdateUrgency(OrderedEnum):
+class SecurityClass(OrderedEnum):
         CRITICAL = 4
         IMPORTANT = 3 
         MODERATE = 2
@@ -14,11 +14,11 @@ class UpdateUrgency(OrderedEnum):
                 assert urgency != ''
                 
                 mapping = {
-                        'critical':    UpdateUrgency.CRITICAL, 
-                        'important':   UpdateUrgency.IMPORTANT, 
-                        'moderate':    UpdateUrgency.MODERATE, 
-                        'low':         UpdateUrgency.LOW, 
-                        'none':        UpdateUrgency.NONE
+                        'critical':    SecurityClass.CRITICAL, 
+                        'important':   SecurityClass.IMPORTANT, 
+                        'moderate':    SecurityClass.MODERATE, 
+                        'low':         SecurityClass.LOW, 
+                        'none':        SecurityClass.NONE
                 }
 
                 key = urgency.lower()

@@ -1,10 +1,10 @@
 from dto.dataclass.Package import Package
 from dto.dataclass.SemanticVersion import SemanticVersion
-from dto.enums.UpdateUrgency import UpdateUrgency
+from dto.enum.SecurityClass import SecurityClass
 
 
 class Update(Package):
-        _urgency: UpdateUrgency
+        _urgency: SecurityClass
         _partition_id: str
         _signature: str
 
@@ -52,11 +52,11 @@ class Update(Package):
                 result.__class__ = Update
                 result._partition_id = partition_id
                 result._signature = signature
-                result._urgency = UpdateUrgency.fromString(urgency)
+                result._urgency = SecurityClass.fromString(urgency)
 
                 assert isinstance(result._partition_id, str)
                 assert isinstance(result._signature, str)
-                assert isinstance(result._urgency, UpdateUrgency)
+                assert isinstance(result._urgency, SecurityClass)
                 assert isinstance(result._name, str)
                 assert isinstance(result._version, SemanticVersion)
 
