@@ -2,7 +2,7 @@ import json
 import asyncio
 
 from common.logger import log_timed_execution
-from dto.RPM import Package, Update
+from dto.dataclass.Package import Package, Update
 from dao.Shell import Shell
 
 from common.costants import GET_UPDATE_DETAILS, LIST_UPDATES_CMD
