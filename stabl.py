@@ -38,8 +38,8 @@ def setup_package_mamager():
 def main():
         update_manager = setup_package_mamager()
 
-        updates_list = update_manager.get_updates_list()
-        suggested_updates_partitions = update_manager.get_suggested_update_partitions()
+        updates_list = update_manager.get_available_partitions()
+        suggested_updates_partitions = update_manager.get_suggested_partition_ids()
 
         display_update_summary(update_manager)
         

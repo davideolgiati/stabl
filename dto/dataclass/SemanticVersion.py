@@ -16,11 +16,11 @@ class SemanticVersion:
 
                 assert len(version_list) >= 3
 
-                new_object = SemanticVersion()
+                result = SemanticVersion()
 
-                new_object.major = version_list[0]
-                new_object.minor = version_list[1]
-                new_object.patch = '.'.join(version_list[2:])
-                new_object.release = release
+                result.major = version_list[0]
+                result.minor = version_list[1]
+                result.patch = '.'.join(version_list[2:])
+                result.release = release
 
-                return new_object
+                return result

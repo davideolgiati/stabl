@@ -15,7 +15,7 @@ def test_get_data_valid(mock_run):
         packageManager = DNF()
         updateManager = UpdateManager(packageManager)
 
-        result = updateManager.get_updates_list()
+        result = updateManager.get_available_partitions()
         assert result.keys() == expected.keys()
 
         for k, v in result.items():
@@ -25,6 +25,6 @@ def test_get_data_valid(mock_run):
                 for pkg in v:
                         assert pkg in current_key_packages
 
-        result_2 = updateManager.get_suggested_update_partitions()
+        result_2 = updateManager.get_suggested_partition_ids()
         assert result_2 == ["FEDORA-2025-0353c74078", "FEDORA-2025-fb8c11bf7d"]
 

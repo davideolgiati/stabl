@@ -5,77 +5,114 @@ from dto.enums.UpdateClassification import UpdateClassification
 
 
 class UpdateManager():
-        max_allowed_version_jump = UpdateClassification.PATCH
-        max_skippable_uregency = UpdateUrgency.NONE
-        packages = {
-                "major": 0,
-                "minor": 0,
-                "patch": 0,
-                "release": 0
-        }
+        _max_version_jump = UpdateClassification.PATCH
+        _min_uregency = UpdateUrgency.NONE
+        _majors = 0
+        _minors = 0
+        _patches = 0
+        _releases = 0
+        _partitions = None
+        _dnf = None
 
-        def __init__(self, package_manager):
-                assert isinstance(package_manager, DNF)
-                self.package_manager = package_manager
+        def __init__(self, dnf):
+                assert isinstance(dnf, DNF)
+                self._dnf = dnf
 
 
         def get_majors_count(self):
-                return self.packages['major']
+                assert isinstance(self._majors, int)
+                return self._majors
         
 
         def get_minors_count(self):
-                return self.packages['minor']
+                assert isinstance(self._minors, int)
+                return self._minors
         
         
         def get_patches_count(self):
-                return self.packages['patch']
+                assert isinstance(self._patches, int)
+                return self._patches
         
         
         def get_releases_count(self):
-                return self.packages['release']
+                assert isinstance(self._releases, int)
+                return self._releases
         
 
-        def get_updates_list(self):
-                self.updates_partitions = self.package_manager.get_updates_by_partition_id()
-                assert isinstance(self.updates_partitions, dict)
+        def get_available_partitions(self):
+                assert self._dnf is not None
+                assert isinstance(self._dnf, DNF)
+                assert self._partitions is None
 
-                return self.updates_partitions
+                self._partitions = self._dnf.get_updates_by_partition_id()
+                
+                assert isinstance(self._partitions, dict)
+                return self._partitions
 
 
         @log_timed_execution("Evalueting partitions properties")
-        def get_suggested_update_partitions(self):
-                assert isinstance(self.updates_partitions, dict)
-                assert self.updates_partitions != {}
+        def get_suggested_partition_ids(self):
+                assert isinstance(self._partitions, dict)
+                assert self._partitions != {}
 
                 suggested_updates = []
 
-                for parttion_id, properties in self.updates_partitions.items():                        
-                        if(self.evaluate_update_partition(properties)):
-                                suggested_updates.append(parttion_id)
+                for id, partition in self._partitions.items():
+                        assert isinstance(id, str)
+                        assert isinstance(partition, dict)
+                        assert id != ""
+                        assert partition != {}
+
+                        self.compute_update_statistics(partition)
+                        
+                        if(self.evaluate_partition_proprties(partition)):
+                                suggested_updates.append(id)
                 
+
+                assert isinstance(suggested_updates, list)
                 return suggested_updates
-        
 
-        def evaluate_update_partition(self, partition_property):
-                urgency = partition_property["urgency"]
-                update_type = partition_property["type"]
-                package_count = len(partition_property["packages"])
+        def compute_update_statistics(self, partition):
+                assert isinstance(partition, dict) 
+                assert "packages" in partition.keys()
+                assert "type" in partition.keys()
+                assert isinstance(partition["packages"], list)
+                assert isinstance(partition["type"], UpdateClassification)
 
-                allowed_partition = False
-
-                if(urgency > self.max_skippable_uregency):
-                        allowed_partition = True
-
-                if(update_type <= self.max_allowed_version_jump):
-                        allowed_partition = True
+                package_count = len(partition["packages"])
+                update_type = partition["type"]
 
                 if (update_type == UpdateClassification.MAJOR):
-                        self.packages['major'] += package_count
+                        assert isinstance(self._majors, int)
+                        self._majors += package_count
                 elif (update_type ==  UpdateClassification.MINOR):
-                        self.packages['minor'] += package_count
+                        assert isinstance(self._minors, int)
+                        self._minors += package_count
                 elif (update_type == UpdateClassification.PATCH):
-                        self.packages['patch'] += package_count
+                        assert isinstance(self._patches, int)
+                        self._patches += package_count
                 else:
-                        self.packages['release'] += package_count
+                        assert isinstance(self._releases, int)
+                        self._releases += package_count
+        
 
-                return allowed_partition
+        def evaluate_partition_proprties(self, partition):
+                assert isinstance(partition, dict)
+                assert "urgency" in partition.keys()
+                assert "type" in partition.keys()
+                assert isinstance(partition["urgency"], UpdateUrgency)
+                assert isinstance(partition["type"], UpdateClassification)
+
+                urgency = partition["urgency"]
+                type = partition["type"]
+                is_valid = False
+
+                if(urgency > self._min_uregency):
+                        is_valid = True
+
+                if(type <= self._max_version_jump):
+                        is_valid = True
+
+
+                assert isinstance(is_valid, bool)
+                return is_valid

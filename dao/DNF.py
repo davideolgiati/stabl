@@ -90,7 +90,7 @@ def get_installed_details_from_updates(updates_details: list[Update]) -> dict:
 @log_timed_execution("Getting updates details")
 def get_update_details_from_repository(updates):
         updates_signature_list: list[str] = list(updates.keys())
-        packages_details_from_repo: list[dict] = query_remote_repo_for_details(updates_signature_list)
+        packages_details_from_repo: list[dict] = query_packages_repository(updates_signature_list)
 
         for update in packages_details_from_repo:
                 keys = update["signature"]
@@ -118,21 +118,66 @@ def get_update_details_from_repository(updates):
         return [update for update in updates_details if update]
 
 
-def query_remote_repo_for_details(update_signature_list) -> list[dict]:
-        assert all([isinstance(pkg, str) for pkg in update_signature_list])
+def query_packages_repository(signatures) -> list[dict]:
+        assert isinstance(signatures, list)
+        assert all([ isinstance(signature, str) for signature in signatures ])
+        
+        if len(signatures) == 0:
+                return []
+
+        assert len(signatures) > 0        
+
         shell: Shell = Shell()
-        repo_query_cmd: list[str] = GET_UPDATE_DETAILS(update_signature_list)
+        repository_query: list[str] = GET_UPDATE_DETAILS(signatures)
 
-        assert all([isinstance(token, str) for token in repo_query_cmd])
+        assert isinstance(repository_query, list)
+        assert repository_query != []
+        assert all([isinstance(token, str) for token in repository_query])
 
-        repo_query_output: str = shell.run(repo_query_cmd)
-        valid_json_repoquery_output: str = f"[{repo_query_output[:-1]}]"
+        query_result: str = shell.run(repository_query)
+        parsed_result = parse_query_result(query_result)
 
-        parsed_json_repoquery_output: list[dict] = json.loads(valid_json_repoquery_output)
+        return parsed_result
 
-        assert all([["name", "version", "release", "arch", "signature"] == list(pkg.keys()) for pkg in parsed_json_repoquery_output])
+def parse_query_result(query_result):
+    assert isinstance(query_result, str)
 
-        return parsed_json_repoquery_output
+    json_result: str = f"[{query_result[:-1]}]"
+
+    assert isinstance(json_result, str)
+    assert json_result != query_result
+    assert json_result != ""
+
+    parsed_result: list[dict] = json.loads(json_result)
+
+    assert isinstance(parsed_result, list)
+    for package in parsed_result:
+            assert isinstance(package, dict)
+            assert len(package.keys()) == 5
+                
+            assert "name"      in package.keys()
+            assert "version"   in package.keys()
+            assert "release"   in package.keys()
+            assert "arch"      in package.keys()
+            assert "signature" in package.keys()
+                
+            assert isinstance(package["name"], str)
+            assert isinstance(package["version"], str)
+            assert isinstance(package["release"], str)
+            assert isinstance(package["arch"], str)
+            assert isinstance(package["signature"], list)
+            assert len(package["signature"]) == 2
+            assert isinstance(package["signature"][0], str)
+            assert isinstance(package["signature"][1], str)
+
+            assert package["name"] != ''
+            assert package["version"] != ''
+            assert package["release"] != ''
+            assert package["arch"] != ''
+            assert package["signature"][0] != ''
+            assert package["signature"][1] != ''
+            
+    return parsed_result
 
 @log_timed_execution("Getting updates partition list")
 def read_updates_list() -> dict:
