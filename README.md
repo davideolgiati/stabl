@@ -1,6 +1,14 @@
 # stabl
 A DNF wrapper to selectively choose what packages to upgrade
 
+# v0.0.4
+### Features
+- Improved clarity and consistency in package handling
+- Refactored DNF, UpdateManager, and Shell classes to streamline data handling, command execution, and maintainability
+- Enhanced package signature validation and processing for more secure operations
+- Improved command execution logic in Shell and DNF classes to reduce redundancy and errors
+- Simplified update details parsing and strengthened error handling across core modules
+
 # v0.0.3
 ### Features
 - Improved version checking system using semantic versioning via the SemanticVersion class
