@@ -9,15 +9,38 @@ class Update(Package):
         _package_signature: str
 
         @staticmethod
-        def from_DNF_output(dnf_output):
+        def from_repository_query(query):
                 
-                assert ["name", "version", "release", "arch", "signature", "partition_id", "severity"] == list(dnf_output.keys())
+                assert "name"         in query.keys()
+                assert "version"      in query.keys()
+                assert "release"      in query.keys()
+                assert "arch"         in query.keys()
+                assert "signature"    in query.keys()
+                assert "partition_id" in query.keys()
+                assert "severity"     in query.keys()
+                assert len(query.keys()) == 7
+
+                assert isinstance(query['name'], str)
+                assert isinstance(query['version'], str)
+                assert isinstance(query['release'], str)
+                assert isinstance(query['arch'], str)
+                assert isinstance(query['signature'], str)
+                assert isinstance(query['partition_id'], str)
+                assert isinstance(query['severity'], str)
                 
-                partition_id = dnf_output['partition_id'] 
-                package_signature = dnf_output['signature']
-                update_urgency = dnf_output['severity'].lower()
-                name = dnf_output['name']
-                version = SemanticVersion.fromVersionAndRelease(dnf_output['version'], dnf_output['release'])
+                assert query['name']         != ''
+                assert query['version']      != ''             
+                assert query['release']      != ''
+                assert query['arch']         != ''
+                assert query['signature']    != ''
+                assert query['partition_id'] != ''
+                assert query['severity']     != ''
+                
+                partition_id = query['partition_id'] 
+                package_signature = query['signature']
+                update_urgency = query['severity'].lower()
+                name = query['name']
+                version = SemanticVersion.fromVersionAndRelease(query['version'], query['release'])
 
                 result = Package().from_signature(package_signature, name, version)
                 result.__class__ = Update

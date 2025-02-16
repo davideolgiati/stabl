@@ -2,7 +2,8 @@ import json
 import asyncio
 
 from common.logger import log_timed_execution
-from dto.dataclass.Package import Package, Update
+from dto.dataclass.Package import Package
+from dto.dataclass.Update import Update
 from dao.Shell import Shell
 
 from common.costants import GET_UPDATE_DETAILS, LIST_UPDATES_CMD
@@ -114,7 +115,7 @@ def get_update_details_from_repository(updates):
                 else:
                         print(f"{key} is missing!")
 
-        updates_details = [Update.from_DNF_output(update) for update in packages_details_from_repo]
+        updates_details = [Update.from_repository_query(update) for update in packages_details_from_repo]
         return [update for update in updates_details if update]
 
 

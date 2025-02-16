@@ -1,7 +1,6 @@
 
 from common.rpm.properties import query_installed_package_info, query_package_info_from_signature
 from dto.dataclass.SemanticVersion import SemanticVersion
-from dto.enums.UpdateUrgency import UpdateUrgency
 
 
 class Package():
