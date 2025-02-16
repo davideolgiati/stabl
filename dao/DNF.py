@@ -11,74 +11,79 @@ from dto.enum.UpdateClass import UpdateClass
 from dto.enum.SecurityClass import SecurityClass
 
 class DNF:
-        def get_updates_by_partition_id(self):
-                updates: dict = read_updates_list()
+        def get_update_partitions(self):
+                updates: dict = get_updates()
 
                 assert isinstance(updates, dict)
                 assert all([isinstance(update, dict) for _, update in updates.items()])
                 assert all([['partition_id', 'severity'] == list(update.keys()) for _, update in updates.items()])
 
-                updates_details: list[Update] = get_update_details_from_repository(updates)
+                updates_details: list[Update] = get_update_details(updates)
 
+                installed_details: dict[str, Package] = get_installed_details(updates_details)
                 
-                installed_details: dict[str, Package] = get_installed_details_from_updates(updates_details)
-                partition_index = {}
+                partition_index = self.group_updates_by_partitions(updates_details, installed_details)
+                                
+                return partition_index
 
-                for update_package in updates_details:
-                        update_partition = update_package.get_partition()
-                        update_urgency = update_package.get_urgency()
-                        update_name = update_package.get_name()
-                        update_version = update_package.get_version()
+        def group_updates_by_partitions(self, updates_details, installed_details):
+            partition_index = {}
+
+            for update_package in updates_details:
+                    update_partition = update_package.get_partition()
+                    update_urgency = update_package.get_urgency()
+                    update_name = update_package.get_name()
+                    update_version = update_package.get_version()
                         
-                        installed_package = installed_details[update_name]
-                        installed_version = installed_package.get_version()
+                    installed_package = installed_details[update_name]
+                    installed_version = installed_package.get_version()
 
-                        current_update_type = UpdateClass.RELEASE
+                    current_update_type = UpdateClass.RELEASE
 
-                        if update_partition not in partition_index:
-                                partition_index[update_partition] = {
+                    if update_partition not in partition_index:
+                            partition_index[update_partition] = {
                                         "urgency" : SecurityClass.NONE,
                                         "type" : UpdateClass.MAJOR,
                                         "packages" : []
                                 }
                         
-                        partition_urgency = partition_index[update_partition]["urgency"]
-                        partition_type = partition_index[update_partition]["type"]
+                    partition_urgency = partition_index[update_partition]["urgency"]
+                    partition_type = partition_index[update_partition]["type"]
 
-                        if update_urgency > partition_urgency:
-                                partition_index[update_partition]["urgency"] = update_urgency
+                    if update_urgency > partition_urgency:
+                            partition_index[update_partition]["urgency"] = update_urgency
 
-                        current_version_str = '.'.join([
+                    current_version_str = '.'.join([
                                 installed_version.major,
                                 installed_version.minor,
                                 installed_version.patch
                         ]) + '-' + installed_version.release
 
-                        update_version_str = '.'.join([
+                    update_version_str = '.'.join([
                                 update_version.major,
                                 update_version.minor,
                                 update_version.patch
                         ]) + '-' + update_version.release
 
-                        update_details_str = f"{update_name.ljust(60)} {current_version_str} -> {update_version_str}"
+                    update_details_str = f"{update_name.ljust(60)} {current_version_str} -> {update_version_str}"
 
-                        partition_index[update_partition]["packages"].append(update_details_str)
+                    partition_index[update_partition]["packages"].append(update_details_str)
 
-                        if update_version.major != installed_version.major:
-                                current_update_type = UpdateClass.MAJOR
-                        elif update_version.minor != installed_version.minor:
-                                current_update_type = UpdateClass.MINOR
-                        elif update_version.patch != installed_version.patch:
-                                current_update_type = UpdateClass.PATCH
+                    if update_version.major != installed_version.major:
+                            current_update_type = UpdateClass.MAJOR
+                    elif update_version.minor != installed_version.minor:
+                            current_update_type = UpdateClass.MINOR
+                    elif update_version.patch != installed_version.patch:
+                            current_update_type = UpdateClass.PATCH
                         
-                        if current_update_type < partition_type:
-                                partition_index[update_partition]["type"] = current_update_type
-                                
-                return partition_index
+                    if current_update_type < partition_type:
+                            partition_index[update_partition]["type"] = current_update_type
+
+            return partition_index
                         
 
 @log_timed_execution("Getting installed packages details")
-def get_installed_details_from_updates(updates_details: list[Update]) -> dict:
+def get_installed_details(updates_details: list[Update]) -> dict:
         installed_details = {}
 
         for update in updates_details:
@@ -89,7 +94,7 @@ def get_installed_details_from_updates(updates_details: list[Update]) -> dict:
         return installed_details
 
 @log_timed_execution("Getting updates details")
-def get_update_details_from_repository(updates):
+def get_update_details(updates):
         updates_signature_list: list[str] = list(updates.keys())
         packages_details_from_repo: list[dict] = query_packages_repository(updates_signature_list)
 
@@ -181,13 +186,39 @@ def parse_query_result(query_result):
     return parsed_result
 
 @log_timed_execution("Getting updates partition list")
-def read_updates_list() -> dict:
-        json_data: list[dict] = get_dnf_updatelist_output()
-        updates_index: dict = compose_update_index_dictionary(json_data)
+def get_updates() -> dict:
+        json_data: list[dict] = get_dnf_updatelist()
+
+        assert isinstance(json_data, list)
+        assert all([isinstance(entry, dict) for entry in json_data])
+
+        assert all(["name"      in entry.keys() for entry in json_data])
+        assert all(["type"      in entry.keys() for entry in json_data])
+        assert all(["nevra"     in entry.keys() for entry in json_data])
+        assert all(["severity"  in entry.keys() for entry in json_data])
+        assert all(["buildtime" in entry.keys() for entry in json_data])
+
+        assert all([entry["name"] != ''      for entry in json_data])
+        assert all([entry["type"] != ''      for entry in json_data])
+        assert all([entry["nevra"] != ''     for entry in json_data])
+        assert all([entry["severity"] != ''  for entry in json_data])
+        assert all([entry["buildtime"] != '' for entry in json_data])
+
+        assert all([len(entry.keys()) == 5 for entry in json_data])
+
+        updates_index: dict = build_update_index(json_data)
+
+        assert all([isinstance(key, str) and isinstance(value, dict) for key, value in updates_index.items()])
+        assert all(["partition_id" in value.keys() for _, value in updates_index.items()])
+        assert all(["severity" in value.keys()     for _, value in updates_index.items()])
+        assert all([isinstance(value["partition_id"], str) for _, value in updates_index.items()])
+        assert all([isinstance(value["severity"], str)     for _, value in updates_index.items()])
+        assert all([value["partition_id"] != '' for _, value in updates_index.items()])
+        assert all([value["severity"] != ''     for _, value in updates_index.items()])
 
         return updates_index
 
-def compose_update_index_dictionary(json_data: list[dict]) -> dict:
+def build_update_index(json_data: list[dict]) -> dict:
         assert isinstance(json_data, list)
         assert all(["nevra" in update.keys() for update in json_data])
         assert all(["name" in update.keys() for update in json_data])
@@ -207,7 +238,7 @@ def compose_update_index_dictionary(json_data: list[dict]) -> dict:
                 
         return updates_index
 
-def get_dnf_updatelist_output() -> dict:
+def get_dnf_updatelist() -> dict:
         shell: Shell = Shell()
         dnf_output: str = shell.run(LIST_UPDATES_CMD)
 

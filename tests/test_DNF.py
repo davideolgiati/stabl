@@ -12,7 +12,7 @@ def test_get_data_by_type(mock_run):
 
         myDNFHelper = DNF()
 
-        result = myDNFHelper.get_updates_by_partition_id()
+        result = myDNFHelper.get_update_partitions()
         assert result.keys() == expected.keys()
 
         for k, v in result.items():

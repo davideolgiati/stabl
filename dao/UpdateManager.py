@@ -44,7 +44,7 @@ class UpdateManager():
                 assert isinstance(self._dnf, DNF)
                 assert self._partitions is None
 
-                self._partitions = self._dnf.get_updates_by_partition_id()
+                self._partitions = self._dnf.get_update_partitions()
                 
                 assert isinstance(self._partitions, dict)
                 return self._partitions
