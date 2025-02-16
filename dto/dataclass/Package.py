@@ -15,9 +15,16 @@ class Package():
                 if not version:
                         version = query_installed_package_info(name)
 
+                assert isinstance(version, SemanticVersion)
+
                 result = Package()
                 result._name = name
                 result._version = version
+
+                assert isinstance(result._name, str)
+                assert result._name != ""
+
+                assert isinstance(result._version, SemanticVersion)
 
                 return result
 
