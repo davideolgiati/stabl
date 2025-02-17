@@ -27,59 +27,59 @@ class DNF:
                 return partition_index
 
         def group_updates_by_partitions(self, updates_details, installed_details):
-            partition_index = {}
+                partition_index = {}
 
-            for update_package in updates_details:
-                    update_partition = update_package.get_partition()
-                    update_urgency = update_package.get_urgency()
-                    update_name = update_package.get_name()
-                    update_version = update_package.get_version()
-                        
-                    installed_package = installed_details[update_name]
-                    installed_version = installed_package.get_version()
+                for update_package in updates_details:
+                        update_partition = update_package.get_partition()
+                        update_urgency = update_package.get_urgency()
+                        update_name = update_package.get_name()
+                        update_version = update_package.get_version()
+                                
+                        installed_package = installed_details[update_name]
+                        installed_version = installed_package.get_version()
 
-                    current_update_type = UpdateClass.RELEASE
+                        current_update_type = UpdateClass.RELEASE
 
-                    if update_partition not in partition_index:
-                            partition_index[update_partition] = {
-                                        "urgency" : SecurityClass.NONE,
-                                        "type" : UpdateClass.MAJOR,
-                                        "packages" : []
-                                }
-                        
-                    partition_urgency = partition_index[update_partition]["urgency"]
-                    partition_type = partition_index[update_partition]["type"]
+                        if update_partition not in partition_index:
+                                partition_index[update_partition] = {
+                                                "urgency" : SecurityClass.NONE,
+                                                "type" : UpdateClass.MAJOR,
+                                                "packages" : []
+                                        }
+                                
+                        partition_urgency = partition_index[update_partition]["urgency"]
+                        partition_type = partition_index[update_partition]["type"]
 
-                    if update_urgency > partition_urgency:
-                            partition_index[update_partition]["urgency"] = update_urgency
+                        if update_urgency > partition_urgency:
+                                partition_index[update_partition]["urgency"] = update_urgency
 
-                    current_version_str = '.'.join([
-                                installed_version.major,
-                                installed_version.minor,
-                                installed_version.patch
-                        ]) + '-' + installed_version.release
+                        current_version_str = '.'.join([
+                                        installed_version.major,
+                                        installed_version.minor,
+                                        installed_version.patch
+                                ]) + '-' + installed_version.release
 
-                    update_version_str = '.'.join([
-                                update_version.major,
-                                update_version.minor,
-                                update_version.patch
-                        ]) + '-' + update_version.release
+                        update_version_str = '.'.join([
+                                        update_version.major,
+                                        update_version.minor,
+                                        update_version.patch
+                                ]) + '-' + update_version.release
 
-                    update_details_str = f"{update_name.ljust(60)} {current_version_str} -> {update_version_str}"
+                        update_details_str = f"{update_name.ljust(60)} {current_version_str} -> {update_version_str}"
 
-                    partition_index[update_partition]["packages"].append(update_details_str)
+                        partition_index[update_partition]["packages"].append(update_details_str)
 
-                    if update_version.major != installed_version.major:
-                            current_update_type = UpdateClass.MAJOR
-                    elif update_version.minor != installed_version.minor:
-                            current_update_type = UpdateClass.MINOR
-                    elif update_version.patch != installed_version.patch:
-                            current_update_type = UpdateClass.PATCH
-                        
-                    if current_update_type < partition_type:
-                            partition_index[update_partition]["type"] = current_update_type
+                        if update_version.major != installed_version.major:
+                                current_update_type = UpdateClass.MAJOR
+                        elif update_version.minor != installed_version.minor:
+                                current_update_type = UpdateClass.MINOR
+                        elif update_version.patch != installed_version.patch:
+                                current_update_type = UpdateClass.PATCH
+                                
+                        if current_update_type < partition_type:
+                                partition_index[update_partition]["type"] = current_update_type
 
-            return partition_index
+                return partition_index
                         
 
 @log_timed_execution("Getting installed packages details")
@@ -220,34 +220,39 @@ def get_updates() -> dict:
 
 def build_update_index(json_data: list[dict]) -> dict:
         assert isinstance(json_data, list)
-
         updates_index: dict = {}
 
         for update in json_data:
-                assert "name" in update.keys()
-                assert "nevra" in update.keys()
-                assert "severity" in update.keys()
-
-                assert isinstance(update['name'], str)
-                assert isinstance(update['nevra'], str)
-                assert isinstance(update['severity'], str)
-
-                assert update['name'] != ''
-                assert update['nevra'] != ''
-                assert update['severity'] != ''
-
-                key: str = update["nevra"]
-                partition_id: str = update["name"]
-                severity: str  = update["severity"]
-
-                updates_index[key] = {
-                        'partition_id': partition_id, 
-                        'severity': severity
-                }
+                key, value = compose_new_index_entry(update)
+                updates_index[key] = value
                 
         assert len(updates_index.keys()) == len(json_data)
 
         return updates_index
+
+def compose_new_index_entry(update):
+        assert "name" in update.keys()
+        assert "nevra" in update.keys()
+        assert "severity" in update.keys()
+
+        assert isinstance(update['name'], str)
+        assert isinstance(update['nevra'], str)
+        assert isinstance(update['severity'], str)
+
+        assert update['name'] != ''
+        assert update['nevra'] != ''
+        assert update['severity'] != ''
+
+        key: str = update["nevra"]
+        partition_id: str = update["name"]
+        severity: str  = update["severity"]
+
+        value = {
+                'partition_id': partition_id, 
+                'severity': severity
+        }
+
+        return key, value
 
 def get_dnf_updatelist() -> dict:
         shell: Shell = Shell()
