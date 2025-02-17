@@ -220,22 +220,33 @@ def get_updates() -> dict:
 
 def build_update_index(json_data: list[dict]) -> dict:
         assert isinstance(json_data, list)
-        assert all(["nevra" in update.keys() for update in json_data])
-        assert all(["name" in update.keys() for update in json_data])
-        assert all(["severity" in update.keys() for update in json_data])
 
         updates_index: dict = {}
 
         for update in json_data:
+                assert "name" in update.keys()
+                assert "nevra" in update.keys()
+                assert "severity" in update.keys()
+
+                assert isinstance(update['name'], str)
+                assert isinstance(update['nevra'], str)
+                assert isinstance(update['severity'], str)
+
+                assert update['name'] != ''
+                assert update['nevra'] != ''
+                assert update['severity'] != ''
+
                 key: str = update["nevra"]
-                severity: str  = update["severity"]
                 partition_id: str = update["name"]
+                severity: str  = update["severity"]
 
                 updates_index[key] = {
                         'partition_id': partition_id, 
                         'severity': severity
                 }
                 
+        assert len(updates_index.keys()) == len(json_data)
+
         return updates_index
 
 def get_dnf_updatelist() -> dict:
