@@ -42,7 +42,7 @@ def build_installed_index(update_packages: list[Update]) -> dict:
 
 
 @log_timed_execution('Getting updates packages details')
-def build_update_index(updates):
+def get_update_details_form_repository(updates):
         assert isinstance(updates, dict)
 
         updates_signature_list: list[str] = list(updates.keys())
