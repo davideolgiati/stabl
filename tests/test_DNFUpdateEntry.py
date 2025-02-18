@@ -1,9 +1,9 @@
 # classes to be tested 
 import pytest
-from dto.DNFUpdateEntry import DNFUpdateEntry
-from dto.ManagedDNFException import ManagedException
-from dto.UpdateClassification import UpdateClassification
-from dto.UpdateUrgency import UpdateUrgency
+from model.DNFUpdateEntry import DNFUpdateEntry
+from model.ManagedDNFException import ManagedException
+from model.UpdateClassification import UpdateClassification
+from model.UpdateUrgency import UpdateUrgency
 
 # test data
 import tests.test_data.sample_json_dnf_update_output as sample_json_dnf_update_output

@@ -1,5 +1,5 @@
 from dao.UpdateManager import UpdateManager
-from dao.DNF import DNF
+from dao.DNF.presentationLayer import DNF
 
 def display_message_to_user(suggested_update_partitions):
         print()

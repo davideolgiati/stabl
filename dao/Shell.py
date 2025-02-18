@@ -1,6 +1,6 @@
 import subprocess
 
-from dto.ManagedShellException import ManagedShellException
+from model.ManagedShellException import ManagedShellException
 
 class Shell:
         def __new__(cls):

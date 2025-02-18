@@ -1,5 +1,5 @@
 import pytest
-from dto.ManagedDNFException import ManagedException
+from model.ManagedDNFException import ManagedException
 
 def test_managed_exception_valid_initialization():
     errors = ["Error 1", "Error 2"]

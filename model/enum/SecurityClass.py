@@ -1,4 +1,4 @@
-from dto.enum.OrderedEnum import OrderedEnum
+from model.enum.OrderedEnum import OrderedEnum
 
 
 class SecurityClass(OrderedEnum):

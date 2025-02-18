@@ -1,7 +1,7 @@
 from common.logger import log_timed_execution
-from dao.DNF import DNF
-from dto.enum.SecurityClass import SecurityClass
-from dto.enum.UpdateClass import UpdateClass
+from dao.DNF.presentationLayer import DNF
+from model.enum.SecurityClass import SecurityClass
+from model.enum.UpdateClass import UpdateClass
 
 
 class UpdateManager():

@@ -1,4 +1,4 @@
-from dto.DNFUpdateEntry import DNFUpdateEntry
+from model.DNFUpdateEntry import DNFUpdateEntry
 
 
 given = """

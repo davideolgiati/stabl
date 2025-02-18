@@ -1,6 +1,6 @@
 from unittest.mock import patch
 
-from dto.DNFUpdateEntry import DNFUpdateEntry
+from model.DNFUpdateEntry import DNFUpdateEntry
 from dao.DNF import DNF
 from dao.UpdateManager import UpdateManager
 

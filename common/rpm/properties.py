@@ -4,7 +4,7 @@ import re
 from common import regex
 from common.costants import GET_INFO_FROM_REPO, INSPECT_PKG
 from dao.Shell import Shell
-from dto.dataclass.SemanticVersion import SemanticVersion
+from model.SemanticVersion import SemanticVersion
 
 
 def format_package_version(version, release):

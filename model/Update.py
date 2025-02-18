@@ -1,6 +1,6 @@
-from dto.dataclass.Package import Package
-from dto.dataclass.SemanticVersion import SemanticVersion
-from dto.enum.SecurityClass import SecurityClass
+from model.Package import Package
+from model.SemanticVersion import SemanticVersion
+from model.enum.SecurityClass import SecurityClass
 
 
 class Update(Package):

@@ -1,4 +1,4 @@
-from dto.OrderedEnum import OrderedEnum
+from model.OrderedEnum import OrderedEnum
 import pytest
 
 class SampleClass(OrderedEnum):
