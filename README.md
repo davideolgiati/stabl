@@ -1,6 +1,11 @@
 # stabl
 A DNF wrapper to selectively choose what packages to upgrade
 
+# v0.0.5
+### Features
+- Enhanced repository query system to include update urgency and partition information
+- Improved partition computation logic to consider update urgency for recommendations
+
 # v0.0.4
 ### Features
 - Improved clarity and consistency in package handling
