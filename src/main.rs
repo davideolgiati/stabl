@@ -27,15 +27,13 @@ fn main() {
     println!("[i] process started!");
     println!("[i] getting updates list from remote...");
 
-    let _available_updates: String = dnf::get_available_updates();
+    let available_updates: Vec<String> = dnf::get_available_updates();
 
-    let test: Update = Update::new(
-        String::from("pippo"),
-        ReleseType::Patch,
-        String::from("test"),
-        String::from("pluto"),
-        String::from("paperino")
-    );
+    for line in available_updates {
+        if(line != "") {
+            Update::from_dnf_output(line);
+        }
+    }
 
-    print!("{:?}", test);
+    //print!("{:?}", test);
 }
