@@ -3,8 +3,11 @@ use system::os;
 use system::dnf;
 
 mod model;
-use model::release_type::ReleseType;
 use model::update::Update;
+
+mod commons;
+
+use std::collections::HashMap;
 
 fn display_stabl_logo() {
     let logo:&str = r"
@@ -28,12 +31,21 @@ fn main() {
     println!("[i] getting updates list from remote...");
 
     let available_updates: Vec<String> = dnf::get_available_updates();
+    let mut updates_by_partition = HashMap::new();
 
     for line in available_updates {
-        if(line != "") {
-            Update::from_dnf_output(line);
-        }
+        assert!(line != "");
+
+        let value: Update = Update::from_dnf_output(line);
+        let key: String = value.get_partition_id().clone();
+
+        updates_by_partition.insert(key, value.clone()); // BUG: value deve essere un array
     }
 
-    //print!("{:?}", test);
+    for (key, value) in map.into_iter() {
+        println!("partition: \"{}\"", value.get_partition_id());
+        println!("update type: \"{}\"", value.get_release_type());
+        println!("security grade: \"{}\"", value.get_severity());
+        println!("signature: \"{}\"\n", value.get_signature());
+    }
 }
