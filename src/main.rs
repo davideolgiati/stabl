@@ -31,7 +31,10 @@ fn main() {
     println!("[i] getting updates list from remote...");
 
     let available_updates: Vec<String> = dnf::get_available_updates();
-    let mut partition_builder = PartitionBuilder::new();
+    
+    println!("[i] gruoping updates in partititons...");
+    
+    let mut partition_builder: PartitionBuilder = PartitionBuilder::new();
 
     for line in available_updates {
         assert!(line != "");
