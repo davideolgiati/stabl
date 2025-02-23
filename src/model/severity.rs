@@ -2,12 +2,13 @@ use std::str::FromStr;
 use std::fmt::{self, Display, Formatter};
 
 #[derive(Clone)]
+#[derive(PartialEq, PartialOrd)]
 pub enum Severity {
-        Critical,
-        Important,
-        Moderate,
+        None,
         Low,
-        None
+        Moderate,
+        Important,
+        Critical
 }
 
 impl FromStr for Severity {

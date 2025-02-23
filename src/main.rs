@@ -43,12 +43,13 @@ fn main() {
 
     let partitions = partition_builder.build();
 
-    for (partition, updates) in &partitions {
-        println!("partition: \"{}\" \n", partition);
-        for _update in updates.into_iter() {
-            println!("\tsignature: \"{}\"", _update.get_signature());
-            println!("\tupdate type: \"{}\"", _update.get_release_type());
-            println!("\tsecurity grade: \"{}\"\n", _update.get_severity());
+    for (partition_id, partition) in &partitions {
+        println!(
+            "\npartition: \"{}\" (type: {}, security grade: {})", 
+            partition_id, partition.get_release_type(), partition.get_severity()
+        );
+        for _update in partition.get_signatures().into_iter() {
+            println!("\t\"{}\"", _update);
         }
     }
 }

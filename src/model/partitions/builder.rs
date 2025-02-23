@@ -1,9 +1,10 @@
 use std::collections::HashMap;
 
+use crate::model::partitions::partition::Partition;
 use crate::model::update::Update;
 
 pub struct PartitionBuilder {
-        _updates_by_partition: HashMap<String, Vec<Update>>,
+        _updates_by_partition: HashMap<String, Partition>,
 }
 
 impl PartitionBuilder {
@@ -15,28 +16,28 @@ impl PartitionBuilder {
 
         pub fn add_update(&mut self, update: Update) {                
                 let current_partition_id = update.get_partition_id().clone();
-                let updated_partition: Vec<Update> = self.update_partition(update);
+                let updated_partition: Partition = self.update_partition(update);
 
                 self._updates_by_partition.insert(current_partition_id, updated_partition);         
         }
 
-        fn update_partition(&self, update: Update) -> Vec<Update> {
+        fn update_partition(&self, update: Update) -> Partition {
                 let partition_id: String = update.get_partition_id().clone();
-                let mut current_partition: Vec<Update> = self.get_partition_by_id(partition_id);
+                let mut current_partition: Partition = self.get_partition_by_id(partition_id);
 
-                current_partition.push(update.clone());
+                current_partition.add_update(update.clone());
 
                 return current_partition.clone()
         }
 
-        fn get_partition_by_id(&self, partition_id: String) -> Vec<Update> {
+        fn get_partition_by_id(&self, partition_id: String) -> Partition {
                 return self._updates_by_partition
                         .get(&partition_id)
-                        .unwrap_or(&Vec::<Update>::new())
-                        .to_vec();
+                        .unwrap_or(&Partition::new())
+                        .clone();
         }
 
-        pub fn build(self) -> HashMap<String, Vec<Update>> {
+        pub fn build(self) -> HashMap<String, Partition> {
                 return self._updates_by_partition.clone();
         }
 }

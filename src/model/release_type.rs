@@ -2,11 +2,12 @@ use std::str::FromStr;
 use std::fmt::{self, Display, Formatter};
 
 #[derive(Clone)]
+#[derive(PartialEq, PartialOrd)]
 pub enum ReleaseType {
-        Major,
-        Minor,
+        Repack,
         Patch,
-        Repack
+        Minor,
+        Major
 }
 
 impl FromStr for ReleaseType {
@@ -29,7 +30,7 @@ impl Display for ReleaseType {
                 Self::Major  => write!(f, "major"),
                 Self::Minor  => write!(f, "minor"),
                 Self::Patch  => write!(f, "patch"),
-                Self::Repack => write!(f, "rpack"),
+                Self::Repack => write!(f, "repack"),
             }
         }
     }
