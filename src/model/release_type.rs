@@ -13,7 +13,7 @@ impl FromStr for ReleaseType {
         type Err = String;
     
         fn from_str(input: &str) -> Result<ReleaseType, Self::Err> {
-                match input {
+                match input.to_lowercase().as_str() {
                         "security"      => Ok(ReleaseType::Patch),
                         "bugfix"        => Ok(ReleaseType::Patch),
                         "enhancement"   => Ok(ReleaseType::Minor),

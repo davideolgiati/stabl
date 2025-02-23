@@ -1,13 +1,15 @@
 use crate::model::release_type::ReleaseType;
+use crate::model::severity::Severity;
 use crate::commons::string::split_string_using_delimiter;
 
 use std::str::FromStr;
+
 
 #[derive(Clone)]
 pub struct Update {
         _partition: String,
         _release_type: ReleaseType,
-        _severity: String,
+        _severity: Severity,
         _signature: String
 }
 
@@ -16,7 +18,7 @@ impl Update {
         pub fn new(
                 partition: String, 
                 release_type: ReleaseType, 
-                severity: String, 
+                severity: Severity, 
                 signature: String
         ) -> Update { 
                 Update {
@@ -36,7 +38,7 @@ impl Update {
 
                 let partition: String = splitted_str[0].clone();
                 let release_type: ReleaseType = ReleaseType::from_str(&splitted_str[1]).unwrap();
-                let severity: String = splitted_str[2].clone();
+                let severity: Severity = Severity::from_str(&splitted_str[2]).unwrap();
                 let signature: String = splitted_str[3].clone();
 
                 let result: Update = Update::new(partition, release_type, severity, signature);
@@ -52,7 +54,7 @@ impl Update {
                 &self._release_type
         }
 
-        pub fn get_severity(&self) -> &String {
+        pub fn get_severity(&self) -> &Severity {
                 &self._severity
         }
         
