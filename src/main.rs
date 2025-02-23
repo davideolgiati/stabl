@@ -4,10 +4,10 @@ use system::dnf;
 
 mod model;
 use model::update::Update;
+use model::partitions::builder::PartitionBuilder;
+
 
 mod commons;
-
-use std::collections::HashMap;
 
 fn display_stabl_logo() {
     let logo:&str = r"
@@ -31,21 +31,24 @@ fn main() {
     println!("[i] getting updates list from remote...");
 
     let available_updates: Vec<String> = dnf::get_available_updates();
-    let mut updates_by_partition = HashMap::new();
+    let mut partition_builder = PartitionBuilder::new();
 
     for line in available_updates {
         assert!(line != "");
 
         let value: Update = Update::from_dnf_output(line);
-        let key: String = value.get_partition_id().clone();
 
-        updates_by_partition.insert(key, value.clone()); // BUG: value deve essere un array
+        partition_builder.add_update(value.clone());
     }
 
-    for (key, value) in map.into_iter() {
-        println!("partition: \"{}\"", value.get_partition_id());
-        println!("update type: \"{}\"", value.get_release_type());
-        println!("security grade: \"{}\"", value.get_severity());
-        println!("signature: \"{}\"\n", value.get_signature());
+    let partitions = partition_builder.build();
+
+    for (partition, updates) in &partitions {
+        println!("partition: \"{}\" \n", partition);
+        for _update in updates.into_iter() {
+            println!("\tsignature: \"{}\"", _update.get_signature());
+            println!("\tupdate type: \"{}\"", _update.get_release_type());
+            println!("\tsecurity grade: \"{}\"\n", _update.get_severity());
+        }
     }
 }
