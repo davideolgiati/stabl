@@ -8,3 +8,17 @@ pub fn get_available_updates() -> Vec<String> {
 
         return (&updates_by_line[1..]).to_vec();
 }
+
+pub fn get_updates_details(signatures: Vec<String>) -> Vec<String> {
+        let updates: Vec<&str> = signatures.iter().map(|x| &**x).collect();
+        let args:Vec<&str> = Vec::from([
+                "repoquery", "-C", 
+                "--quiet", 
+                "--queryformat=%{name}|#|%{version}|#|%{release}|#|%{arch}|#|%{full_nevra}|#|%{name}-%{version}-%{release}.%{arch}\\n",
+        ]).into_iter().chain(updates).collect();
+        
+        let output: String = shell::run_command_and_read_stdout(&"dnf", &args);
+        let updates_by_line: Vec<String> = split_string_using_delimiter(output, "\n");
+
+        return updates_by_line;
+}

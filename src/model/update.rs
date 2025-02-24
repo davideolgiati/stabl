@@ -1,5 +1,5 @@
-use crate::model::release_type::ReleaseType;
-use crate::model::severity::Severity;
+use crate::model::enums::release_type::ReleaseType;
+use crate::model::enums::severity::Severity;
 use crate::commons::string::split_string_using_delimiter;
 
 use std::str::FromStr;
@@ -10,7 +10,9 @@ pub struct Update {
         _partition: String,
         _release_type: ReleaseType,
         _severity: Severity,
-        _signature: String
+        _signature: String,
+        _version: String,
+        _release: String
 }
 
 
@@ -19,13 +21,17 @@ impl Update {
                 partition: String, 
                 release_type: ReleaseType, 
                 severity: Severity, 
-                signature: String
+                signature: String,
+                version: String,
+                release: String
         ) -> Update { 
                 Update {
                         _partition: partition,
                         _release_type: release_type,
                         _severity: severity,
-                        _signature: signature
+                        _signature: signature,
+                        _version: version,
+                        _release: release
                 }
         }
 
@@ -41,24 +47,47 @@ impl Update {
                 let severity: Severity = Severity::from_str(&splitted_str[2]).unwrap();
                 let signature: String = splitted_str[3].clone();
 
-                let result: Update = Update::new(partition, release_type, severity, signature);
+                let result: Update = Update::new(
+                        partition, release_type, 
+                        severity, signature, 
+                        String::from(""), 
+                        String::from("")
+                );
 
                 return result;
         }
 
         pub fn get_partition_id(&self) -> &String {
-                &self._partition
+                return &self._partition;
         }
 
         pub fn get_release_type(&self) -> &ReleaseType {
-                &self._release_type
+                return &self._release_type;
         }
 
         pub fn get_severity(&self) -> &Severity {
-                &self._severity
+                return &self._severity;
         }
         
         pub fn get_signature(&self) -> &String {
-                &self._signature
+                return &self._signature;
+        }
+
+        pub fn get_version(&self) -> &String {
+                return &self._version;
+        }
+
+        pub fn get_release(&self) -> &String {
+                return &self._release;
+        }
+
+        pub fn set_version(mut self, version: &String) -> Update {
+                self._version = version.clone();
+                return self;
+        }
+
+        pub fn set_release(mut self, release: &String) -> Update {
+                self._release = release.clone();
+                return self;
         }
 }

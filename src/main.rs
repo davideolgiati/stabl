@@ -6,7 +6,6 @@ mod model;
 use model::update::Update;
 use model::partitions::builder::PartitionBuilder;
 
-
 mod commons;
 
 fn display_stabl_logo() {
@@ -40,19 +39,19 @@ fn main() {
         assert!(line != "");
 
         let value: Update = Update::from_dnf_output(line);
-
-        partition_builder.add_update(value.clone());
+        
+        partition_builder.register_update(value.clone());
     }
-
+    
     let partitions = partition_builder.build();
-
+    
     for (partition_id, partition) in &partitions {
         println!(
             "\npartition: \"{}\" (type: {}, security grade: {})", 
             partition_id, partition.get_release_type(), partition.get_severity()
         );
-        for _update in partition.get_signatures().into_iter() {
-            println!("\t\"{}\"", _update);
+        for _update in partition.get_updates().into_iter() {
+            println!("\t\"{}\" {}-{}", _update.get_signature(), _update.get_version(), _update.get_release());
         }
     }
 }
