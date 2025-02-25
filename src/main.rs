@@ -7,6 +7,7 @@ use model::update::Update;
 use model::partitions::builder::PartitionBuilder;
 
 mod commons;
+use commons::string::split_string_using_delimiter;
 
 fn display_stabl_logo() {
     let logo:&str = r"
@@ -34,13 +35,24 @@ fn main() {
     println!("[i] gruoping updates in partititons...");
     
     let mut partition_builder: PartitionBuilder = PartitionBuilder::new();
+    let updates: Vec<Update> = available_updates
+                                .into_iter()
+                                .map(|line| Update::from_dnf_output(line))
+                                .collect();
+    let signatures: Vec<String> = updates
+                                    .clone()
+                                    .into_iter()
+                                    .map(|update| update.get_signature().clone())
+                                    .collect();
+    let remote_details: Vec<String> = dnf::get_updates_details(signatures);
+    let processed_details: Vec<Vec<String>> = remote_details
+                                            .clone()
+                                            .into_iter()
+                                            .map(|line| split_string_using_delimiter(line, "|#|"))
+                                            .collect();
 
-    for line in available_updates {
-        assert!(line != "");
-
-        let value: Update = Update::from_dnf_output(line);
-        
-        partition_builder.register_update(value.clone());
+    for update in updates {
+        partition_builder.register_update(update.clone());
     }
     
     let partitions = partition_builder.build();

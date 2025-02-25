@@ -2,7 +2,6 @@ use std::collections::HashMap;
 
 use crate::model::partitions::partition::Partition;
 use crate::model::update::Update;
-use crate::commons::string::split_string_using_delimiter;
 
 use crate::dnf;
 
@@ -18,19 +17,9 @@ impl PartitionBuilder {
         }
 
         pub fn register_update(&mut self, update: Update) {
-                let dnf_output: Vec<String> = dnf::get_updates_details(Vec::from([update.get_signature().clone()]));
-                let processed_output: &Vec<String> = &split_string_using_delimiter(dnf_output[0].to_string(), "|#|");
-                let version: &String = &processed_output[1];
-                let release: &String = &processed_output[2];
-
-                let enriched_update:Update = update
-                        .clone()
-                        .set_release(release)
-                        .set_version(version);
-
-                let current_partition_id: String = enriched_update.get_partition_id().clone();
-                let update_signature: String = enriched_update.get_signature().clone();
-                let updated_partition: Partition = self.update_partition(enriched_update);
+                let current_partition_id: String = update.get_partition_id().clone();
+                let update_signature: String = update.get_signature().clone();
+                let updated_partition: Partition = self.update_partition(update);
 
                 self._partitions.insert(current_partition_id.clone(), updated_partition);    
         }
