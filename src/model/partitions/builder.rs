@@ -1,7 +1,7 @@
 use std::collections::HashMap;
 
 use crate::model::partitions::partition::Partition;
-use crate::model::update::Update;
+use crate::model::updates::update::Update;
 
 use crate::dnf;
 

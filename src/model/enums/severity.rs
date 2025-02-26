@@ -29,11 +29,11 @@ impl FromStr for Severity {
 impl Display for Severity {
         fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
             match self {
-                Self::Critical  => write!(f, "critical"),
-                Self::Important  => write!(f, "important"),
-                Self::Moderate  => write!(f, "moderate"),
-                Self::Low => write!(f, "low"),
-                Self::None => write!(f, "none"),
+                Self::Critical  => write!(f, "CRITICAL"),
+                Self::Important  => write!(f, "IMPORTANT"),
+                Self::Moderate  => write!(f, "MODERATE"),
+                Self::Low => write!(f, "LOW"),
+                Self::None => write!(f, "NONE"),
             }
         }
     }

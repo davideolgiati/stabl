@@ -1,6 +1,6 @@
 use crate::model::enums::release_type::ReleaseType;
 use crate::model::enums::severity::Severity;
-use crate::model::update::Update;
+use crate::model::updates::update::Update;
 
 #[derive(Clone)]
 pub struct Partition {

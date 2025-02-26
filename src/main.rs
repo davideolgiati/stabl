@@ -1,15 +1,18 @@
 mod system;
+use model::enums::release_type::ReleaseType;
+use model::enums::severity::Severity;
 use system::os;
 use system::dnf;
 
 mod model;
-use model::update::Update;
+use model::updates::update::Update;
 use model::partitions::builder::PartitionBuilder;
 
 mod commons;
 use commons::string::split_string_using_delimiter;
 
 use std::collections::HashMap;
+use std::collections::HashSet;
 
 fn display_stabl_logo() {
     let logo:&str = r"
@@ -70,13 +73,20 @@ fn main() {
     let mut partition_builder: PartitionBuilder = PartitionBuilder::new();
     let signatures: Vec<String> = extract_signature_list(available_updates.clone());
     let remote_details: Vec<String> = dnf::get_updates_details(signatures);
+    let processed_details: HashMap<String, (String, String, String)> = extract_version_and_release_map(remote_details.clone());
+    let packages_names: Vec<String> = processed_details
+        .clone()
+        .into_values()
+        .map(|item| item.0)
+        .collect::<HashSet<_>>()
+        .into_iter()
+        .collect();
     
     let updates: Vec<Update> = available_updates
                                 .into_iter()
                                 .map(|line| Update::from_dnf_output(line))
                                 .collect();
 
-    let processed_details: HashMap<String, (String, String, String)> = extract_version_and_release_map(remote_details.clone());
 
     for update in updates {
         partition_builder.register_update(update.clone());
@@ -85,12 +95,14 @@ fn main() {
     let partitions = partition_builder.build();
     
     for (partition_id, partition) in &partitions {
-        println!(
-            "\npartition: \"{}\" (type: {}, security grade: {})", 
-            partition_id, partition.get_release_type(), partition.get_severity()
-        );
-        for _update in partition.get_updates().into_iter() {
-            println!("\t\"{}\" {}-{}", _update.get_signature(), _update.get_version(), _update.get_release());
+        if (*partition.get_release_type() <= ReleaseType::Patch || *partition.get_severity() > Severity::None) {
+            println!(
+                "\nPartition Id: \"{}\" \nType: {} \nSecurity grade: {}", 
+                partition_id, partition.get_release_type(), partition.get_severity()
+            );
+            for _update in partition.get_updates().into_iter() {
+                println!("\t\"{}\" {}-{}", _update.get_signature(), _update.get_version(), _update.get_release());
+            }
         }
     }
 }

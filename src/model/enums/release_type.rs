@@ -27,10 +27,10 @@ impl FromStr for ReleaseType {
 impl Display for ReleaseType {
         fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
             match self {
-                Self::Major  => write!(f, "major"),
-                Self::Minor  => write!(f, "minor"),
-                Self::Patch  => write!(f, "patch"),
-                Self::Repack => write!(f, "repack"),
+                Self::Major  => write!(f, "MAJOR"),
+                Self::Minor  => write!(f, "MINOR"),
+                Self::Patch  => write!(f, "PATCH"),
+                Self::Repack => write!(f, "REPACK"),
             }
         }
     }
