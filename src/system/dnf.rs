@@ -22,3 +22,16 @@ pub fn get_updates_details(signatures: Vec<String>) -> Vec<String> {
 
         return updates_by_line;
 }
+
+pub fn get_installed_details(package_name: String) -> String {
+        let args:Vec<&str> = Vec::from([
+                "-q", 
+                "--queryformat=%{name}|#|%{version}|#|%{release}\\n",
+                &package_name.as_str()
+        ]);
+        
+        let output: String = shell::run_command_and_read_stdout(&"rpm", &args);
+        let updates_by_line: Vec<String> = split_string_using_delimiter(output, "\n");
+
+        return updates_by_line[0].clone();
+}

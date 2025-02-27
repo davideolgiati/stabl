@@ -12,7 +12,8 @@ pub struct Update {
         _severity: Severity,
         _signature: String,
         _version: String,
-        _release: String
+        _release: String,
+        _name: String
 }
 
 
@@ -23,7 +24,8 @@ impl Update {
                 severity: Severity, 
                 signature: String,
                 version: String,
-                release: String
+                release: String,
+                name: String
         ) -> Update { 
                 Update {
                         _partition: partition,
@@ -31,30 +33,9 @@ impl Update {
                         _severity: severity,
                         _signature: signature,
                         _version: version,
-                        _release: release
+                        _release: release,
+                        _name: name
                 }
-        }
-
-        pub fn from_dnf_output(stdout: String) -> Update{
-                assert!(stdout != "");
-
-                let splitted_str = split_string_using_delimiter(stdout, " ");
-
-                assert!(splitted_str.len() == 6);
-
-                let partition: String = splitted_str[0].clone();
-                let release_type: ReleaseType = ReleaseType::from_str(&splitted_str[1]).unwrap();
-                let severity: Severity = Severity::from_str(&splitted_str[2]).unwrap();
-                let signature: String = splitted_str[3].clone();
-
-                let result: Update = Update::new(
-                        partition, release_type, 
-                        severity, signature, 
-                        String::from(""), 
-                        String::from("")
-                );
-
-                return result;
         }
 
         pub fn get_partition_id(&self) -> &String {
@@ -81,13 +62,7 @@ impl Update {
                 return &self._release;
         }
 
-        pub fn set_version(mut self, version: &String) -> Update {
-                self._version = version.clone();
-                return self;
-        }
-
-        pub fn set_release(mut self, release: &String) -> Update {
-                self._release = release.clone();
-                return self;
+        pub fn get_name(&self) -> &String {
+                return &self._name
         }
 }

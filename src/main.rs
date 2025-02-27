@@ -1,6 +1,7 @@
 mod system;
 use model::enums::release_type::ReleaseType;
 use model::enums::severity::Severity;
+use model::updates::builder::UpdateBuilder;
 use system::os;
 use system::dnf;
 
@@ -36,7 +37,7 @@ fn extract_signature_list(available_updates: Vec<String>) -> Vec<String> {
         .collect();
 }
 
-fn extract_version_and_release_map(details_from_repository: Vec<String>) -> HashMap<String, (String, String, String)> {
+fn extract_version_and_release_map(details_from_repository: Vec<String>) -> HashMap<String, Vec<String>> {
     let mut version_and_release_map = HashMap::new();
     let details: Vec<Vec<String>> = details_from_repository
         .clone()
@@ -47,12 +48,12 @@ fn extract_version_and_release_map(details_from_repository: Vec<String>) -> Hash
     for detail in details {
         version_and_release_map.insert(
             detail[4].clone(), 
-            (detail[0].clone(), detail[1].clone(), detail[2].clone())
+            Vec::from([detail[0].clone(), detail[1].clone(), detail[2].clone()])
         );
 
         version_and_release_map.insert(
             detail[5].clone(), 
-            (detail[0].clone(), detail[1].clone(), detail[2].clone())
+            Vec::from([detail[0].clone(), detail[1].clone(), detail[2].clone()])
         );
     }
 
@@ -73,18 +74,25 @@ fn main() {
     let mut partition_builder: PartitionBuilder = PartitionBuilder::new();
     let signatures: Vec<String> = extract_signature_list(available_updates.clone());
     let remote_details: Vec<String> = dnf::get_updates_details(signatures);
-    let processed_details: HashMap<String, (String, String, String)> = extract_version_and_release_map(remote_details.clone());
-    let packages_names: Vec<String> = processed_details
+    let processed_details: HashMap<String, Vec<String>> = extract_version_and_release_map(remote_details.clone());
+    let packages_names: HashMap<String, Vec<String>> = processed_details
         .clone()
         .into_values()
-        .map(|item| item.0)
-        .collect::<HashSet<_>>()
+        .map(|item| item[0].clone())
+        .collect::<HashSet<String>>()
         .into_iter()
-        .collect();
+        .map(|package_name| dnf::get_installed_details(package_name))
+        .map(|line| split_string_using_delimiter(line, "|#|"))
+        .map(|details| (details[0].clone(), Vec::from([details[1].clone(), details[2].clone()])))
+        .collect::<HashMap<String, Vec<String>>>();
     
+    let update_builder: UpdateBuilder = UpdateBuilder::new(
+        processed_details, packages_names
+    );
+
     let updates: Vec<Update> = available_updates
                                 .into_iter()
-                                .map(|line| Update::from_dnf_output(line))
+                                .map(|line| update_builder.from_dnf_output(line))
                                 .collect();
 
 
@@ -95,13 +103,15 @@ fn main() {
     let partitions = partition_builder.build();
     
     for (partition_id, partition) in &partitions {
-        if (*partition.get_release_type() <= ReleaseType::Patch || *partition.get_severity() > Severity::None) {
+        if *partition.get_release_type() <= ReleaseType::Patch || *partition.get_severity() > Severity::None {
             println!(
                 "\nPartition Id: \"{}\" \nType: {} \nSecurity grade: {}", 
                 partition_id, partition.get_release_type(), partition.get_severity()
             );
             for _update in partition.get_updates().into_iter() {
-                println!("\t\"{}\" {}-{}", _update.get_signature(), _update.get_version(), _update.get_release());
+                let update_info: &Vec<String> = processed_details.get(&_update.get_signature().clone()).unwrap();
+                let installed_info: &Vec<String> = packages_names.get(&update_info[0]).unwrap();
+                println!("\t{:55} {}-{} -> {}-{}", update_info[0], installed_info[0], installed_info[1], update_info[1], update_info[2]);
             }
         }
     }
