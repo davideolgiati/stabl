@@ -1,6 +1,11 @@
 # stabl
 A DNF wrapper to selectively choose what packages to upgrade
 
+# v0.1.0
+### Features
+- First real working version
+- Rust Rewrite
+
 # v0.0.5
 ### Features
 - Enhanced repository query system to include update urgency and partition information
