@@ -15,27 +15,6 @@ use commons::string::split_string_using_delimiter;
 use std::collections::HashMap;
 use std::collections::HashSet;
 
-fn get_dnf_updates_list() -> Vec<String> {
-    println!("[i] getting updates list from remote...");
-
-    dnf::get_available_updates()
-}
-
-fn get_update_details_from_repository(dnf_updates_list: &[String]) -> Vec<String>{
-    println!("[i] getting update details from repository...");
-    
-    let signatures: Vec<String> = extract_signature_list(dnf_updates_list.to_owned());
-    dnf::get_updates_details(signatures)
-}
-
-fn extract_signature_list(available_updates: Vec<String>) -> Vec<String> {
-    available_updates
-        .into_iter()
-        .map(|line| split_string_using_delimiter(line, " "))
-        .map(|tokens| tokens[3].clone())
-        .collect()
-}
-
 fn extract_version_and_release_map(details_from_repository: Vec<String>) -> HashMap<String, Vec<String>> {
     let mut version_and_release_map = HashMap::new();
     let details: Vec<Vec<String>> = details_from_repository
@@ -65,8 +44,8 @@ fn main() {
     ui::display_stabl_logo();
     ui::display_system_informations();
     
-    let dnf_updates_list: Vec<String> = get_dnf_updates_list();
-    let repository_update_details: Vec<String> = get_update_details_from_repository(&dnf_updates_list);
+    let dnf_updates_list: Vec<String> = dnf::get_updates_list();
+    let repository_update_details: Vec<String> = dnf::get_updates_details(&dnf_updates_list);
 
     println!("[i] getting installed packages details...");
 
@@ -110,8 +89,11 @@ fn main() {
     for (partition_id, partition) in &partitions {
         if *partition.get_release_type() <= ReleaseType::Patch || *partition.get_severity() > Severity::None {
             selected_part_id.push(partition_id.clone());
+        }
+
+        if *partition.get_release_type() == ReleaseType::Minor {
             println!(
-                "\nPartition Id: \"{:30}\" Type: {:15} Security grade: {}", 
+                "\nPartition Id: {:30} Type: {:15} Security grade: {}", 
                 partition_id, partition.get_release_type(), partition.get_severity()
             );
 
