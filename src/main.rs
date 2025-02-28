@@ -16,26 +16,15 @@ use std::collections::HashMap;
 use std::collections::HashSet;
 
 fn extract_version_and_release_map(details_from_repository: Vec<String>) -> HashMap<String, Vec<String>> {
-    let mut version_and_release_map = HashMap::new();
-    let details: Vec<Vec<String>> = details_from_repository
+    details_from_repository
         .clone()
         .into_iter()
         .map(|line| split_string_using_delimiter(line, "|#|"))
-        .collect();
-
-    for detail in details {
-        version_and_release_map.insert(
-            detail[4].clone(), 
-            Vec::from([detail[0].clone(), detail[1].clone(), detail[2].clone()])
-        );
-
-        version_and_release_map.insert(
-            detail[5].clone(), 
-            Vec::from([detail[0].clone(), detail[1].clone(), detail[2].clone()])
-        );
-    }
-
-    version_and_release_map
+        .flat_map(|tokens| Vec::from([
+            (tokens[4].to_owned(), tokens[..=2].to_owned()), 
+            (tokens[5].to_owned(), tokens[..=2].to_owned())
+        ]))
+        .collect::<HashMap<String, Vec<String>>>()
 }
 
 fn main() {
@@ -89,9 +78,7 @@ fn main() {
     for (partition_id, partition) in &partitions {
         if *partition.get_release_type() <= ReleaseType::Patch || *partition.get_severity() > Severity::None {
             selected_part_id.push(partition_id.clone());
-        }
 
-        if *partition.get_release_type() == ReleaseType::Minor {
             println!(
                 "\nPartition Id: {:30} Type: {:15} Security grade: {}", 
                 partition_id, partition.get_release_type(), partition.get_severity()
