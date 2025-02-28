@@ -2,7 +2,7 @@ mod system;
 use model::enums::release_type::ReleaseType;
 use model::enums::severity::Severity;
 use model::updates::builder::UpdateBuilder;
-use system::os;
+use system::ui;
 use system::dnf;
 
 mod model;
@@ -15,18 +15,17 @@ use commons::string::split_string_using_delimiter;
 use std::collections::HashMap;
 use std::collections::HashSet;
 
-fn display_stabl_logo() {
-    let logo:&str = r"
-     _        _     _ 
- ___| |_ __ _| |__ | |
-/ __| __/ _` | '_ \| |
-\__ \ || (_| | |_) | |
-|___/\__\__,_|_.__/|_|
+fn get_dnf_updates_list() -> Vec<String> {
+    println!("[i] getting updates list from remote...");
 
-A DNF wrapper to selectively choose what packages to upgrade
+    dnf::get_available_updates()
+}
 
-    ";
-    println!("{}", logo);
+fn get_update_details_from_repository(dnf_updates_list: &[String]) -> Vec<String>{
+    println!("[i] getting update details from repository...");
+    
+    let signatures: Vec<String> = extract_signature_list(dnf_updates_list.to_owned());
+    dnf::get_updates_details(signatures)
 }
 
 fn extract_signature_list(available_updates: Vec<String>) -> Vec<String> {
@@ -61,24 +60,17 @@ fn extract_version_and_release_map(details_from_repository: Vec<String>) -> Hash
 }
 
 fn main() {
-    display_stabl_logo();
-    let system_details:String = os::get_os_name();
-    let mut partition_builder: PartitionBuilder = PartitionBuilder::new();
+    let mut partition_builder:PartitionBuilder = PartitionBuilder::new();
     
-    println!("[*] running on: {}\n", system_details);
-    println!("[i] process started!");
-    println!("[i] getting updates list from remote...");
-
-    let available_updates: Vec<String> = dnf::get_available_updates();
+    ui::display_stabl_logo();
+    ui::display_system_informations();
     
-    println!("[i] getting update details from repository...");
-    
-    let signatures: Vec<String> = extract_signature_list(available_updates.clone());
-    let remote_details: Vec<String> = dnf::get_updates_details(signatures);
+    let dnf_updates_list: Vec<String> = get_dnf_updates_list();
+    let repository_update_details: Vec<String> = get_update_details_from_repository(&dnf_updates_list);
 
     println!("[i] getting installed packages details...");
 
-    let processed_details: HashMap<String, Vec<String>> = extract_version_and_release_map(remote_details.clone());
+    let processed_details: HashMap<String, Vec<String>> = extract_version_and_release_map(repository_update_details.clone());
     let packages_names: HashMap<String, Vec<String>> = processed_details
         .clone()
         .into_values()
@@ -96,14 +88,14 @@ fn main() {
         &processed_details, &packages_names
     );
 
-    let valid_updates: Vec<String> = available_updates
+    let valid_updates: Vec<String> = dnf_updates_list
         .into_iter()
         .filter(|line| update_builder.check_dnf_output_valididty(line.clone()))
         .collect();
 
     let updates: Vec<Update> = valid_updates
         .into_iter()
-        .map(|line| update_builder.from_dnf_output(line))
+        .map(|line| update_builder.add_dnf_output(line))
         .collect();
 
     println!("[i] building update partitions...");

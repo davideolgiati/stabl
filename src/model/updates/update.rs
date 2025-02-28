@@ -7,7 +7,6 @@ pub struct Update {
         _partition: String,
         _release_type: ReleaseType,
         _severity: Severity,
-        _signature: String,
         _installed_version: SemanticVersion,
         _update_version: SemanticVersion,
         _name: String
@@ -18,8 +17,7 @@ impl Update {
         pub fn new(
                 partition: String, 
                 release_type: ReleaseType, 
-                severity: Severity, 
-                signature: String,
+                severity: Severity,
                 installed_version: SemanticVersion,
                 update_version: SemanticVersion,
                 name: String
@@ -28,7 +26,6 @@ impl Update {
                         _partition: partition,
                         _release_type: release_type,
                         _severity: severity,
-                        _signature: signature,
                         _installed_version: installed_version,
                         _update_version: update_version,
                         _name: name
@@ -45,10 +42,6 @@ impl Update {
 
         pub fn get_severity(&self) -> &Severity {
                 &self._severity
-        }
-        
-        pub fn get_signature(&self) -> &String {
-                &self._signature
         }
 
         pub fn get_installed_version(&self) -> &SemanticVersion {

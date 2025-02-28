@@ -47,7 +47,7 @@ impl UpdateBuilder {
                 !update_info[0].is_empty()
         }
 
-        pub fn from_dnf_output(&mut self, stdout: String) -> Update {
+        pub fn add_dnf_output(&mut self, stdout: String) -> Update {
                 assert!(!stdout.is_empty());
 
                 let splitted_str = split_string_using_delimiter(stdout, " ");
@@ -89,10 +89,8 @@ impl UpdateBuilder {
                 }
 
                 let result: Update = Update::new(
-                        partition, release_type, 
-                        severity, signature, 
-                        installed_version, update_version, 
-                        name
+                        partition, release_type, severity, 
+                        installed_version, update_version, name
                 );
 
                 result
