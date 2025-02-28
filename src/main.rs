@@ -63,17 +63,21 @@ fn extract_version_and_release_map(details_from_repository: Vec<String>) -> Hash
 fn main() {
     display_stabl_logo();
     let system_details:String = os::get_os_name();
-    println!("[i] running on: {}\n", system_details);
+    let mut partition_builder: PartitionBuilder = PartitionBuilder::new();
+    
+    println!("[*] running on: {}\n", system_details);
     println!("[i] process started!");
     println!("[i] getting updates list from remote...");
 
     let available_updates: Vec<String> = dnf::get_available_updates();
     
-    println!("[i] gruoping updates in partititons...");
+    println!("[i] getting update details from repository...");
     
-    let mut partition_builder: PartitionBuilder = PartitionBuilder::new();
     let signatures: Vec<String> = extract_signature_list(available_updates.clone());
     let remote_details: Vec<String> = dnf::get_updates_details(signatures);
+
+    println!("[i] getting installed packages details...");
+
     let processed_details: HashMap<String, Vec<String>> = extract_version_and_release_map(remote_details.clone());
     let packages_names: HashMap<String, Vec<String>> = processed_details
         .clone()
@@ -86,34 +90,53 @@ fn main() {
         .map(|details| (details[0].clone(), Vec::from([details[1].clone(), details[2].clone()])))
         .collect::<HashMap<String, Vec<String>>>();
     
-    let update_builder: UpdateBuilder = UpdateBuilder::new(
+    println!("[i] enriching updates with additional informations...");
+
+    let mut update_builder: UpdateBuilder = UpdateBuilder::new(
         &processed_details, &packages_names
     );
 
-    let updates: Vec<Update> = available_updates
-                                .into_iter()
-                                .map(|line| update_builder.from_dnf_output(line))
-                                .collect();
+    let valid_updates: Vec<String> = available_updates
+        .into_iter()
+        .filter(|line| update_builder.check_dnf_output_valididty(line.clone()))
+        .collect();
 
+    let updates: Vec<Update> = valid_updates
+        .into_iter()
+        .map(|line| update_builder.from_dnf_output(line))
+        .collect();
+
+    println!("[i] building update partitions...");
 
     for update in updates {
         partition_builder.register_update(update.clone());
     }
     
     let partitions = partition_builder.build();
+    let mut selected_part_id: Vec<String> = Vec::new();
     
     for (partition_id, partition) in &partitions {
         if *partition.get_release_type() <= ReleaseType::Patch || *partition.get_severity() > Severity::None {
+            selected_part_id.push(partition_id.clone());
             println!(
-                "\nPartition Id: \"{}\" \nType: {} \nSecurity grade: {}", 
+                "\nPartition Id: \"{:30}\" Type: {:15} Security grade: {}", 
                 partition_id, partition.get_release_type(), partition.get_severity()
             );
-            
+
             for _update in partition.get_updates().iter() {
-                let update_info: &Vec<String> = processed_details.get(&_update.get_signature().clone()).unwrap();
-                let installed_info: &Vec<String> = packages_names.get(&update_info[0]).unwrap();
-                println!("\t{:55} {}-{} -> {}-{}", update_info[0], installed_info[0], installed_info[1], update_info[1], update_info[2]);
+                println!("\t{:55} {} -> {}", _update.get_name(), _update.get_installed_version(), _update.get_updated_version());
             }
         }
+    }
+
+    println!("\nMajor   updates: {}", update_builder.get_major_count());
+    println!("Minor   updates: {}", update_builder.get_minor_count());
+    println!("Patch   updates: {}", update_builder.get_patch_count());
+    println!("Release updates: {}\n\n", update_builder.get_release_count());
+
+    if !selected_part_id.is_empty() {
+        println!("\nsudo dnf update --advisory={}\n\n", selected_part_id.join(","));
+    } else {
+        println!("\nno suggested updates found\n\n");
     }
 }

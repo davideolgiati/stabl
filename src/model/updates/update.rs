@@ -1,5 +1,6 @@
 use crate::model::enums::release_type::ReleaseType;
 use crate::model::enums::severity::Severity;
+use crate::model::semantic_version::SemanticVersion;
 
 #[derive(Clone)]
 pub struct Update {
@@ -7,8 +8,8 @@ pub struct Update {
         _release_type: ReleaseType,
         _severity: Severity,
         _signature: String,
-        _version: String,
-        _release: String,
+        _installed_version: SemanticVersion,
+        _update_version: SemanticVersion,
         _name: String
 }
 
@@ -19,8 +20,8 @@ impl Update {
                 release_type: ReleaseType, 
                 severity: Severity, 
                 signature: String,
-                version: String,
-                release: String,
+                installed_version: SemanticVersion,
+                update_version: SemanticVersion,
                 name: String
         ) -> Update { 
                 Update {
@@ -28,8 +29,8 @@ impl Update {
                         _release_type: release_type,
                         _severity: severity,
                         _signature: signature,
-                        _version: version,
-                        _release: release,
+                        _installed_version: installed_version,
+                        _update_version: update_version,
                         _name: name
                 }
         }
@@ -50,12 +51,12 @@ impl Update {
                 &self._signature
         }
 
-        pub fn get_version(&self) -> &String {
-                &self._version
+        pub fn get_installed_version(&self) -> &SemanticVersion {
+                &self._installed_version
         }
 
-        pub fn get_release(&self) -> &String {
-                &self._release
+        pub fn get_updated_version(&self) -> &SemanticVersion {
+                &self._update_version
         }
 
         pub fn get_name(&self) -> &String {

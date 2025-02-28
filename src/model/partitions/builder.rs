@@ -17,7 +17,6 @@ impl PartitionBuilder {
 
         pub fn register_update(&mut self, update: Update) {
                 let current_partition_id: String = update.get_partition_id().clone();
-                let update_signature: String = update.get_signature().clone();
                 let updated_partition: Partition = self.update_partition(update);
 
                 self._partitions.insert(current_partition_id.clone(), updated_partition);    
