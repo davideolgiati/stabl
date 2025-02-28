@@ -3,7 +3,6 @@ use std::collections::HashMap;
 use crate::model::partitions::partition::Partition;
 use crate::model::updates::update::Update;
 
-use crate::dnf;
 
 pub struct PartitionBuilder {
         _partitions: HashMap<String, Partition>
@@ -30,17 +29,17 @@ impl PartitionBuilder {
 
                 current_partition.add_update(update.clone());
 
-                return current_partition.clone()
+                current_partition.clone()
         }
 
         fn get_partition_by_id(&self, partition_id: String) -> Partition {
-                return self._partitions
+                self._partitions
                         .get(&partition_id)
                         .unwrap_or(&Partition::new())
-                        .clone();
+                        .clone()
         }
 
         pub fn build(self) -> HashMap<String, Partition> {
-                return self._partitions.clone();
+                self._partitions.clone()
         }
 }

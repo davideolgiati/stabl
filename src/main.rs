@@ -30,11 +30,11 @@ A DNF wrapper to selectively choose what packages to upgrade
 }
 
 fn extract_signature_list(available_updates: Vec<String>) -> Vec<String> {
-    return available_updates
+    available_updates
         .into_iter()
         .map(|line| split_string_using_delimiter(line, " "))
         .map(|tokens| tokens[3].clone())
-        .collect();
+        .collect()
 }
 
 fn extract_version_and_release_map(details_from_repository: Vec<String>) -> HashMap<String, Vec<String>> {
@@ -57,7 +57,7 @@ fn extract_version_and_release_map(details_from_repository: Vec<String>) -> Hash
         );
     }
 
-    return version_and_release_map
+    version_and_release_map
 }
 
 fn main() {
@@ -81,13 +81,13 @@ fn main() {
         .map(|item| item[0].clone())
         .collect::<HashSet<String>>()
         .into_iter()
-        .map(|package_name| dnf::get_installed_details(package_name))
+        .map(dnf::get_installed_details)
         .map(|line| split_string_using_delimiter(line, "|#|"))
         .map(|details| (details[0].clone(), Vec::from([details[1].clone(), details[2].clone()])))
         .collect::<HashMap<String, Vec<String>>>();
     
     let update_builder: UpdateBuilder = UpdateBuilder::new(
-        processed_details, packages_names
+        &processed_details, &packages_names
     );
 
     let updates: Vec<Update> = available_updates
@@ -108,7 +108,8 @@ fn main() {
                 "\nPartition Id: \"{}\" \nType: {} \nSecurity grade: {}", 
                 partition_id, partition.get_release_type(), partition.get_severity()
             );
-            for _update in partition.get_updates().into_iter() {
+            
+            for _update in partition.get_updates().iter() {
                 let update_info: &Vec<String> = processed_details.get(&_update.get_signature().clone()).unwrap();
                 let installed_info: &Vec<String> = packages_names.get(&update_info[0]).unwrap();
                 println!("\t{:55} {}-{} -> {}-{}", update_info[0], installed_info[0], installed_info[1], update_info[1], update_info[2]);

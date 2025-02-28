@@ -1,9 +1,5 @@
 use crate::model::enums::release_type::ReleaseType;
 use crate::model::enums::severity::Severity;
-use crate::commons::string::split_string_using_delimiter;
-
-use std::str::FromStr;
-
 
 #[derive(Clone)]
 pub struct Update {
@@ -39,30 +35,30 @@ impl Update {
         }
 
         pub fn get_partition_id(&self) -> &String {
-                return &self._partition;
+                &self._partition
         }
 
         pub fn get_release_type(&self) -> &ReleaseType {
-                return &self._release_type;
+                &self._release_type
         }
 
         pub fn get_severity(&self) -> &Severity {
-                return &self._severity;
+                &self._severity
         }
         
         pub fn get_signature(&self) -> &String {
-                return &self._signature;
+                &self._signature
         }
 
         pub fn get_version(&self) -> &String {
-                return &self._version;
+                &self._version
         }
 
         pub fn get_release(&self) -> &String {
-                return &self._release;
+                &self._release
         }
 
         pub fn get_name(&self) -> &String {
-                return &self._name
+                &self._name
         }
 }

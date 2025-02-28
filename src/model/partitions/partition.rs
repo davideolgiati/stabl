@@ -34,14 +34,14 @@ impl Partition {
     }
 
     pub fn get_release_type(&self) -> &ReleaseType {
-        return &self._release_type
+        &self._release_type
     }
 
     pub fn get_severity(&self) -> &Severity {
-        return &self._severity
+        &self._severity
     }
 
     pub fn get_updates(&self) -> &Vec<Update> {
-        return &self._updates
+        &self._updates
     }
 }
