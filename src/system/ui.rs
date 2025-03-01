@@ -1,4 +1,4 @@
-use crate::system::os;
+use crate::{model::updates::builder::UpdateBuilder, system::os};
 
 pub fn display_stabl_logo() {
         let logo:&str = r"
@@ -16,4 +16,11 @@ pub fn display_stabl_logo() {
     
 pub fn display_system_informations() {
         println!("[*] running on: {}\n", os::get_os_name());
+}
+
+pub fn display_suggested_upgrades(update_builder: &UpdateBuilder) {
+        println!("\nMajor   updates: {}", update_builder.get_major_count());
+        println!("Minor   updates: {}", update_builder.get_minor_count());
+        println!("Patch   updates: {}", update_builder.get_patch_count());
+        println!("Release updates: {}\n\n", update_builder.get_release_count());
 }

@@ -13,7 +13,6 @@ mod commons;
 use commons::string::split_string_using_delimiter;
 
 use std::collections::HashMap;
-use std::collections::HashSet;
 
 fn extract_version_and_release_map(details_from_repository: Vec<String>) -> HashMap<String, Vec<String>> {
     details_from_repository
@@ -21,8 +20,8 @@ fn extract_version_and_release_map(details_from_repository: Vec<String>) -> Hash
         .into_iter()
         .map(|line| split_string_using_delimiter(line, "|#|"))
         .flat_map(|tokens| Vec::from([
-            (tokens[4].to_owned(), tokens[..=2].to_owned()), 
-            (tokens[5].to_owned(), tokens[..=2].to_owned())
+            (tokens[3].to_owned(), tokens[..=2].to_owned()), 
+            (tokens[4].to_owned(), tokens[..=2].to_owned())
         ]))
         .collect::<HashMap<String, Vec<String>>>()
 }
@@ -35,20 +34,9 @@ fn main() {
     
     let dnf_updates_list: Vec<String> = dnf::get_updates_list();
     let repository_update_details: Vec<String> = dnf::get_updates_details(&dnf_updates_list);
-
-    println!("[i] getting installed packages details...");
+    let packages_names: HashMap<String, Vec<String>> = dnf::get_installed_details(&repository_update_details);
 
     let processed_details: HashMap<String, Vec<String>> = extract_version_and_release_map(repository_update_details.clone());
-    let packages_names: HashMap<String, Vec<String>> = processed_details
-        .clone()
-        .into_values()
-        .map(|item| item[0].clone())
-        .collect::<HashSet<String>>()
-        .into_iter()
-        .map(dnf::get_installed_details)
-        .map(|line| split_string_using_delimiter(line, "|#|"))
-        .map(|details| (details[0].clone(), Vec::from([details[1].clone(), details[2].clone()])))
-        .collect::<HashMap<String, Vec<String>>>();
     
     println!("[i] enriching updates with additional informations...");
 
@@ -90,10 +78,7 @@ fn main() {
         }
     }
 
-    println!("\nMajor   updates: {}", update_builder.get_major_count());
-    println!("Minor   updates: {}", update_builder.get_minor_count());
-    println!("Patch   updates: {}", update_builder.get_patch_count());
-    println!("Release updates: {}\n\n", update_builder.get_release_count());
+    ui::display_suggested_upgrades(&update_builder);
 
     if !selected_part_id.is_empty() {
         println!("\nsudo dnf update --advisory={}\n\n", selected_part_id.join(","));
