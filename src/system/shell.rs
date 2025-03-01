@@ -2,13 +2,25 @@ use std::process::Command;
 use std::process::Output;
 
 pub fn run_command_and_read_stdout(command: &str, args: &[&str]) -> String {
-        let system_details:&Output = &Command::new(command)
-                .args(args)
-                .output()
-                .expect("failed to get system details"); //TODO: errore specifico
+        assert!(!command.is_empty());
+        assert!(!args.is_empty());
+        assert!(!command.contains(" "));
         
-        let stdout:String = String::from_utf8(system_details.stdout.clone())
-                .expect("System details returned an unparsable UTF-8 string"); //TODO: errore specifico
+        let mut cmd = Command::new(command);
+
+        for arg in args {
+                assert!(!arg.is_empty());
+                assert!(!arg.contains(" "));
+
+                cmd.arg(arg);
+        }
+
+        let console_output: Output = cmd
+                .output()
+                .unwrap_or_else(|_| panic!("failed to run {}!", command));
+        
+        let stdout:String = String::from_utf8(console_output.stdout)
+                .unwrap_or_else(|_| panic!("{} returned an unparsable sequence of bytes!", command));
         
         stdout
 }
