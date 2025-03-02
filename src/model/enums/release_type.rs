@@ -33,5 +33,90 @@ impl Display for ReleaseType {
                 Self::Repack => write!(f, "REPACK"),
             }
         }
-    }
+}
+
+
+#[cfg(test)]
+mod tests {
+    use super::*;
     
+    #[test]
+    fn new_major() {
+        let input: &str = "unspecified";
+        let expected: ReleaseType = ReleaseType::Major;
+        let output = ReleaseType::from_str(input).unwrap();
+
+        assert!(output == expected);
+    }
+
+    #[test]
+    fn new_minor() {
+        let input: &str = "enhancement";
+        let expected: ReleaseType = ReleaseType::Minor;
+        let output = ReleaseType::from_str(input).unwrap();
+
+        assert!(output == expected);
+    }
+
+    #[test]
+    fn new_patch() {
+        let input: &str = "bugfix";
+        let expected: ReleaseType = ReleaseType::Patch;
+        let output = ReleaseType::from_str(input).unwrap();
+
+        assert!(output == expected);
+    }
+
+    #[test]
+    fn new_patch_security() {
+        let input: &str = "security";
+        let expected: ReleaseType = ReleaseType::Patch;
+        let output = ReleaseType::from_str(input).unwrap();
+
+        assert!(output == expected);
+    }
+
+    #[test]
+    fn print_major() {
+        let input: &str = "unspecified";
+        let expected: &str = "MAJOR";
+        let output = ReleaseType::from_str(input).unwrap();
+
+        assert!(format!("{}", output) == expected);
+    }
+
+    #[test]
+    fn print_minor() {
+        let input: &str = "enhancement";
+        let expected: &str = "MINOR";
+        let output = ReleaseType::from_str(input).unwrap();
+
+        assert!(format!("{}", output) == expected);
+    }
+
+    #[test]
+    fn print_patch() {
+        let input: &str = "bugfix";
+        let expected: &str = "PATCH";
+        let output = ReleaseType::from_str(input).unwrap();
+
+        assert!(format!("{}", output) == expected);
+    }
+
+    #[test]
+    fn print_patch_security() {
+        let input: &str = "security";
+        let expected: &str = "PATCH";
+        let output = ReleaseType::from_str(input).unwrap();
+
+        assert!(format!("{}", output) == expected);
+    }
+
+    #[test]
+    fn unknown_string() {
+        let input: &str = "major";
+        let output = ReleaseType::from_str(input);
+
+        assert!(output.is_err(), "'major' is not a valid value for ReleaseType");
+    }
+}
