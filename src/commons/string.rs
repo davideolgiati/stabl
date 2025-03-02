@@ -15,3 +15,17 @@ pub fn split_string_using_delimiter(string: String, delimiter: &str) -> Vec<Stri
 
         output
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    
+
+    #[test]
+    fn happy_path() {
+        let test: String = "Hello World!".to_string();
+        let expected: Vec<String> = vec!["Hello".to_string(), "World!".to_string()];
+        let result = split_string_using_delimiter(test, " ");
+        assert_eq!(result, expected);
+    }
+}

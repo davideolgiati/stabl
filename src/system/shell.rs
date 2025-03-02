@@ -1,7 +1,7 @@
 use std::process::Command;
 use std::process::Output;
 
-pub fn run_command_and_read_stdout(command: &str, args: &[&str]) -> String {
+pub fn run_command_and_read_stdout(command: &str, args: Vec<String>) -> String {
         assert!(!command.is_empty());
         assert!(!args.is_empty());
         assert!(!command.contains(" "));
@@ -12,7 +12,7 @@ pub fn run_command_and_read_stdout(command: &str, args: &[&str]) -> String {
                 assert!(!arg.is_empty());
                 assert!(!arg.contains(" "));
 
-                cmd.arg(arg);
+                cmd.arg(&arg);
         }
 
         let console_output: Output = cmd
