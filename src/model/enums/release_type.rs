@@ -14,6 +14,8 @@ impl FromStr for ReleaseType {
         type Err = String;
     
         fn from_str(input: &str) -> Result<ReleaseType, Self::Err> {
+                assert!(!input.is_empty());
+            
                 match input.to_lowercase().as_str() {
                         "security"      => Ok(ReleaseType::Patch),
                         "bugfix"        => Ok(ReleaseType::Patch),
@@ -118,5 +120,11 @@ mod tests {
         let output = ReleaseType::from_str(input);
 
         assert!(output.is_err(), "'major' is not a valid value for ReleaseType");
+    }
+
+    #[test]
+    #[should_panic]
+    fn empty_string() {
+        ReleaseType::from_str("").unwrap();
     }
 }
