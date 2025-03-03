@@ -22,6 +22,9 @@ impl Update {
                 update_version: SemanticVersion,
                 name: String
         ) -> Update { 
+                assert!(!partition.is_empty());
+                assert!(!name.is_empty());
+
                 Update {
                         _partition: partition,
                         _release_type: release_type,
@@ -56,3 +59,79 @@ impl Update {
                 &self._name
         }
 }
+
+#[cfg(test)]
+mod tests {
+        use super::*;
+        use crate::model::semantic_version::compose_new_semantic_version;
+        
+        #[test]
+        fn happy_path() {
+                let name: String = "firefox".to_string();
+                let partition: String = "FEDORA-2025-1234".to_string();
+                let severity: Severity = Severity::Critical;
+                let release_type: ReleaseType = ReleaseType::Major;
+                let installed_version: SemanticVersion = compose_new_semantic_version(
+                        "1.0.0".to_string(), "1.fc41".to_string()
+                );
+                let update_version: SemanticVersion = compose_new_semantic_version(
+                        "2.0.0".to_string(), "2.fc41".to_string()
+                );
+
+                let output = Update::new(
+                        partition.clone(), release_type,
+                        severity, installed_version,
+                        update_version.clone(), name.clone()
+                );
+    
+                assert_eq!(*output.get_name(), name);
+                assert_eq!(*output.get_partition_id(), partition);
+                assert!(*output.get_release_type() == ReleaseType::Major);
+                assert!(*output.get_severity() == Severity::Critical);
+                assert_eq!(format!("{}", *output.get_installed_version()), "1.0.0-1.fc41");
+                assert_eq!(format!("{}", *output.get_updated_version()), "2.0.0-2.fc41");
+        }
+    
+        #[test]
+        #[should_panic]
+        fn empty_name() {
+                let name: String = "".to_string();
+                let partition: String = "FEDORA-2025-1234".to_string();
+                let severity: Severity = Severity::Critical;
+                let release_type: ReleaseType = ReleaseType::Major;
+                let installed_version: SemanticVersion = compose_new_semantic_version(
+                        "1.0.0".to_string(), "1.fc41".to_string()
+                );
+                let update_version: SemanticVersion = compose_new_semantic_version(
+                        "2.0.0".to_string(), "2.fc41".to_string()
+                );
+
+                let _output = Update::new(
+                        partition.clone(), release_type,
+                        severity, installed_version,
+                        update_version.clone(), name.clone()
+                );
+        }
+
+        #[test]
+        #[should_panic]
+        fn empty_partition() {
+                let name: String = "firefox".to_string();
+                let partition: String = "".to_string();
+                let severity: Severity = Severity::Critical;
+                let release_type: ReleaseType = ReleaseType::Major;
+                let installed_version: SemanticVersion = compose_new_semantic_version(
+                        "1.0.0".to_string(), "1.fc41".to_string()
+                );
+                let update_version: SemanticVersion = compose_new_semantic_version(
+                        "2.0.0".to_string(), "2.fc41".to_string()
+                );
+
+                let _output = Update::new(
+                        partition.clone(), release_type,
+                        severity, installed_version,
+                        update_version.clone(), name.clone()
+                );
+        }
+
+    }

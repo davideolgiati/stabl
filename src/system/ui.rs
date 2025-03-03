@@ -1,12 +1,13 @@
 use crate::{model::updates::builder::UpdateBuilder, system::os};
 
 pub fn display_stabl_logo() {
-        let logo:&str = r"
-         _        _     _ 
-     ___| |_ __ _| |__ | |
-    / __| __/ _` | '_ \| |
-    \__ \ || (_| | |_) | |
-    |___/\__\__,_|_.__/|_|
+        let logo:&str = r"          
+                                    ___________
+         _        _     _          \___________/
+     ___| |_ __ _| |__ | |           )_(   )_(
+    / __| __/ _` | '_ \| |           | |   | |
+    \__ \ || (_| | |_) | |           | |   | | 
+    |___/\__\__,_|_.__/|_|           |_|   |_|
     
     A DNF wrapper to selectively choose what packages to upgrade
     

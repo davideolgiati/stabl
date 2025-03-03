@@ -112,3 +112,46 @@ impl UpdateBuilder {
                 &self._release_count
         }
 }
+
+#[cfg(test)]
+mod tests {
+        use crate::model::semantic_version::SemanticVersion;
+
+        use super::*;
+        
+        #[test]
+        fn happy_path() {
+                let update_map = HashMap::from([(
+                        "firefox-2.0.0-1.fc41".to_string(), 
+                        vec![
+                                "firefox".to_string(), 
+                                "2.0.0".to_string(), 
+                                "1.fc41".to_string()
+                        ]
+                )]);
+                let installed_map = HashMap::from([(
+                        "firefox".to_string(), 
+                        vec![
+                                "1.0.0".to_string(), 
+                                "1.fc41".to_string()
+                        ]
+                )]);
+                let mut update_builder = UpdateBuilder::new(
+                        &update_map, &installed_map
+                );
+                let stdout: &str = "Fedora-2025-1234 bugfix None firefox-2.0.0-1.fc41 2025-03-02 02:18:47";
+
+                let output: Update = update_builder.add_dnf_output(stdout.to_string());
+
+                assert!(*output.get_partition_id() == "Fedora-2025-1234");
+                assert!(*output.get_release_type() == ReleaseType::Major);
+                assert!(*output.get_severity() == Severity::None);
+                assert!(*output.get_name() == "firefox");
+
+                let update_version: &SemanticVersion = output.get_updated_version();
+                let installed_version: &SemanticVersion = output.get_installed_version();
+
+                assert!(format!("{}", update_version) == "2.0.0-1.fc41");
+                assert!(format!("{}", installed_version) == "1.0.0-1.fc41");
+        }
+}
