@@ -31,10 +31,10 @@ impl UpdateBuilder {
                 }
         }
 
-        pub fn check_dnf_output_valididty(&self, stdout: String) -> bool {
+        pub fn check_dnf_output_valididty(&self, stdout: &str) -> bool {
                 assert!(!stdout.is_empty());
 
-                let splitted_str = split_string_using_delimiter(stdout, " ");
+                let splitted_str = split_string_using_delimiter(stdout.to_owned(), " ");
                 assert!(splitted_str.len() == 6);
 
                 let signature: String = splitted_str[3].clone();

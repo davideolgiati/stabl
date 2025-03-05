@@ -43,7 +43,6 @@ fn main() {
     let dnf_updates_list: Vec<String> = dnf::get_updates_list();
     let repository_update_details: Vec<String> = dnf::get_updates_details(&dnf_updates_list);
     let packages_names: HashMap<String, Vec<String>> = dnf::get_installed_details(&repository_update_details);
-
     let processed_details: HashMap<String, Vec<String>> = extract_version_and_release_map(repository_update_details.clone());
     
     println!("[i] enriching updates with additional informations...");
@@ -53,12 +52,14 @@ fn main() {
     );
 
     let valid_updates: Vec<String> = dnf_updates_list
-        .into_iter()
-        .filter(|line| update_builder.check_dnf_output_valididty(line.clone()))
+        .iter()
+        .filter(|&line | update_builder.check_dnf_output_valididty(line))
+        .cloned()
         .collect();
 
     let updates: Vec<Update> = valid_updates
-        .into_iter()
+        .iter()
+        .cloned()
         .map(|line| update_builder.add_dnf_output(line))
         .collect();
 
