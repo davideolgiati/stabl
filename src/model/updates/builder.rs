@@ -10,6 +10,7 @@ use std::str::FromStr;
 pub struct UpdateBuilder {
         _repository_info: HashMap<String, Vec<String>>,
         _installed_info: HashMap<String, Vec<String>>,
+        _updates: Vec<Update>,
         _major_count: i16,
         _minor_count: i16,
         _patch_count: i16,
@@ -24,6 +25,7 @@ impl UpdateBuilder {
                 UpdateBuilder{
                         _repository_info: repository_info.clone(),
                         _installed_info: installed_info.clone(),
+                        _updates: Vec::new(),
                         _major_count: 0,
                         _minor_count: 0,
                         _patch_count: 0,
@@ -47,7 +49,7 @@ impl UpdateBuilder {
                 !update_info[0].is_empty()
         }
 
-        pub fn add_dnf_output(&mut self, stdout: String) -> Update {
+        pub fn add_dnf_output(&mut self, stdout: String) {
                 assert!(!stdout.is_empty());
 
                 let splitted_str = split_string_using_delimiter(stdout, " ");
@@ -93,7 +95,7 @@ impl UpdateBuilder {
                         installed_version, update_version, name
                 );
 
-                result
+                self._updates.push(result);
         }
 
         pub fn get_major_count(&self) -> &i16 {
@@ -110,6 +112,10 @@ impl UpdateBuilder {
         
         pub fn get_release_count(&self) -> &i16 {
                 &self._release_count
+        }
+
+        pub fn get_updates(&self) -> &Vec<Update> {
+                &self._updates
         }
 }
 
@@ -141,7 +147,9 @@ mod tests {
                 );
                 let stdout: &str = "Fedora-2025-1234 bugfix None firefox-2.0.0-1.fc41 2025-03-02 02:18:47";
 
-                let output: Update = update_builder.add_dnf_output(stdout.to_string());
+                update_builder.add_dnf_output(stdout.to_string());
+
+                let output: Update = update_builder.get_updates()[0].clone();
 
                 assert!(*output.get_partition_id() == "Fedora-2025-1234");
                 assert!(*output.get_release_type() == ReleaseType::Major);

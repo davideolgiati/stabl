@@ -1,4 +1,5 @@
 mod model;
+use model::partitions::partition::Partition;
 use model::updates::update::Update;
 use model::enums::severity::Severity;
 use model::updates::builder::UpdateBuilder;
@@ -16,16 +17,28 @@ use commons::string::split_string_using_delimiter;
 use std::collections::HashMap;
 use std::env;
 
-fn extract_version_and_release_map(details_from_repository: Vec<String>) -> HashMap<String, Vec<String>> {
+fn extract_version_and_release_map(details_from_repository: &[String]) -> HashMap<String, Vec<String>> {
     details_from_repository
-        .clone()
-        .into_iter()
+        .iter()
+        .cloned()
         .map(|line| split_string_using_delimiter(line, "|#|"))
         .flat_map(|tokens| Vec::from([
             (tokens[3].to_owned(), tokens[..=2].to_owned()), 
             (tokens[4].to_owned(), tokens[..=2].to_owned())
         ]))
         .collect::<HashMap<String, Vec<String>>>()
+}
+
+fn build_partitions(updates: &Vec<Update>) -> HashMap<String, Partition> {
+    println!("[i] building update partitions...");
+    
+    let mut partition_builder:PartitionBuilder = PartitionBuilder::new();
+    
+    for update in updates {
+        partition_builder.register_update(update.clone());
+    }
+    
+    partition_builder.build()
 }
 
 fn main() {
@@ -35,15 +48,13 @@ fn main() {
     args::look_for_help(&input_args);
     
     let max_release: ReleaseType = args::get_release_arg(&input_args);
-
-    let mut partition_builder:PartitionBuilder = PartitionBuilder::new();
     
     ui::display_system_informations();
     
     let dnf_updates_list: Vec<String> = dnf::get_updates_list();
     let repository_update_details: Vec<String> = dnf::get_updates_details(&dnf_updates_list);
     let packages_names: HashMap<String, Vec<String>> = dnf::get_installed_details(&repository_update_details);
-    let processed_details: HashMap<String, Vec<String>> = extract_version_and_release_map(repository_update_details.clone());
+    let processed_details: HashMap<String, Vec<String>> = extract_version_and_release_map(&repository_update_details);
     
     println!("[i] enriching updates with additional informations...");
 
@@ -57,19 +68,13 @@ fn main() {
         .cloned()
         .collect();
 
-    let updates: Vec<Update> = valid_updates
-        .iter()
-        .cloned()
-        .map(|line| update_builder.add_dnf_output(line))
-        .collect();
-
-    println!("[i] building update partitions...");
-
-    for update in updates {
-        partition_builder.register_update(update.clone());
+    for line in valid_updates {
+        update_builder.add_dnf_output(line)
     }
-    
-    let partitions = partition_builder.build();
+
+    let updates: &Vec<Update> = update_builder.get_updates();
+
+    let partitions: HashMap<String, Partition> = build_partitions(updates);
     let mut selected_part_id: Vec<String> = Vec::new();
     
     for (partition_id, partition) in &partitions {
@@ -90,8 +95,8 @@ fn main() {
     ui::display_suggested_upgrades(&update_builder);
 
     if !selected_part_id.is_empty() {
-        println!("\nsudo dnf update --advisory={}\n\n", selected_part_id.join(","));
-    } else {
-        println!("\nno suggested updates found\n\n");
-    }
+    println!("\nsudo dnf update --advisory={}\n\n", selected_part_id.join(","));
+} else {
+    println!("\nno suggested updates found\n\n");
+}
 }
