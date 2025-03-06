@@ -33,7 +33,7 @@ impl UpdateBuilder {
                 }
         }
 
-        pub fn check_dnf_output_valididty(&self, stdout: &str) -> bool {
+        pub fn check_dnf_output_valididty(&self, stdout: &String) -> bool {
                 assert!(!stdout.is_empty());
 
                 let splitted_str = split_string_using_delimiter(stdout.to_owned(), " ");
@@ -49,10 +49,10 @@ impl UpdateBuilder {
                 !update_info[0].is_empty()
         }
 
-        pub fn add_dnf_output(&mut self, stdout: String) {
+        pub fn add_dnf_output(&mut self, stdout: &String) {
                 assert!(!stdout.is_empty());
 
-                let splitted_str = split_string_using_delimiter(stdout, " ");
+                let splitted_str = split_string_using_delimiter(stdout.to_owned(), " ");
 
                 assert!(splitted_str.len() == 6);
 
@@ -147,7 +147,7 @@ mod tests {
                 );
                 let stdout: &str = "Fedora-2025-1234 bugfix None firefox-2.0.0-1.fc41 2025-03-02 02:18:47";
 
-                update_builder.add_dnf_output(stdout.to_string());
+                update_builder.add_dnf_output(&stdout.to_string());
 
                 let output: Update = update_builder.get_updates()[0].clone();
 

@@ -62,14 +62,10 @@ fn main() {
         &processed_details, &packages_names
     );
 
-    let valid_updates: Vec<String> = dnf_updates_list
-        .iter()
-        .filter(|&line | update_builder.check_dnf_output_valididty(line))
-        .cloned()
-        .collect();
-
-    for line in valid_updates {
-        update_builder.add_dnf_output(line)
+    for line in dnf_updates_list {
+        if update_builder.check_dnf_output_valididty(&line) {
+            update_builder.add_dnf_output(&line)
+        }
     }
 
     let updates: &Vec<Update> = update_builder.get_updates();

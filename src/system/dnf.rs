@@ -13,23 +13,25 @@ pub fn get_updates_list() -> Vec<String> {
                 "updateinfo".to_string(), "list".to_string(), 
                 "--updates".to_string(), "--quiet".to_string()
         ];
-        let output: String = shell::run_command_and_read_stdout("dnf", args);
+        let stdout: String = shell::run_command_and_read_stdout("dnf", args);
 
-        if output.is_empty() {
+        if stdout.is_empty() {
                 return Vec::new();
         }
 
-        let mut updates_by_line: Vec<String> = split_string_using_delimiter(output, "\n");
-        let output: Vec<String> = updates_by_line.drain(1..).collect();
+        let output: Vec<String> = split_string_using_delimiter(stdout, "\n")
+                .drain(1..)
+                .collect();
 
         output
 }
 
 pub fn get_updates_details(updates_list: &[String]) -> Vec<String> {
-        
-        let updates: HashSet<String> = updates_list.iter().cloned()
-                .map(|line: String| split_string_using_delimiter(line, " "))
-                .map(|items: Vec<String>| items[3].clone())
+        let updates: HashSet<String> = 
+                updates_list
+                .iter()
+                .cloned()
+                .map(|line: String| split_string_using_delimiter(line, " ")[3].clone())
                 .collect::<HashSet<String>>();
 
         println!("[i] getting details from repository for {} update ...", updates.len());
@@ -50,8 +52,7 @@ pub fn get_installed_details(updates_list: &[String]) -> HashMap<String, Vec<Str
         assert!(!updates_list.is_empty());
         
         let installed = updates_list.iter().cloned()
-                .map(|line: String| split_string_using_delimiter(line, "|#|"))
-                .map(|items: Vec<String>| items[0].clone())
+                .map(|line: String| split_string_using_delimiter(line, "|#|")[0].clone())
                 .collect::<HashSet<String>>();
 
         println!("[i] getting details for {} installed packages ...", installed.len());
