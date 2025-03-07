@@ -72,23 +72,30 @@ fn main() {
 
     let partitions: HashMap<String, Partition> = build_partitions(updates);
     let mut selected_part_id: Vec<String> = Vec::new();
-    
+    let mut buffer = String::from("");
+
+
     for (partition_id, partition) in &partitions {
         if *partition.get_release_type() <= max_release || *partition.get_severity() > Severity::None {
             selected_part_id.push(partition_id.clone());
 
-            println!(
-                "\nPartition Id: {:30} Type: {:15} Security grade: {}", 
+            buffer = buffer + &format!(
+                "\nPartition Id: {:30} Type: {:15} Security grade: {}\n", 
                 partition_id, partition.get_release_type(), partition.get_severity()
             );
 
             for _update in partition.get_updates().iter() {
-                println!("\t{:55} {} -> {}", _update.get_name(), _update.get_installed_version(), _update.get_updated_version());
+                buffer = buffer + &format!(
+                    "\t{:55} {} -> {}\n", 
+                    _update.get_name(), 
+                    _update.get_installed_version(), 
+                    _update.get_updated_version()
+                );
             }
         }
     }
 
-    ui::display_suggested_upgrades(&update_builder);
+    ui::display_suggested_upgrades(&update_builder, buffer);
 
     if !selected_part_id.is_empty() {
     println!("\nsudo dnf update --advisory={}\n\n", selected_part_id.join(","));

@@ -19,9 +19,10 @@ pub fn display_system_informations() {
         println!("[*] running on: {}\n", os::get_os_name());
 }
 
-pub fn display_suggested_upgrades(update_builder: &UpdateBuilder) {
-        println!("\nMajor   updates: {}", update_builder.get_major_count());
-        println!("Minor   updates: {}", update_builder.get_minor_count());
-        println!("Patch   updates: {}", update_builder.get_patch_count());
-        println!("Release updates: {}\n\n", update_builder.get_release_count());
+pub fn display_suggested_upgrades(update_builder: &UpdateBuilder, buffer: String) {
+        println!(
+                "{}\nMajor   updates: {}\nMinor   updates: {}\nPatch   updates: {}\nRelease updates: {}\n\n", 
+                buffer, update_builder.get_release_count(), update_builder.get_major_count(),
+                update_builder.get_minor_count(), update_builder.get_patch_count()
+        );
 }

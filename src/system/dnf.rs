@@ -9,10 +9,7 @@ const INSTALLED_QUERYFORMAT: &str = "%{name}|#|%{version}|#|%{release}";
 pub fn get_updates_list() -> Vec<String> {
         println!("[i] getting updates list from remote...");
 
-        let args: Vec<String> = vec![
-                "updateinfo".to_string(), "list".to_string(), 
-                "--updates".to_string(), "--quiet".to_string()
-        ];
+        let args: &[&str] = &["updateinfo", "list", "--updates", "--quiet"];
         let stdout: String = shell::run_command_and_read_stdout("dnf", args);
 
         if stdout.is_empty() {
@@ -37,12 +34,13 @@ pub fn get_updates_details(updates_list: &[String]) -> Vec<String> {
         println!("[i] getting details from repository for {} update ...", updates.len());
 
         let query_format: String = format!("--queryformat={}\\n", UPDATE_QUERYFORMAT);
-        let args:Vec<String> = compose_args(
-                &["repoquery", "-C", "--quiet", &query_format], 
+        let base_args: [&str; 4] = ["repoquery", "-C", "--quiet", &query_format];
+        let args:Vec<&str> = compose_args(
+                &base_args, 
                 &updates
         );
 
-        let output: String = shell::run_command_and_read_stdout("dnf", args);
+        let output: String = shell::run_command_and_read_stdout("dnf", &args);
         let updates_by_line: Vec<String> = split_string_using_delimiter(output, "\n");
 
         updates_by_line
@@ -58,8 +56,10 @@ pub fn get_installed_details(updates_list: &[String]) -> HashMap<String, Vec<Str
         println!("[i] getting details for {} installed packages ...", installed.len());
 
         let query_format: String = format!("--queryformat={}\\n", INSTALLED_QUERYFORMAT);
-        let args:Vec<String> = compose_args(&["-q", &query_format], &installed);
-        let output: String = shell::run_command_and_read_stdout("rpm", args);
+        let base_args: [&str; 2] = ["-q", &query_format];
+
+        let args:Vec<&str> = compose_args(&base_args, &installed);
+        let output: String = shell::run_command_and_read_stdout("rpm", &args);
 
         split_string_using_delimiter(output, "\n")
                 .into_iter()
@@ -69,7 +69,7 @@ pub fn get_installed_details(updates_list: &[String]) -> HashMap<String, Vec<Str
 
 }
 
-fn compose_args(base: &[&str], additionals: &HashSet<String>) -> Vec<String> {
+fn compose_args<'a>(base: &'a [&'a str], additionals: &'a HashSet<String>) -> Vec<&'a str> {
         let mut args = Vec::from(base);
 
         for item in additionals {
@@ -79,5 +79,5 @@ fn compose_args(base: &[&str], additionals: &HashSet<String>) -> Vec<String> {
                 args.push(item);
         }
 
-        args.iter().map(|item| item.to_string()).collect()
+        args
 }
