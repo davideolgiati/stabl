@@ -98,8 +98,8 @@ fn main() {
     ui::display_suggested_upgrades(&update_builder, buffer);
 
     if !selected_part_id.is_empty() {
-    println!("\nsudo dnf update --advisory={}\n\n", selected_part_id.join(","));
-} else {
-    println!("\nno suggested updates found\n\n");
-}
+        println!("\nsudo dnf update --advisory={}\n\n", selected_part_id.join(","));
+    } else {
+        println!("\nno suggested updates found\n\n");
+    }
 }

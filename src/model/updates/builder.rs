@@ -61,24 +61,32 @@ impl UpdateBuilder {
                 let signature: String = splitted_str[3].clone();
                 
                 let update_info: &Vec<String> = self._repository_info
-                        .get(&signature.clone())
-                        .unwrap();
+                        .get(&signature.clone()).unwrap();
         
-                let name = update_info[0].clone();
-                
-                let installed_info: &Vec<String> = self._installed_info
-                        .get(&name)
-                        .unwrap();
-
+                assert!(update_info.len() == 3);
+                assert!(!update_info[0].is_empty());
+                assert!(!update_info[1].is_empty());
+                assert!(!update_info[2].is_empty());
 
                 let update_version = compose_new_semantic_version(
-                        update_info[1].clone(),
-                        update_info[2].clone()
+                        &update_info[1],
+                        &update_info[2]
                 );
 
+                let name: &String = &update_info[0];
+                
+                let installed_info: &Vec<String> = self._installed_info
+                        .get(name).unwrap();
+
+                assert!(installed_info.len() == 2);
+                assert!(!installed_info[0].is_empty());
+                assert!(!installed_info[1].is_empty());
+
+
+
                 let installed_version = compose_new_semantic_version(
-                        installed_info[0].clone(),
-                        installed_info[1].clone()
+                        &installed_info[0],
+                        &installed_info[1]
                 );
                 
                 let release_type: ReleaseType = compare_version(&update_version, &installed_version);
@@ -92,29 +100,34 @@ impl UpdateBuilder {
 
                 let result: Update = Update::new(
                         partition, release_type, severity, 
-                        installed_version, update_version, name
+                        installed_version, update_version, name.to_string()
                 );
 
                 self._updates.push(result);
         }
 
         pub fn get_major_count(&self) -> &i16 {
+                assert!(self._major_count >= 0);
                 &self._major_count
         }
 
         pub fn get_minor_count(&self) -> &i16 {
+                assert!(self._minor_count >= 0);
                 &self._minor_count
         }
 
         pub fn get_patch_count(&self) -> &i16 {
+                assert!(self._patch_count >= 0);
                 &self._patch_count
         }
         
         pub fn get_release_count(&self) -> &i16 {
+                assert!(self._release_count >= 0);
                 &self._release_count
         }
 
         pub fn get_updates(&self) -> &Vec<Update> {
+                assert!(self._updates.len() == (self._major_count + self._minor_count + self._patch_count + self._release_count).try_into().unwrap());
                 &self._updates
         }
 }

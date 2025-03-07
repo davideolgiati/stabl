@@ -72,10 +72,10 @@ mod tests {
                 let severity: Severity = Severity::Critical;
                 let release_type: ReleaseType = ReleaseType::Major;
                 let installed_version: SemanticVersion = compose_new_semantic_version(
-                        "1.0.0".to_string(), "1.fc41".to_string()
+                        "1.0.0", "1.fc41"
                 );
                 let update_version: SemanticVersion = compose_new_semantic_version(
-                        "2.0.0".to_string(), "2.fc41".to_string()
+                        "2.0.0", "2.fc41"
                 );
 
                 let output = Update::new(
@@ -100,10 +100,10 @@ mod tests {
                 let severity: Severity = Severity::Critical;
                 let release_type: ReleaseType = ReleaseType::Major;
                 let installed_version: SemanticVersion = compose_new_semantic_version(
-                        "1.0.0".to_string(), "1.fc41".to_string()
+                        "1.0.0", "1.fc41"
                 );
                 let update_version: SemanticVersion = compose_new_semantic_version(
-                        "2.0.0".to_string(), "2.fc41".to_string()
+                        "2.0.0", "2.fc41"
                 );
 
                 let _output = Update::new(
@@ -121,10 +121,10 @@ mod tests {
                 let severity: Severity = Severity::Critical;
                 let release_type: ReleaseType = ReleaseType::Major;
                 let installed_version: SemanticVersion = compose_new_semantic_version(
-                        "1.0.0".to_string(), "1.fc41".to_string()
+                        "1.0.0", "1.fc41"
                 );
                 let update_version: SemanticVersion = compose_new_semantic_version(
-                        "2.0.0".to_string(), "2.fc41".to_string()
+                        "2.0.0", "2.fc41"
                 );
 
                 let _output = Update::new(

@@ -27,13 +27,13 @@ impl SemanticVersion {
         }
 }
 
-pub fn compose_new_semantic_version(version: String, release: String) -> SemanticVersion {
+pub fn compose_new_semantic_version(version: &str, release: &str) -> SemanticVersion {
         let tokenized_version: Vec<String> = split_string_using_delimiter(format!("{}.0.0", version), ".");
         SemanticVersion::new(
                         tokenized_version[0].clone(), 
                         tokenized_version[1].clone(), 
                         tokenized_version[2].clone(), 
-                        release
+                        release.to_owned()
                 )
 }
 
