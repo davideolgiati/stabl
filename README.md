@@ -1,6 +1,13 @@
 # stabl
 A DNF wrapper to selectively choose what packages to upgrade
 
+# v0.1.1
+### Features
+- Cleaned up code
+- Added cli option tho choose update types
+- Added cli option to display usage
+- Added unit tests for some classes
+
 # v0.1.0
 ### Features
 - First real working version
