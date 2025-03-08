@@ -5,9 +5,9 @@ use crate::Update;
 use crate::model::enums::release_type::ReleaseType;
 
 use std::collections::HashMap;
-use chrono::DateTime;
-
+use chrono::{DateTime, NaiveDateTime, Utc};
 use std::str::FromStr;
+use regex::Regex;
 
 pub struct UpdateBuilder {
         _repository_info: HashMap<String, Vec<String>>,
@@ -75,8 +75,17 @@ impl UpdateBuilder {
                         &update_info[2]
                 );
 
+                let date_re = Regex::new(r"^\d{4}-\d{2}-\d{2}$").unwrap();
+                let hour_re = Regex::new(r"^\d{2}:\d{2}:\d{2}$").unwrap();
+                assert!(date_re.is_match(&splitted_str[4]));
+                assert!(hour_re.is_match(&splitted_str[5]));
+
                 let name: &String = &update_info[0];
-                let release_ts: DateTime<chrono::Utc> = DateTime::parse_from_str(&format!("{} {}", splitted_str[4], splitted_str[5]), "%Y-%m-%d %H:%M:%S").unwrap().into();
+                let datetime: &str = &format!("{} {}", splitted_str[4], splitted_str[5]);
+                let release_ts: DateTime<Utc> = 
+                        NaiveDateTime::parse_from_str(datetime, "%F %X")
+                                .unwrap()
+                                .and_utc();
                 
                 let installed_info: &Vec<String> = self._installed_info
                         .get(name).unwrap();
@@ -84,8 +93,6 @@ impl UpdateBuilder {
                 assert!(installed_info.len() == 2);
                 assert!(!installed_info[0].is_empty());
                 assert!(!installed_info[1].is_empty());
-
-
 
                 let installed_version = compose_new_semantic_version(
                         &installed_info[0],
