@@ -1,3 +1,5 @@
+use chrono::{DateTime, Utc};
+
 use crate::model::enums::release_type::ReleaseType;
 use crate::model::enums::severity::Severity;
 use crate::model::semantic_version::SemanticVersion;
@@ -9,7 +11,8 @@ pub struct Update {
         _severity: Severity,
         _installed_version: SemanticVersion,
         _update_version: SemanticVersion,
-        _name: String
+        _name: String,
+        _release_ts: DateTime<Utc>
 }
 
 
@@ -20,7 +23,8 @@ impl Update {
                 severity: Severity,
                 installed_version: SemanticVersion,
                 update_version: SemanticVersion,
-                name: String
+                name: String,
+                release_ts: DateTime<Utc>
         ) -> Update { 
                 assert!(!partition.is_empty());
                 assert!(!name.is_empty());
@@ -31,7 +35,8 @@ impl Update {
                         _severity: severity,
                         _installed_version: installed_version,
                         _update_version: update_version,
-                        _name: name
+                        _name: name,
+                        _release_ts: release_ts
                 }
         }
 
@@ -58,6 +63,10 @@ impl Update {
         pub fn get_name(&self) -> &String {
                 &self._name
         }
+
+        pub fn get_release_timestamp(&self) -> &DateTime<Utc> {
+                &self._release_ts
+        }
 }
 
 #[cfg(test)]
@@ -81,7 +90,8 @@ mod tests {
                 let output = Update::new(
                         partition.clone(), release_type,
                         severity, installed_version,
-                        update_version.clone(), name.clone()
+                        update_version.clone(), name.clone(),
+                        Utc::now()
                 );
     
                 assert_eq!(*output.get_name(), name);
@@ -109,7 +119,8 @@ mod tests {
                 let _output = Update::new(
                         partition.clone(), release_type,
                         severity, installed_version,
-                        update_version.clone(), name.clone()
+                        update_version.clone(), name.clone(),
+                        Utc::now()
                 );
         }
 
@@ -130,7 +141,8 @@ mod tests {
                 let _output = Update::new(
                         partition.clone(), release_type,
                         severity, installed_version,
-                        update_version.clone(), name.clone()
+                        update_version.clone(), name.clone(),
+                        Utc::now()
                 );
         }
 

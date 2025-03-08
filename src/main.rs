@@ -16,6 +16,7 @@ use commons::string::split_string_using_delimiter;
 
 use std::collections::HashMap;
 use std::env;
+use chrono::Utc;
 
 fn extract_version_and_release_map(details_from_repository: &[String]) -> HashMap<String, Vec<String>> {
     details_from_repository
@@ -86,10 +87,11 @@ fn main() {
 
             for _update in partition.get_updates().iter() {
                 buffer = buffer + &format!(
-                    "\t{:55} {} -> {}\n", 
+                    "\t{:55} {} -> {} ({} days ago)\n", 
                     _update.get_name(), 
                     _update.get_installed_version(), 
-                    _update.get_updated_version()
+                    _update.get_updated_version(),
+                    (Utc::now() - _update.get_release_timestamp()).num_days()
                 );
             }
         }

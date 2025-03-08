@@ -1,9 +1,11 @@
-use std::collections::HashMap;
 use crate::commons::string::split_string_using_delimiter;
 use crate::model::enums::severity::Severity;
 use crate::model::semantic_version::{compare_version, compose_new_semantic_version};
 use crate::Update;
 use crate::model::enums::release_type::ReleaseType;
+
+use std::collections::HashMap;
+use chrono::DateTime;
 
 use std::str::FromStr;
 
@@ -56,12 +58,12 @@ impl UpdateBuilder {
 
                 assert!(splitted_str.len() == 6);
 
-                let partition: String = splitted_str[0].clone();
-                let severity: Severity = Severity::from_str(splitted_str[2].as_str()).unwrap();
-                let signature: String = splitted_str[3].clone();
+                let partition: &String = &splitted_str[0];
+                let severity: Severity = Severity::from_str(&splitted_str[2]).unwrap();
+                let signature: &String = &splitted_str[3];
                 
                 let update_info: &Vec<String> = self._repository_info
-                        .get(&signature.clone()).unwrap();
+                        .get(signature).unwrap();
         
                 assert!(update_info.len() == 3);
                 assert!(!update_info[0].is_empty());
@@ -74,6 +76,7 @@ impl UpdateBuilder {
                 );
 
                 let name: &String = &update_info[0];
+                let release_ts: DateTime<chrono::Utc> = DateTime::parse_from_str(&format!("{} {}", splitted_str[4], splitted_str[5]), "%Y-%m-%d %H:%M:%S").unwrap().into();
                 
                 let installed_info: &Vec<String> = self._installed_info
                         .get(name).unwrap();
@@ -99,8 +102,9 @@ impl UpdateBuilder {
                 }
 
                 let result: Update = Update::new(
-                        partition, release_type, severity, 
-                        installed_version, update_version, name.to_string()
+                        partition.clone(), release_type, severity, 
+                        installed_version, update_version, name.to_string(),
+                        release_ts
                 );
 
                 self._updates.push(result);
