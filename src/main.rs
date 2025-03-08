@@ -80,17 +80,19 @@ fn main() {
         if *partition.get_release_type() <= max_release || *partition.get_severity() > Severity::None {
             selected_part_id.push(partition_id.clone());
 
+            let update_type_str = format!("{}", partition.get_release_type());
+
             buffer = buffer + &format!(
-                "\nPartition Id: {:30} Type: {:15} Security grade: {}\n", 
-                partition_id, partition.get_release_type(), partition.get_severity()
+                "\n\n\nPartition Id: {:30} Type: {:15} Security grade: {}\n\n", 
+                partition_id, update_type_str, partition.get_severity()
             );
 
             for _update in partition.get_updates().iter() {
                 buffer = buffer + &format!(
-                    "\t{:55} {} -> {} ({} days ago)\n", 
+                    "\t{:<35} {:^25} > {:^25} ({:^3} days ago)\n", 
                     _update.get_name(), 
-                    _update.get_installed_version(), 
-                    _update.get_updated_version(),
+                    format!("{}", _update.get_installed_version()), 
+                    format!("{}", _update.get_updated_version()),
                     (Utc::now() - _update.get_release_timestamp()).num_days()
                 );
             }
