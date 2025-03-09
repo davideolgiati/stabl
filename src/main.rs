@@ -17,6 +17,8 @@ use commons::string::split_string_using_delimiter;
 
 use std::collections::HashMap;
 use std::env;
+use std::process;
+
 use chrono::Utc;
 
 fn extract_version_and_release_map(details_from_repository: &[String]) -> HashMap<String, Vec<String>> {
@@ -37,10 +39,23 @@ fn build_partitions(updates: &Vec<Update>) -> HashMap<String, Partition> {
     let mut partition_builder:PartitionBuilder = PartitionBuilder::new();
     
     for update in updates {
-        partition_builder.register_update(&update);
+        partition_builder.register_update(update);
     }
     
     partition_builder.build()
+}
+
+fn evaluate_partition(partition: &Partition, target_release: &ReleaseType) -> bool {
+    let super_release_type: ReleaseType = get_super(target_release);
+    let additional_date_check: bool = (Utc::now() - *partition.get_date()).num_days() > 60;
+
+    let is_release_type_valid: bool = target_release >= partition.get_release_type();
+    let is_super_release_type_valid: bool = &super_release_type >= partition.get_release_type();
+
+    let is_partition_a_security_update: bool = partition.get_severity() > &Severity::None;
+    let is_partition_ammissible_in_time_range: bool = is_super_release_type_valid && additional_date_check;
+
+    is_partition_a_security_update || is_release_type_valid || is_partition_ammissible_in_time_range
 }
 
 fn main() {
@@ -54,6 +69,12 @@ fn main() {
     ui::display_system_informations();
     
     let dnf_updates_list: Vec<String> = dnf::get_updates_list();
+
+    if dnf_updates_list.is_empty() {
+        println!("\nno suggested updates found\n\n");
+        process::exit(0);
+    }
+
     let repository_update_details: Vec<String> = dnf::get_updates_details(&dnf_updates_list);
     let packages_names: HashMap<String, Vec<String>> = dnf::get_installed_details(&repository_update_details);
     let processed_details: HashMap<String, Vec<String>> = extract_version_and_release_map(&repository_update_details);
@@ -78,12 +99,7 @@ fn main() {
 
 
     for (partition_id, partition) in &partitions {
-        if (
-            *partition.get_release_type() <= max_release || (
-                *partition.get_release_type() == get_super(&max_release) 
-                && (Utc::now() - *partition.get_date()).num_days() > 60
-            )
-        ) || *partition.get_severity() > Severity::None {
+        if evaluate_partition(partition, &max_release) {
             selected_part_id.push(partition_id.clone());
 
             let update_type_str = format!("{}", partition.get_release_type());

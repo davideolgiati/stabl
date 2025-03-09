@@ -26,7 +26,7 @@ impl PartitionBuilder {
                 let partition_id: &String = update.get_partition_id();
                 let mut current_partition: Partition = self.get_partition_by_id(partition_id);
 
-                current_partition.add_update(&update);
+                current_partition.add_update(update);
 
                 current_partition.clone()
         }
