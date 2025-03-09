@@ -10,6 +10,15 @@ pub enum ReleaseType {
         Major
 }
 
+pub fn get_super(value: &ReleaseType) -> ReleaseType {
+    match *value {
+        ReleaseType::Major => ReleaseType::Major,
+        ReleaseType::Minor => ReleaseType::Major,
+        ReleaseType::Patch => ReleaseType::Minor,
+        ReleaseType::Repack => ReleaseType::Patch
+    }
+}
+
 impl FromStr for ReleaseType {
         type Err = String;
     

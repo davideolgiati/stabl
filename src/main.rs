@@ -1,4 +1,5 @@
 mod model;
+use model::enums::release_type::get_super;
 use model::partitions::partition::Partition;
 use model::updates::update::Update;
 use model::enums::severity::Severity;
@@ -36,7 +37,7 @@ fn build_partitions(updates: &Vec<Update>) -> HashMap<String, Partition> {
     let mut partition_builder:PartitionBuilder = PartitionBuilder::new();
     
     for update in updates {
-        partition_builder.register_update(update.clone());
+        partition_builder.register_update(&update);
     }
     
     partition_builder.build()
@@ -77,7 +78,12 @@ fn main() {
 
 
     for (partition_id, partition) in &partitions {
-        if *partition.get_release_type() <= max_release || *partition.get_severity() > Severity::None {
+        if (
+            *partition.get_release_type() <= max_release || (
+                *partition.get_release_type() == get_super(&max_release) 
+                && (Utc::now() - *partition.get_date()).num_days() > 60
+            )
+        ) || *partition.get_severity() > Severity::None {
             selected_part_id.push(partition_id.clone());
 
             let update_type_str = format!("{}", partition.get_release_type());
