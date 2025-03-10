@@ -2,7 +2,7 @@ pub fn split_string_using_delimiter(string: String, delimiter: &str) -> Vec<Stri
         assert!(!string.is_empty());
         assert!(!delimiter.is_empty());
         assert!(string.contains(delimiter));
-        
+
         let output: Vec<String> = string
                 .split(delimiter)
                 .clone()
@@ -11,7 +11,6 @@ pub fn split_string_using_delimiter(string: String, delimiter: &str) -> Vec<Stri
                 .collect();
 
         assert!(!output.is_empty());
-        assert!(output.len() >= 2);
 
         output
 }
