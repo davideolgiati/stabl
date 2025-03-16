@@ -1,3 +1,5 @@
+use std::collections::HashSet;
+
 pub fn split_string_using_delimiter(string: String, delimiter: &str) -> Vec<String> {
         assert!(!string.is_empty());
         assert!(!delimiter.is_empty());
@@ -13,6 +15,14 @@ pub fn split_string_using_delimiter(string: String, delimiter: &str) -> Vec<Stri
         assert!(!output.is_empty());
 
         output
+}
+
+pub fn split_filter_and_deduplicate_string_list(list: &[String], delimiter: &str, offset: usize) -> HashSet<String>{
+    list
+        .iter()
+        .cloned()
+        .map(|line: String| split_string_using_delimiter(line, delimiter)[offset].clone())
+        .collect::<HashSet<String>>()
 }
 
 #[cfg(test)]
