@@ -1,7 +1,7 @@
 use std::process::Command;
 use std::process::Output;
 
-pub fn run_command_and_read_stdout(command: &str, args: &[&str]) -> String {
+pub fn run_command_and_read_stdout(command: &str, args: &[String]) -> String {
         assert!(!command.is_empty());
         assert!(!args.is_empty());
         assert!(!command.contains(" "));
