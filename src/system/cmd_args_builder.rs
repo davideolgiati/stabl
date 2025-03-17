@@ -1,5 +1,3 @@
-use std::collections::HashSet;
-
 const UPDATE_QUERYFORMAT: &str = "%{name}|#|%{version}|#|%{release}|#|%{full_nevra}|#|%{name}-%{version}-%{release}.%{arch}";
 const INSTALLED_QUERYFORMAT: &str = "%{name}|#|%{version}|#|%{release}";
 
@@ -7,8 +5,8 @@ pub struct CmdArgsBuilder {
         _quiet: bool,
         _cached: bool,
         _query_format_args: String,
-        _base_args: HashSet<String>,
-        _additional_args: HashSet<String>
+        _base_args: Vec<String>,
+        _additional_args: Vec<String>
 }
 
 impl CmdArgsBuilder {
@@ -17,8 +15,8 @@ impl CmdArgsBuilder {
                         _quiet: false,
                         _cached: false,
                         _query_format_args: String::from(""),
-                        _base_args: HashSet::new(),
-                        _additional_args: HashSet::new()
+                        _base_args: Vec::new(),
+                        _additional_args: Vec::new()
                 }
         }
 
@@ -33,13 +31,13 @@ impl CmdArgsBuilder {
         }
 
         pub fn add_base_arg(&mut self, base_arg : &str) -> &mut CmdArgsBuilder {
-                self._base_args.insert(base_arg.to_owned());
+                self._base_args.push(base_arg.to_owned());
                 self
         }
 
         pub fn add_additional_args(&mut self, additional_args : &[String]) -> &mut CmdArgsBuilder {
                 for item in additional_args {
-                        self._additional_args.insert(item.clone());
+                        self._additional_args.push(item.clone());
                 }
                 self
         }
@@ -61,9 +59,7 @@ impl CmdArgsBuilder {
         pub fn build(&mut self) -> Vec<String> {
                 let mut output: Vec<String> = Vec::new();
 
-                for item in &self._base_args {
-                        output.push(item.to_string());
-                }
+                output.append(&mut self._base_args);
 
                 if self._quiet {
                         output.push("-q".to_owned());
@@ -77,9 +73,7 @@ impl CmdArgsBuilder {
                         output.push(format!("--queryformat={}\\n", self._query_format_args));
                 }
 
-                for item in &self._additional_args {
-                        output.push(item.to_string());
-                }
+                output.append(&mut self._additional_args);
 
                 output
         }

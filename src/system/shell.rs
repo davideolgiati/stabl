@@ -6,16 +6,8 @@ pub fn run_command_and_read_stdout(command: &str, args: &[String]) -> String {
         assert!(!args.is_empty());
         assert!(!command.contains(" "));
         
-        let mut cmd = Command::new(command);
-
-        for arg in args {
-                assert!(!arg.is_empty());
-                assert!(!arg.contains(" "));
-
-                cmd.arg(arg);
-        }
-
-        let console_output: Output = cmd
+        let console_output: Output = Command::new(command)
+                .args(args)
                 .output()
                 .unwrap_or_else(|_| panic!("failed to run {}!", command));
         
