@@ -1,49 +1,29 @@
-use crate::system::cmd_args_builder::CmdArgsBuilder;
-use crate::system::shell_cmd_factory::ShellCmdFactory;
-use crate::system::shell;
+use crate::system::shell_cmd_facade::ShellCmdFacade;
 use crate::commons::string::split_string_using_delimiter;
-use crate::commons::string::split_filter_and_deduplicate_string_list;
 use std::collections::HashMap;
 
 pub fn get_updates_list() -> Vec<String> {
-        let cmd = ShellCmdFactory::build_new_updateinfo();
-        let stdout: String = cmd();
+        let output: String = ShellCmdFacade::get_updateinfo_output();
 
-        if stdout.is_empty() {
+        if output.is_empty() {
                 return Vec::new();
         }
 
-        let output: Vec<String> = split_string_using_delimiter(stdout, "\n")
+        split_string_using_delimiter(output, "\n")
                 .drain(1..)
-                .collect();
-
-        output
+                .collect()
 }
 
 pub fn get_updates_details(updates_list: &[String]) -> Vec<String> {
-        let cmd = ShellCmdFactory::build_new_repoquery();
-        let stdout: String = cmd(updates_list);
-        let updates_by_line: Vec<String> = split_string_using_delimiter(stdout, "\n");
-
-        updates_by_line
+        let stdout: String = ShellCmdFacade::get_repoquery_output(updates_list);
+        
+        split_string_using_delimiter(stdout, "\n")
 }
 
 pub fn get_installed_details(updates_list: &[String]) -> HashMap<String, Vec<String>> {
         assert!(!updates_list.is_empty());
-        
-        let installed: Vec<String> = split_filter_and_deduplicate_string_list(
-                updates_list, "|#|", 0
-        ).into_iter().collect();
 
-        println!("[i] getting details for {} installed packages ...", installed.len());
-
-        let cmd_args = CmdArgsBuilder::new()
-                .toggle_quiet_flag()
-                .set_query_format_for_installed_pkgs()
-                .add_additional_args(&installed)
-                .build();
-
-        let output: String = shell::run_command_and_read_stdout("rpm", &cmd_args);
+        let output: String = ShellCmdFacade::get_rpm_output_for_local_packages(updates_list);
 
         split_string_using_delimiter(output, "\n")
                 .into_iter()

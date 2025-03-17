@@ -32,10 +32,8 @@ impl CmdArgsBuilder {
                 self
         }
 
-        pub fn add_base_args(&mut self, base_args : &[String]) -> &mut CmdArgsBuilder {
-                for item in base_args {
-                        self._base_args.insert(item.clone());
-                }
+        pub fn add_base_arg(&mut self, base_arg : &str) -> &mut CmdArgsBuilder {
+                self._base_args.insert(base_arg.to_owned());
                 self
         }
 
