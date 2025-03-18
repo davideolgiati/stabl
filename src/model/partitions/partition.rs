@@ -45,7 +45,6 @@ impl Partition {
                 self._date = *update_date
         }
 
-
         self._updates.push(update.clone());
     }
 

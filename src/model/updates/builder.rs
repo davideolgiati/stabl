@@ -1,6 +1,6 @@
 use crate::commons::string::split_string_using_delimiter;
 use crate::model::enums::severity::Severity;
-use crate::model::semantic_version::{compare_version, compose_new_semantic_version};
+use crate::model::semantic_version::{compare, compose_new_semantic_version};
 use crate::Update;
 use crate::model::enums::release_type::ReleaseType;
 
@@ -99,7 +99,7 @@ impl UpdateBuilder {
                         &installed_info[1]
                 );
                 
-                let release_type: ReleaseType = compare_version(&update_version, &installed_version);
+                let release_type: ReleaseType = compare(&update_version, &installed_version);
                 
                 match release_type {
                         ReleaseType::Major => self._major_count += 1,

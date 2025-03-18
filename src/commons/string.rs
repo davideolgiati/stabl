@@ -18,6 +18,9 @@ pub fn split_string_using_delimiter(string: String, delimiter: &str) -> Vec<Stri
 }
 
 pub fn split_filter_and_deduplicate_string_list(list: &[String], delimiter: &str, offset: usize) -> HashSet<String>{
+    assert!(!list.is_empty());
+    assert!(!delimiter.is_empty());
+
     list
         .iter()
         .cloned()
