@@ -1,6 +1,6 @@
 use std::collections::HashMap;
 
-use chrono::{DateTime, NaiveDateTime, TimeZone, Utc};
+use chrono::{DateTime, NaiveDateTime, Utc};
 
 use crate::commons::string::split_string_using_delimiter;
 
@@ -12,7 +12,7 @@ pub struct DataModelBuilder{
         partitions_severity: HashMap<String, Severity>,
         partitions_type: HashMap<String, ReleaseType>,
         partitions_date: HashMap<String, DateTime<Utc>>,
-        updates_by_partition: HashMap<String, Update>,
+        updates_by_partition: HashMap<String, String>,
         updates_version: HashMap<String, SemanticVersion>
 }
 
@@ -57,6 +57,8 @@ impl DataModelBuilder {
                 let splitted_str = split_string_using_delimiter(line.to_owned(), " ");
 
                 assert!(splitted_str.len() == 6);
+                
+                let signature: &String = &splitted_str[3];
 
                 let partition: &String = &splitted_str[0];
                 let severity: Severity = Severity::from_str(&splitted_str[2]).unwrap();
@@ -65,29 +67,8 @@ impl DataModelBuilder {
                         .unwrap().and_utc();
                 
                 self.update_partition_details(partition, &severity, &release_ts);
-                
-                let signature: &String = &splitted_str[3];
-
-                let installed_version = compose_new_semantic_version(
-                        &installed_info[0],
-                        &installed_info[1]
-                );
-                
-                let release_type: ReleaseType = compare(&update_version, &installed_version);
-                
-                match release_type {
-                        ReleaseType::Major => self._major_count += 1,
-                        ReleaseType::Minor => self._minor_count += 1,
-                        ReleaseType::Patch => self._patch_count += 1,
-                        ReleaseType::Repack => self._release_count += 1
-                }
-
-                let result: Update = Update::new(
-                        partition.clone(), release_type, severity, 
-                        installed_version, update_version, name.to_string(),
-                        release_ts
-                );
-
-                self._updates.push(result);
+                self.updates_by_partition.insert(signature.clone(), partition.clone());
         }
+
+
 }
