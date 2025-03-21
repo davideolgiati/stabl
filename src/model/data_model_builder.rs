@@ -3,6 +3,7 @@ use std::collections::HashMap;
 use chrono::{DateTime, NaiveDateTime, Utc};
 
 use crate::commons::string::split_string_using_delimiter;
+use crate::model::semantic_version::compose_new_semantic_version;
 
 use super::{semantic_version::SemanticVersion, update::Update};
 use super::enums::{release_type::ReleaseType, severity::Severity};
@@ -13,7 +14,8 @@ pub struct DataModelBuilder{
         partitions_type: HashMap<String, ReleaseType>,
         partitions_date: HashMap<String, DateTime<Utc>>,
         updates_by_partition: HashMap<String, String>,
-        updates_version: HashMap<String, SemanticVersion>
+        updates_version: HashMap<String, SemanticVersion>,
+        updates_list: Vec<Update>
 }
 
 impl DataModelBuilder {
@@ -23,7 +25,8 @@ impl DataModelBuilder {
                         partitions_type: HashMap::new(), 
                         partitions_date: HashMap::new(), 
                         updates_by_partition: HashMap::new(), 
-                        updates_version: HashMap::new() 
+                        updates_version: HashMap::new(),
+                        updates_list: Vec::new()
                 }
         }
 
@@ -51,7 +54,7 @@ impl DataModelBuilder {
                 }
         }
 
-        pub fn add_dnf_output(&mut self, line: String) {
+        pub fn add_updateinfo_output(&mut self, line: String) {
                 assert!(!line.is_empty());
 
                 let splitted_str = split_string_using_delimiter(line.to_owned(), " ");
@@ -68,6 +71,35 @@ impl DataModelBuilder {
                 
                 self.update_partition_details(partition, &severity, &release_ts);
                 self.updates_by_partition.insert(signature.clone(), partition.clone());
+        }
+
+        pub fn add_repoquery_output(&mut self, line: String) {
+                assert!(!line.is_empty());
+
+                let splitted_str = split_string_using_delimiter(line.to_owned(), "|#|");
+
+                assert!(splitted_str.len() == 5);
+
+                let name: &String = &splitted_str[0];
+                let version_str: &String = &splitted_str[1];
+                let release_str: &String = &splitted_str[2];
+
+                let version: SemanticVersion = compose_new_semantic_version(
+                        version_str, release_str
+                );
+
+                let partition = {
+                        if self.updates_by_partition.contains_key(&splitted_str[3]) {
+                                self.updates_by_partition.get(&splitted_str[3])
+                        } else {
+                                self.updates_by_partition.get(&splitted_str[4])
+                        }
+                }.unwrap();
+
+                let new_obj: Update = Update::new(partition.clone(), version.clone(), name.clone());
+
+                self.updates_list.push(new_obj);
+                self.updates_version.insert(name.to_string(), version);
         }
 
 
