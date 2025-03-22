@@ -31,7 +31,7 @@ impl DataModelBuilder {
                 }
         }
 
-        fn update_partition_details(&mut self, id: &String, severity: &Severity, release_ts: &DateTime<Utc>) {
+        fn update_partition_details(&mut self, id: &String, severity: &Severity, release_ts: &DateTime<Utc>, release_type: &ReleaseType) {
                 if !self.partitions_date.contains_key(id) {
                         self.partitions_date.insert(id.clone(), *release_ts);
                 } else {
@@ -53,9 +53,20 @@ impl DataModelBuilder {
                                 *self.partitions_severity.get_mut(id).unwrap() = severity.clone();
                         }
                 }
+
+                if !self.partitions_type.contains_key(id) {
+                        self.partitions_type.insert(id.clone(), release_type.clone());
+                } else {
+                        let current_release_type: &ReleaseType = self.partitions_type
+                                .get(id).unwrap();
+
+                        if release_type > current_release_type {
+                                *self.partitions_type.get_mut(id).unwrap() = release_type.clone();
+                        }
+                }
         }
 
-        pub fn add_updateinfo_output(&mut self, line: String) {
+        pub fn add_updateinfo_output(&mut self, line: &String) {
                 assert!(!line.is_empty());
 
                 let splitted_str = split_string_using_delimiter(line.to_owned(), " ");
@@ -65,16 +76,17 @@ impl DataModelBuilder {
                 let signature: &String = &splitted_str[3];
 
                 let partition: &String = &splitted_str[0];
+                let release_type: ReleaseType = ReleaseType::from_str(&splitted_str[1]).unwrap();
                 let severity: Severity = Severity::from_str(&splitted_str[2]).unwrap();
                 let datetime: &str = &format!("{} {}", splitted_str[4], splitted_str[5]);
                 let release_ts: DateTime<Utc> = NaiveDateTime::parse_from_str(datetime, "%F %X")
                         .unwrap().and_utc();
                 
-                self.update_partition_details(partition, &severity, &release_ts);
+                self.update_partition_details(partition, &severity, &release_ts, &release_type);
                 self.updates_by_partition.insert(signature.clone(), partition.clone());
         }
 
-        pub fn add_repoquery_output(&mut self, line: String) {
+        pub fn add_repoquery_output(&mut self, line: &String) {
                 assert!(!line.is_empty());
 
                 let splitted_str = split_string_using_delimiter(line.to_owned(), "|#|");
@@ -103,7 +115,7 @@ impl DataModelBuilder {
                 self.packages_details.insert(name.to_string(), (partition.to_owned(), version));
         }
 
-        pub fn add_rpm_output(&mut self, line: String) {
+        pub fn add_rpm_output(&mut self, line: &String) {
                 assert!(!line.is_empty());
 
                 let splitted_str = split_string_using_delimiter(line.to_owned(), "|#|");
@@ -121,7 +133,7 @@ impl DataModelBuilder {
                 let update_detail: &(String, SemanticVersion) = self.packages_details.get(name).unwrap();
 
                 let release: ReleaseType = compare(&current_version, &update_detail.1);
-                let current_partition_release: &ReleaseType = self.partitions_type.get(&update_detail.0).unwrap();
+                let current_partition_release: &ReleaseType = self.partitions_type.get(&update_detail.0).unwrap_or_else(|| panic!("{}\n {:?}", update_detail.0, self.partitions_type));
 
                 if &release > current_partition_release {
                         *self.partitions_type.get_mut(&update_detail.0).unwrap() = release;

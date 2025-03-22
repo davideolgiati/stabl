@@ -2,6 +2,7 @@ use std::str::FromStr;
 use std::fmt::{self, Display, Formatter};
 
 #[derive(Clone)]
+#[derive(Debug)]
 #[derive(PartialEq, PartialOrd)]
 pub enum ReleaseType {
     Repack,
