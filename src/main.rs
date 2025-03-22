@@ -40,17 +40,15 @@ fn main() {
     
     ui::display_system_informations();
     
-    let dnf_updates_list: Vec<String> = dnf::get_updates_list();
+    let dnf_updates_list: Vec<&str> = dnf::get_updates_list();
 
     if dnf_updates_list.is_empty() {
         println!("\nno suggested updates found\n\n");
         process::exit(0);
     }
 
-    let updates_refs: Vec<&str> = dnf_updates_list.iter().map(|s| s.as_ref()).collect();
-    let repository_update_details: Vec<String> = dnf::get_updates_details(&updates_refs);
-    let details_refs: Vec<&str> = repository_update_details.iter().map(|s| s.as_ref()).collect();
-    let packages_names: Vec<String> = dnf::get_installed_details(&details_refs);
+    let repository_update_details: Vec<&str> = dnf::get_updates_details(&dnf_updates_list);
+    let packages_names: Vec<&str> = dnf::get_installed_details(&repository_update_details);
     
     println!("[i] enriching updates with additional informations...");
 
