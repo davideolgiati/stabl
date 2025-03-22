@@ -17,10 +17,10 @@ impl ShellCmdFacade {
                 shell::run_command_and_read_stdout("dnf", &cmd_args)
         }
 
-        pub fn get_repoquery_output(updates_list: &[String]) -> String {
-                let updates: Vec<String> = split_filter_and_deduplicate_string_list(
+        pub fn get_repoquery_output(updates_list: &[&str]) -> String {
+                let updates: Vec<&str> = split_filter_and_deduplicate_string_list(
                         updates_list, " ", 3
-                ).into_iter().collect();
+                );
         
                 println!("[i] getting details from repository for {} update ...", updates.len());
         
@@ -35,10 +35,10 @@ impl ShellCmdFacade {
                 shell::run_command_and_read_stdout("dnf", &cmd_args)
         }
 
-        pub fn get_rpm_output_for_local_packages(updates_list: &[String]) -> String {
-                let installed: Vec<String> = split_filter_and_deduplicate_string_list(
+        pub fn get_rpm_output_for_local_packages(updates_list: &[&str]) -> String {
+                let installed: Vec<&str> = split_filter_and_deduplicate_string_list(
                         updates_list, "|#|", 0
-                ).into_iter().collect();
+                );
         
                 println!("[i] getting details for {} installed packages ...", installed.len());
         

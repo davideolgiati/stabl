@@ -35,9 +35,9 @@ impl CmdArgsBuilder {
                 self
         }
 
-        pub fn add_additional_args(&mut self, additional_args : &[String]) -> &mut CmdArgsBuilder {
+        pub fn add_additional_args(&mut self, additional_args : &[&str]) -> &mut CmdArgsBuilder {
                 for item in additional_args {
-                        self._additional_args.push(item.clone());
+                        self._additional_args.push(item.to_string());
                 }
                 self
         }

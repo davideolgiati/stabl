@@ -29,11 +29,11 @@ impl SemanticVersion {
 
 pub fn compose_new_semantic_version(version: &str, release: &str) -> SemanticVersion {
         let padded_string: String = format!("{}.0.0", version);
-        let version_tokens: Vec<String> = split_string_using_delimiter(padded_string, ".");
+        let version_tokens: Vec<&str> = split_string_using_delimiter(&padded_string, ".");
         SemanticVersion::new(
-                &version_tokens[0], 
-                &version_tokens[1], 
-                &version_tokens[2], 
+                version_tokens[0], 
+                version_tokens[1], 
+                version_tokens[2], 
                 release
         )
 }

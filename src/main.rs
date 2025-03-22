@@ -11,9 +11,7 @@ use system::dnf;
 use system::args;
 
 mod commons;
-use commons::string::split_string_using_delimiter;
 
-use std::collections::HashMap;
 use std::env;
 use std::process;
 
@@ -49,8 +47,10 @@ fn main() {
         process::exit(0);
     }
 
-    let repository_update_details: Vec<String> = dnf::get_updates_details(&dnf_updates_list);
-    let packages_names: Vec<String> = dnf::get_installed_details(&repository_update_details);
+    let updates_refs: Vec<&str> = dnf_updates_list.iter().map(|s| s.as_ref()).collect();
+    let repository_update_details: Vec<String> = dnf::get_updates_details(&updates_refs);
+    let details_refs: Vec<&str> = repository_update_details.iter().map(|s| s.as_ref()).collect();
+    let packages_names: Vec<String> = dnf::get_installed_details(&details_refs);
     
     println!("[i] enriching updates with additional informations...");
 

@@ -1,15 +1,14 @@
 use std::collections::HashSet;
 
-pub fn split_string_using_delimiter(string: String, delimiter: &str) -> Vec<String> {
+#[inline]
+pub fn split_string_using_delimiter<'a>(string: &'a str, delimiter: &'a str) -> Vec<&'a str> {
         assert!(!string.is_empty());
         assert!(!delimiter.is_empty());
         assert!(string.contains(delimiter));
 
-        let output: Vec<String> = string
+        let output: Vec<&str> = string
                 .split(delimiter)
-                .clone()
-                .filter(|&str| *str != *"")
-                .map(str::to_string)
+                .filter(|str| !str.is_empty())
                 .collect();
 
         assert!(!output.is_empty());
@@ -17,15 +16,17 @@ pub fn split_string_using_delimiter(string: String, delimiter: &str) -> Vec<Stri
         output
 }
 
-pub fn split_filter_and_deduplicate_string_list(list: &[String], delimiter: &str, offset: usize) -> HashSet<String>{
+pub fn split_filter_and_deduplicate_string_list<'a>(list: &[&'a str], delimiter: &'a str, offset: usize) -> Vec<&'a str>{
     assert!(!list.is_empty());
     assert!(!delimiter.is_empty());
 
     list
         .iter()
+        .map(|line: &&str| split_string_using_delimiter(line, delimiter)[offset])
+        .collect::<HashSet<&str>>()
+        .iter()
         .cloned()
-        .map(|line: String| split_string_using_delimiter(line, delimiter)[offset].clone())
-        .collect::<HashSet<String>>()
+        .collect::<Vec<&str>>()
 }
 
 #[cfg(test)]
@@ -36,7 +37,7 @@ mod tests {
     fn happy_path_1() {
         let test: String = "Hello World!".to_string();
         let expected: Vec<String> = vec!["Hello".to_string(), "World!".to_string()];
-        let result = split_string_using_delimiter(test, " ");
+        let result = split_string_using_delimiter(&test, " ");
         assert_eq!(result, expected);
     }
     
@@ -47,7 +48,7 @@ mod tests {
             "one".to_string(), "two".to_string(),
             "three".to_string(), "four".to_string()
         ];
-        let result = split_string_using_delimiter(test, ",");
+        let result = split_string_using_delimiter(&test, ",");
         assert_eq!(result, expected);
     }
         
@@ -55,7 +56,7 @@ mod tests {
     fn happy_path_3() {
         let test: String = "Hello--World!".to_string();
         let expected: Vec<String> = vec!["Hello".to_string(), "World!".to_string()];
-        let result = split_string_using_delimiter(test, "--");
+        let result = split_string_using_delimiter(&test, "--");
         assert_eq!(result, expected);
     }
         
@@ -65,7 +66,7 @@ mod tests {
         let expected: Vec<String> = vec![
             "one".to_string(), "two".to_string()
         ];
-        let result = split_string_using_delimiter(test, ",");
+        let result = split_string_using_delimiter(&test, ",");
         assert_eq!(result, expected);
     }
         
@@ -75,7 +76,7 @@ mod tests {
         let expected: Vec<String> = vec![
             "one".to_string(), "two".to_string()
         ];
-        let result = split_string_using_delimiter(test, ",");
+        let result = split_string_using_delimiter(&test, ",");
         assert_eq!(result, expected);
     }
         
@@ -83,27 +84,27 @@ mod tests {
     #[should_panic]
     fn empty_string() {
         let test: String = "".to_string();
-        split_string_using_delimiter(test, ",");
+        split_string_using_delimiter(&test, ",");
     }
 
     #[test]
     #[should_panic]
     fn no_real_values_string() {
         let test: String = ",,,,".to_string();
-        split_string_using_delimiter(test, ",");
+        split_string_using_delimiter(&test, ",");
     }
 
     #[test]
     #[should_panic]
     fn no_delimiter_string() {
         let test: String = ",,,,".to_string();
-        split_string_using_delimiter(test, "");
+        split_string_using_delimiter(&test, "");
     }
 
     #[test]
     #[should_panic]
     fn delimiter_not_in_string() {
         let test: String = ",,,,".to_string();
-        split_string_using_delimiter(test, "");
+        split_string_using_delimiter(&test, "");
     }
 }

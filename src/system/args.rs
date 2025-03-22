@@ -1,5 +1,6 @@
 use crate::model::enums::release_type::ReleaseType;
 
+#[inline]
 fn convert_release(arg: &str) -> ReleaseType {
         match arg {
                 "--patch"  => ReleaseType::Patch,
