@@ -3,8 +3,9 @@ use std::collections::HashMap;
 use chrono::{DateTime, NaiveDateTime, Utc};
 
 use crate::commons::string::split_string_using_delimiter;
-use crate::model::semantic_version::compose_new_semantic_version;
+use crate::model::semantic_version::{compare, compose_new_semantic_version};
 
+use super::partition::Partition;
 use super::{semantic_version::SemanticVersion, update::Update};
 use super::enums::{release_type::ReleaseType, severity::Severity};
 use std::str::FromStr;
@@ -14,7 +15,7 @@ pub struct DataModelBuilder{
         partitions_type: HashMap<String, ReleaseType>,
         partitions_date: HashMap<String, DateTime<Utc>>,
         updates_by_partition: HashMap<String, String>,
-        updates_version: HashMap<String, SemanticVersion>,
+        packages_details: HashMap<String, (String, SemanticVersion)>,
         updates_list: Vec<Update>
 }
 
@@ -25,7 +26,7 @@ impl DataModelBuilder {
                         partitions_type: HashMap::new(), 
                         partitions_date: HashMap::new(), 
                         updates_by_partition: HashMap::new(), 
-                        updates_version: HashMap::new(),
+                        packages_details: HashMap::new(),
                         updates_list: Vec::new()
                 }
         }
@@ -99,8 +100,62 @@ impl DataModelBuilder {
                 let new_obj: Update = Update::new(partition.clone(), version.clone(), name.clone());
 
                 self.updates_list.push(new_obj);
-                self.updates_version.insert(name.to_string(), version);
+                self.packages_details.insert(name.to_string(), (partition.to_owned(), version));
         }
 
+        pub fn add_rpm_output(&mut self, line: String) {
+                assert!(!line.is_empty());
+
+                let splitted_str = split_string_using_delimiter(line.to_owned(), "|#|");
+
+                assert!(splitted_str.len() == 3);
+
+                let name: &String = &splitted_str[0];
+                let version_str: &String = &splitted_str[1];
+                let release_str: &String = &splitted_str[2];
+
+                let current_version: SemanticVersion = compose_new_semantic_version(
+                        version_str, release_str
+                );
+
+                let update_detail: &(String, SemanticVersion) = self.packages_details.get(name).unwrap();
+
+                let release: ReleaseType = compare(&current_version, &update_detail.1);
+                let current_partition_release: &ReleaseType = self.partitions_type.get(&update_detail.0).unwrap();
+
+                if &release > current_partition_release {
+                        *self.partitions_type.get_mut(&update_detail.0).unwrap() = release;
+                }
+        }
+
+        pub fn build(self) -> (Vec<Partition>, HashMap<String, Vec<Update>>) {
+                let partitions: Vec<Partition> = self.partitions_severity
+                        .iter()
+                        .map(|(id, severity)| {
+                                let date = self.partitions_date.get(id).unwrap();
+                                let release_type = self.partitions_type.get(id).unwrap();
+
+                                Partition::new(
+                                        id.clone(), release_type.clone(), 
+                                        severity.clone(), *date
+                                )
+                        })
+                        .collect();
+
+                let updates: HashMap<String, Vec<Update>> = 
+                        self.updates_list.iter()
+                        .fold(HashMap::new(), |mut result, elem| {
+                                let partition = elem.get_partition_id();
+                                if !result.contains_key(partition) {
+                                        result.insert(partition.clone(), vec![elem.clone()]);
+                                } else {
+                                        result.get_mut(partition).unwrap().push(elem.clone());
+                                }
+
+                                result
+                        });
+
+                (partitions, updates)
+        }
 
 }
