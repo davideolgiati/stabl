@@ -1,8 +1,7 @@
 use std::str::FromStr;
 use std::fmt::{self, Display, Formatter};
 
-#[derive(Clone)]
-#[derive(PartialEq, PartialOrd)]
+#[derive(Clone, PartialEq, PartialOrd, Debug)]
 pub enum Severity {
     None,
     Low,
@@ -45,48 +44,48 @@ mod tests {
     use super::*;
     
     #[test]
-    fn new_critical() {
+    fn happy_path_severity_critical() {
         let input: &str = "critical";
         let expected: Severity = Severity::Critical;
         let output = Severity::from_str(input).unwrap();
 
-        assert!(output == expected);
+        assert_eq!(output, expected);
     }
 
     #[test]
-    fn new_important() {
+    fn happy_path_severity_important() {
         let input: &str = "important";
         let expected: Severity = Severity::Important;
         let output = Severity::from_str(input).unwrap();
 
-        assert!(output == expected);
+        assert_eq!(output, expected);
     }
 
     #[test]
-    fn new_moderate() {
+    fn happy_path_severity_moderate() {
         let input: &str = "moderate";
         let expected: Severity = Severity::Moderate;
         let output = Severity::from_str(input).unwrap();
 
-        assert!(output == expected);
+        assert_eq!(output, expected);
     }
 
     #[test]
-    fn new_low() {
+    fn happy_path_severity_low() {
         let input: &str = "low";
         let expected: Severity = Severity::Low;
         let output = Severity::from_str(input).unwrap();
 
-        assert!(output == expected);
+        assert_eq!(output, expected);
     }
 
     #[test]
-    fn new_none() {
+    fn happy_path_severity_none() {
         let input: &str = "none";
         let expected: Severity = Severity::None;
         let output = Severity::from_str(input).unwrap();
 
-        assert!(output == expected);
+        assert_eq!(output, expected);
     }
 
     #[test]
@@ -95,7 +94,7 @@ mod tests {
         let expected: &str = "CRITICAL";
         let output = Severity::from_str(input).unwrap();
 
-        assert!(format!("{}", output) == expected);
+        assert_eq!(format!("{}", output), expected);
     }
 
     #[test]
@@ -104,7 +103,7 @@ mod tests {
         let expected: &str = "IMPORTANT";
         let output = Severity::from_str(input).unwrap();
 
-        assert!(format!("{}", output) == expected);
+        assert_eq!(format!("{}", output), expected);
     }
 
     #[test]
@@ -113,7 +112,7 @@ mod tests {
         let expected: &str = "MODERATE";
         let output = Severity::from_str(input).unwrap();
 
-        assert!(format!("{}", output) == expected);
+        assert_eq!(format!("{}", output), expected);
     }
 
     #[test]
@@ -122,7 +121,7 @@ mod tests {
         let expected: &str = "LOW";
         let output = Severity::from_str(input).unwrap();
 
-        assert!(format!("{}", output) == expected);
+        assert_eq!(format!("{}", output), expected);
     }
 
     #[test]
@@ -131,11 +130,11 @@ mod tests {
         let expected: &str = "NONE";
         let output = Severity::from_str(input).unwrap();
 
-        assert!(format!("{}", output) == expected);
+        assert_eq!(format!("{}", output), expected);
     }
 
     #[test]
-    fn unknown_string() {
+    fn panic_unknown_string() {
         let input: &str = "major";
         let output = Severity::from_str(input);
 
@@ -144,7 +143,7 @@ mod tests {
 
     #[test]
     #[should_panic]
-    fn empty_string() {
+    fn panic_empty_string() {
         Severity::from_str("").unwrap();
     }
 }

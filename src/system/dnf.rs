@@ -20,7 +20,7 @@ pub fn get_updates_list<'a>() -> Vec<&'a str> {
 pub fn get_updates_details<'a>(updates_list: &[&str]) -> Vec<&'a str> {
         let stdout: String = ShellCmdFacade::get_repoquery_output(updates_list);
 
-        let stdout = Box::leak(stdout.into_boxed_str());
+        let stdout: &str = Box::leak(stdout.into_boxed_str());
         
         split_string_using_delimiter(stdout, "\n").to_vec()
 }
@@ -30,7 +30,7 @@ pub fn get_installed_details<'a>(updates_list: &[&str]) -> Vec<&'a str> {
 
         let output: String = ShellCmdFacade::get_rpm_output_for_local_packages(updates_list);
 
-        let output = Box::leak(output.into_boxed_str());
+        let output: &str = Box::leak(output.into_boxed_str());
 
         split_string_using_delimiter(output, "\n").to_vec()
 }
