@@ -211,6 +211,16 @@ mod tests {
     }
 
     #[test]
+    fn print_version() {
+        let version: &str = "1.0.0";
+        let release: &str = "1";
+        let expected: &str = "1.0.0-1";
+        let output =  compose_new_semantic_version(version, release);
+
+        assert_eq!(format!("{}", output), expected);
+    }
+
+    #[test]
     #[should_panic]
     fn panic_compare_equal_version() {
         let update = SemanticVersion::new(

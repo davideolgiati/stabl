@@ -17,6 +17,9 @@ impl Partition {
         id: String, release_type: ReleaseType,
         severity: Severity, date: DateTime<Utc>
     ) -> Partition {
+        assert!(!id.is_empty());
+        assert!(date <= Utc::now());
+        
         Partition {
                 _id: id,
                 _release_type: release_type,

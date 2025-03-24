@@ -38,7 +38,7 @@ mod tests {
         use crate::model::semantic_version::compose_new_semantic_version;
         
         #[test]
-        fn happy_path() {
+        fn happy_path_new_update() {
                 let name: String = "firefox".to_string();
                 let partition: String = "FEDORA-2025-1234".to_string();
                 let version: SemanticVersion = compose_new_semantic_version(
@@ -57,7 +57,7 @@ mod tests {
     
         #[test]
         #[should_panic]
-        fn empty_name() {
+        fn panic_empty_name() {
                 let name: String = "".to_string();
                 let partition: String = "FEDORA-2025-1234".to_string();
                 let version: SemanticVersion = compose_new_semantic_version(
@@ -73,7 +73,7 @@ mod tests {
 
         #[test]
         #[should_panic]
-        fn empty_partition() {
+        fn panic_empty_partition() {
                 let name: String = "firefox".to_string();
                 let partition: String = "".to_string();
                 let version: SemanticVersion = compose_new_semantic_version(

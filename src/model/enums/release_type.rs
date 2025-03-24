@@ -53,7 +53,7 @@ mod tests {
     use super::*;
     
     #[test]
-    fn new_major() {
+    fn happy_path_new_major() {
         let input: &str = "unspecified";
         let expected: ReleaseType = ReleaseType::Major;
         let output = ReleaseType::from_str(input).unwrap();
@@ -62,7 +62,7 @@ mod tests {
     }
 
     #[test]
-    fn new_minor() {
+    fn happy_path_new_minor() {
         let input: &str = "enhancement";
         let expected: ReleaseType = ReleaseType::Minor;
         let output = ReleaseType::from_str(input).unwrap();
@@ -71,7 +71,7 @@ mod tests {
     }
 
     #[test]
-    fn new_patch() {
+    fn happy_path_new_patch() {
         let input: &str = "bugfix";
         let expected: ReleaseType = ReleaseType::Patch;
         let output = ReleaseType::from_str(input).unwrap();
@@ -80,10 +80,46 @@ mod tests {
     }
 
     #[test]
-    fn new_patch_security() {
+    fn happy_path_new_patch_security() {
         let input: &str = "security";
         let expected: ReleaseType = ReleaseType::Patch;
         let output = ReleaseType::from_str(input).unwrap();
+
+        assert!(output == expected);
+    }
+
+    #[test]
+    fn happy_path_get_super_for_major() {
+        let input:ReleaseType = ReleaseType::Major;
+        let expected: ReleaseType  = ReleaseType::Major;
+        let output: ReleaseType = get_super(&input);
+
+        assert!(output == expected);
+    }
+
+    #[test]
+    fn happy_path_get_super_for_minor() {
+        let input: ReleaseType  = ReleaseType::Minor;
+        let expected: ReleaseType  = ReleaseType::Major;
+        let output: ReleaseType = get_super(&input);
+
+        assert!(output == expected);
+    }
+
+    #[test]
+    fn happy_path_get_super_for_patch() {
+        let input: ReleaseType = ReleaseType::Patch;
+        let expected: ReleaseType  = ReleaseType::Minor;
+        let output: ReleaseType = get_super(&input);
+
+        assert!(output == expected);
+    }
+
+    #[test]
+    fn happy_path_get_super_for_repack() {
+        let input: ReleaseType = ReleaseType::Repack;
+        let expected: ReleaseType  = ReleaseType::Patch;
+        let output: ReleaseType = get_super(&input);
 
         assert!(output == expected);
     }
@@ -125,7 +161,7 @@ mod tests {
     }
 
     #[test]
-    fn unknown_string() {
+    fn panic_unknown_string() {
         let input: &str = "major";
         let output = ReleaseType::from_str(input);
 
@@ -134,7 +170,7 @@ mod tests {
 
     #[test]
     #[should_panic]
-    fn empty_string() {
+    fn panic_empty_string() {
         ReleaseType::from_str("").unwrap();
     }
 }
