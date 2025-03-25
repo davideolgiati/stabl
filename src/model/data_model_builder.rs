@@ -10,6 +10,7 @@ use super::{semantic_version::SemanticVersion, update::Update};
 use super::enums::{release_type::ReleaseType, severity::Severity};
 use std::str::FromStr;
 
+#[derive(Default)]
 pub struct DataModelBuilder<'a>{
         partitions_severity: HashMap<&'a str, Severity>,
         partitions_type: HashMap<&'a str, ReleaseType>,
@@ -21,14 +22,7 @@ pub struct DataModelBuilder<'a>{
 
 impl<'a> DataModelBuilder<'a> {
         pub fn new() -> DataModelBuilder<'a> {
-                DataModelBuilder { 
-                        partitions_severity: HashMap::new(), 
-                        partitions_type: HashMap::new(), 
-                        partitions_date: HashMap::new(), 
-                        updates_by_partition: HashMap::new(), 
-                        packages_details: HashMap::new(),
-                        updates_list: Vec::new()
-                }
+                Self::default()
         }
 
         fn update_partition_details(&mut self, id: &'a str, severity: &Severity, release_ts: &DateTime<Utc>, release_type: &ReleaseType) {

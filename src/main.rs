@@ -6,6 +6,7 @@ use model::enums::release_type::ReleaseType;
 
 mod system;
 use model::partition::Partition;
+use system::shell;
 use system::ui;
 use system::dnf;
 use system::args;
@@ -40,25 +41,32 @@ fn main() {
     
     ui::display_system_informations();
     
-    let dnf_updates_list: Vec<&str> = dnf::get_updates_list();
+    let dnf_updates_list: Vec<&str> = dnf::get_updates_list(shell::run_command_and_read_stdout);
 
     if dnf_updates_list.is_empty() {
         println!("\nno suggested updates found\n\n");
         process::exit(0);
     }
 
-    let repository_update_details: Vec<&str> = dnf::get_updates_details(&dnf_updates_list);
-    let packages_names: Vec<&str> = dnf::get_installed_details(&repository_update_details);
+    let repository_update_details: Vec<&str> = dnf::get_updates_details(
+        &dnf_updates_list, shell::run_command_and_read_stdout
+    );
+    let packages_names: Vec<&str> = dnf::get_installed_details(
+        &repository_update_details, 
+        shell::run_command_and_read_stdout
+    );
     
     println!("[i] enriching updates with additional informations...");
 
-    let mut data_model_builder = DataModelBuilder::new();
+    let (partitions, updates) = {
+        let mut data_model_builder: DataModelBuilder<'_> = DataModelBuilder::new();
 
-    dnf_updates_list.iter().for_each(|line| data_model_builder.add_updateinfo_output(line));
-    repository_update_details.iter().for_each(|line| data_model_builder.add_repoquery_output(line));
-    packages_names.iter().for_each(|line| data_model_builder.add_rpm_output(line));
+        dnf_updates_list.iter().for_each(|line| data_model_builder.add_updateinfo_output(line));
+        repository_update_details.iter().for_each(|line| data_model_builder.add_repoquery_output(line));
+        packages_names.iter().for_each(|line| data_model_builder.add_rpm_output(line));
 
-    let (partitions, updates) = data_model_builder.build();
+        data_model_builder.build()
+    };
 
     let mut selected_part_id: Vec<String> = Vec::new();
     let mut buffer = String::from("");
@@ -84,6 +92,9 @@ fn main() {
             }
         }
     }
+
+    let buffer = buffer;
+    let selected_part_id = selected_part_id;
 
     println!("{}", buffer);
     //ui::display_suggested_upgrades(&update_builder, buffer);

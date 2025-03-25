@@ -1,10 +1,13 @@
 use crate::commons::string::split_filter_and_deduplicate_string_list;
 
-use super::{cmd_args_builder::CmdArgsBuilder, shell};
+use super::cmd_args_builder::CmdArgsBuilder;
+
+type ShellCmdClosure = fn(&str, &[String]) -> String;
 
 pub struct ShellCmdFacade;
+
 impl ShellCmdFacade {
-        pub fn get_updateinfo_output() -> String {
+        pub fn get_updateinfo_output(_shell_cmd: ShellCmdClosure) -> String {
                 println!("[i] getting updates list from remote...");
 
                 let cmd_args = CmdArgsBuilder::new()
@@ -14,10 +17,10 @@ impl ShellCmdFacade {
                         .toggle_quiet_flag()
                         .build();
 
-                shell::run_command_and_read_stdout("dnf", &cmd_args)
+                _shell_cmd("dnf", &cmd_args)
         }
 
-        pub fn get_repoquery_output(updates_list: &[&str]) -> String {
+        pub fn get_repoquery_output(updates_list: &[&str], _shell_cmd: ShellCmdClosure) -> String {
                 let updates: Vec<&str> = split_filter_and_deduplicate_string_list(
                         updates_list, " ", 3
                 );
@@ -32,10 +35,10 @@ impl ShellCmdFacade {
                         .add_additional_args(&updates)
                         .build();
         
-                shell::run_command_and_read_stdout("dnf", &cmd_args)
+                _shell_cmd("dnf", &cmd_args)
         }
 
-        pub fn get_rpm_output_for_local_packages(updates_list: &[&str]) -> String {
+        pub fn get_rpm_output_for_local_packages(updates_list: &[&str], _shell_cmd: ShellCmdClosure) -> String {
                 let installed: Vec<&str> = split_filter_and_deduplicate_string_list(
                         updates_list, "|#|", 0
                 );
@@ -48,7 +51,7 @@ impl ShellCmdFacade {
                         .add_additional_args(&installed)
                         .build();
         
-                shell::run_command_and_read_stdout("rpm", &cmd_args)
+                _shell_cmd("rpm", &cmd_args)
         }
 
 }

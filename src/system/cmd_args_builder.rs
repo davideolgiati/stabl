@@ -1,6 +1,7 @@
 const UPDATE_QUERYFORMAT: &str = "%{name}|#|%{version}|#|%{release}|#|%{full_nevra}|#|%{name}-%{version}-%{release}.%{arch}";
 const INSTALLED_QUERYFORMAT: &str = "%{name}|#|%{version}|#|%{release}";
 
+#[derive(Default)]
 pub struct CmdArgsBuilder {
         _quiet: bool,
         _cached: bool,
@@ -11,13 +12,7 @@ pub struct CmdArgsBuilder {
 
 impl CmdArgsBuilder {
         pub fn new() -> CmdArgsBuilder {
-                CmdArgsBuilder{
-                        _quiet: false,
-                        _cached: false,
-                        _query_format_args: String::from(""),
-                        _base_args: Vec::new(),
-                        _additional_args: Vec::new()
-                }
+                Default::default()
         }
 
         pub fn toggle_quiet_flag(&mut self) -> &mut CmdArgsBuilder {
