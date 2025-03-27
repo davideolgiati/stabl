@@ -12,6 +12,8 @@ pub fn get_updates_list<'a>(_shell_cmd: ShellCmdClosure) -> Vec<&'a str> {
                 return Vec::new();
         }
 
+        assert!(!output.is_empty());
+
         let output = Box::leak(output.into_boxed_str());
 
         split_string_using_delimiter(output, "\n")
@@ -26,6 +28,8 @@ pub fn get_updates_details<'a>(updates_list: &[&str], _shell_cmd: ShellCmdClosur
                 updates_list, _shell_cmd
         );
 
+        assert!(!stdout.is_empty());
+
         let stdout: &str = Box::leak(stdout.into_boxed_str());
         
         split_string_using_delimiter(stdout, "\n").to_vec()
@@ -37,6 +41,8 @@ pub fn get_installed_details<'a>(updates_list: &[&str], _shell_cmd: ShellCmdClos
         let output: String = ShellCmdFacade::get_rpm_output_for_local_packages(
                 updates_list, _shell_cmd
         );
+
+        assert!(!output.is_empty());
 
         let output: &str = Box::leak(output.into_boxed_str());
 

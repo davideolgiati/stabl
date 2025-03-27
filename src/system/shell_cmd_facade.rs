@@ -17,6 +17,8 @@ impl ShellCmdFacade {
                         .toggle_quiet_flag()
                         .build();
 
+                assert!(!cmd_args.is_empty());
+
                 _shell_cmd("dnf", &cmd_args)
         }
 
@@ -25,6 +27,8 @@ impl ShellCmdFacade {
                         updates_list, " ", 3
                 );
         
+                assert!(!updates.is_empty());
+
                 println!("[i] getting details from repository for {} update ...", updates.len());
         
                 let cmd_args = CmdArgsBuilder::new()
@@ -34,6 +38,8 @@ impl ShellCmdFacade {
                         .set_query_format_for_update_pkgs()
                         .add_additional_args(&updates)
                         .build();
+
+                assert!(!cmd_args.is_empty());
         
                 _shell_cmd("dnf", &cmd_args)
         }
@@ -43,6 +49,8 @@ impl ShellCmdFacade {
                         updates_list, "|#|", 0
                 );
         
+                assert!(!installed.is_empty());
+
                 println!("[i] getting details for {} installed packages ...", installed.len());
         
                 let cmd_args = CmdArgsBuilder::new()
@@ -50,6 +58,8 @@ impl ShellCmdFacade {
                         .set_query_format_for_installed_pkgs()
                         .add_additional_args(&installed)
                         .build();
+
+                assert!(!cmd_args.is_empty());
         
                 _shell_cmd("rpm", &cmd_args)
         }

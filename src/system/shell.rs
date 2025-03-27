@@ -14,6 +14,6 @@ pub fn run_command_and_read_stdout(command: &str, args: &[String]) -> String {
         
         let stdout:String = String::from_utf8(console_output.stdout)
                 .unwrap_or_else(|_| panic!("{} returned an unparsable sequence of bytes!", command));
-        
+
         stdout
 }
