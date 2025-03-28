@@ -1,4 +1,4 @@
-use crate::model::enums::release_type::ReleaseType;
+use crate::model::release_type::ReleaseType;
 
 #[inline]
 fn convert_release(arg: &str) -> ReleaseType {

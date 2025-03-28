@@ -1,8 +1,7 @@
 use chrono::Utc;
 use chrono::DateTime;
 
-use crate::model::enums::release_type::ReleaseType;
-use crate::model::enums::severity::Severity;
+use crate::model::{release_type::ReleaseType, severity::Severity};
 
 #[derive(Clone)]
 pub struct Partition {

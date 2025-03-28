@@ -1,5 +1,5 @@
 use criterion::{black_box, criterion_group, criterion_main, Criterion};
-use stabl::{commons::string::{split_filter_and_deduplicate_string_list, split_string_using_delimiter}, system::dnf::get_updates_list};
+use stabl::{commons::string::{split_filter_and_deduplicate_string_list, split_string_using_delimiter}, system::shell_cmd_facade::get_updateinfo_output};
 
 pub fn split_string_repoquery(c: &mut Criterion) {
     c.bench_function("split_string_repoquery", |b| b.iter(|| split_string_using_delimiter(
@@ -164,7 +164,7 @@ FEDORA-2025-f455f56914 bugfix      None                  python3-blivet-1:3.11.0
 }
 
 pub fn get_updates_list_benchmark(c: &mut Criterion) {
-        c.bench_function("get_updates_list", |b| b.iter(|| get_updates_list(dnf_updatelist_mock)));
+        c.bench_function("get_updates_list", |b| b.iter(|| get_updateinfo_output(dnf_updatelist_mock)));
 }
 
 criterion_group!(benches, 

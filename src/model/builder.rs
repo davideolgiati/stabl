@@ -6,12 +6,11 @@ use crate::commons::string::split_string_using_delimiter;
 use crate::model::semantic_version::{compare, compose_new_semantic_version};
 
 use super::partition::Partition;
-use super::{semantic_version::SemanticVersion, update::Update};
-use super::enums::{release_type::ReleaseType, severity::Severity};
+use super::{semantic_version::SemanticVersion, update::Update, release_type::ReleaseType, severity::Severity};
 use std::str::FromStr;
 
 #[derive(Default)]
-pub struct DataModelBuilder<'a>{
+pub struct ModelBuilder<'a>{
         partitions_severity: HashMap<&'a str, Severity>,
         partitions_type: HashMap<&'a str, ReleaseType>,
         partitions_date: HashMap<&'a str, DateTime<Utc>>,
@@ -20,8 +19,8 @@ pub struct DataModelBuilder<'a>{
         updates_list: Vec<Update>
 }
 
-impl<'a> DataModelBuilder<'a> {
-        pub fn new() -> DataModelBuilder<'a> {
+impl<'a> ModelBuilder<'a> {
+        pub fn new() -> ModelBuilder<'a> {
                 Self::default()
         }
 

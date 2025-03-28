@@ -1,5 +1,3 @@
-use crate::system::os;
-
 pub fn display_stabl_logo() {
         let logo:&str = r"          
                                     __________________________________
@@ -13,10 +11,6 @@ pub fn display_stabl_logo() {
     
         ";
         println!("{}", logo);
-}
-    
-pub fn display_system_informations() {
-        println!("[*] running on: {}\n", os::get_os_name());
 }
 
 /*

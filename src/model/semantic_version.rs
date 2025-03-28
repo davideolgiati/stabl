@@ -1,7 +1,7 @@
 use crate::commons::string::split_string_using_delimiter;
 use std::fmt::{self, Display, Formatter};
 
-use super::enums::release_type::ReleaseType;
+use super::release_type::ReleaseType;
 
 #[derive(Clone, Debug, PartialEq)]
 pub struct SemanticVersion {

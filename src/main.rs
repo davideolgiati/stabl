@@ -1,14 +1,16 @@
 mod model;
-use model::data_model_builder::DataModelBuilder;
-use model::enums::release_type::get_super;
-use model::enums::severity::Severity;
-use model::enums::release_type::ReleaseType;
+use model::Severity;
+use model::Partition;
+use model::ModelBuilder;
+use model::release_type::get_super;
+use model::release_type::ReleaseType;
 
 mod system;
-use model::partition::Partition;
 use system::shell;
+use system::shell_cmd_facade::get_repoquery_output;
+use system::shell_cmd_facade::get_rpm_output_for_local_packages;
+use system::shell_cmd_facade::get_updateinfo_output;
 use system::ui;
-use system::dnf;
 use system::args;
 
 mod commons;
@@ -39,19 +41,17 @@ fn main() {
     
     let max_release: ReleaseType = args::get_release_arg(&input_args);
     
-    ui::display_system_informations();
-    
-    let dnf_updates_list: Vec<&str> = dnf::get_updates_list(shell::run_command_and_read_stdout);
+    let dnf_updates_list: Vec<&str> = get_updateinfo_output(shell::run_command_and_read_stdout);
 
     if dnf_updates_list.is_empty() {
         println!("\nno suggested updates found\n\n");
         process::exit(0);
     }
 
-    let repository_update_details: Vec<&str> = dnf::get_updates_details(
+    let repository_update_details: Vec<&str> = get_repoquery_output(
         &dnf_updates_list, shell::run_command_and_read_stdout
     );
-    let packages_names: Vec<&str> = dnf::get_installed_details(
+    let packages_names: Vec<&str> = get_rpm_output_for_local_packages(
         &repository_update_details, 
         shell::run_command_and_read_stdout
     );
@@ -59,7 +59,7 @@ fn main() {
     println!("[i] enriching updates with additional informations...");
 
     let (partitions, updates) = {
-        let mut data_model_builder: DataModelBuilder<'_> = DataModelBuilder::new();
+        let mut data_model_builder: ModelBuilder<'_> = ModelBuilder::new();
 
         dnf_updates_list.iter().for_each(|line| data_model_builder.add_updateinfo_output(line));
         repository_update_details.iter().for_each(|line| data_model_builder.add_repoquery_output(line));
