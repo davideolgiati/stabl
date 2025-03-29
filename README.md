@@ -1,6 +1,16 @@
 # stabl
 A DNF wrapper to selectively choose what packages to upgrade
 
+# v0.1.2
+### Feature
+ - Implemented command-line argument parsing to show help (--help) and to set maximum allowed version bump (major, minor, ptch, release).
+
+### Enhancements
+- Refactored command execution logic into a dedicated runner module.
+- Removed operating system-specific information display function (display_system_informations).
+- Reorganized data model for better maintainability (more in next releases)
+- Reorganized dnf and shell modules to simplify logic and implement dependency injection
+
 # v0.1.1
 ### Features
 - Cleaned up code
