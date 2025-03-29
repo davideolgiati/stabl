@@ -7,9 +7,9 @@ use model::semantic_version::SemanticVersion;
 
 mod system;
 use system::shell;
-use system::shell_cmd_facade::get_repoquery_output;
-use system::shell_cmd_facade::get_rpm_output_for_local_packages;
-use system::shell_cmd_facade::get_updateinfo_output;
+use system::dnf::get_repoquery_output;
+use system::dnf::get_rpm_output_for_local_packages;
+use system::dnf::get_updateinfo_output;
 use system::ui;
 use system::args;
 

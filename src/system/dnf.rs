@@ -6,7 +6,7 @@ const UPDATE_QUERYFORMAT: &str = "%{name}|#|%{version}|#|%{release}|#|%{full_nev
 const INSTALLED_QUERYFORMAT: &str = "%{name}|#|%{version}|#|%{release}";
 
 #[derive(Default)]
-struct CmdArgsBuilder {
+struct ArgsBuilder {
         _quiet: bool,
         _cached: bool,
         _query_format_args: String,
@@ -14,41 +14,41 @@ struct CmdArgsBuilder {
         _additional_args: Vec<String>
 }
 
-impl CmdArgsBuilder {
-        pub fn new() -> CmdArgsBuilder {
+impl ArgsBuilder {
+        pub fn new() -> ArgsBuilder {
                 Default::default()
         }
 
-        pub fn toggle_quiet_flag(&mut self) -> &mut CmdArgsBuilder {
+        pub fn toggle_quiet_flag(&mut self) -> &mut ArgsBuilder {
                 self._quiet = !self._quiet;
                 self
         }
 
-        pub fn toggle_cached_flag(&mut self) -> &mut CmdArgsBuilder {
+        pub fn toggle_cached_flag(&mut self) -> &mut ArgsBuilder {
                 self._cached = !self._cached;
                 self
         }
 
-        pub fn add_base_arg(&mut self, base_arg : &str) -> &mut CmdArgsBuilder {
+        pub fn add_base_arg(&mut self, base_arg : &str) -> &mut ArgsBuilder {
                 self._base_args.push(base_arg.to_owned());
                 self
         }
 
-        pub fn add_additional_args(&mut self, additional_args : &[&str]) -> &mut CmdArgsBuilder {
+        pub fn add_additional_args(&mut self, additional_args : &[&str]) -> &mut ArgsBuilder {
                 for item in additional_args {
                         self._additional_args.push(item.to_string());
                 }
                 self
         }
 
-        pub fn set_query_format_for_update_pkgs(&mut self) -> &mut CmdArgsBuilder {
+        pub fn set_query_format_for_update_pkgs(&mut self) -> &mut ArgsBuilder {
                 self._query_format_args = String::from(
                         UPDATE_QUERYFORMAT
                 );
                 self
         }
 
-        pub fn set_query_format_for_installed_pkgs(&mut self) -> &mut CmdArgsBuilder {
+        pub fn set_query_format_for_installed_pkgs(&mut self) -> &mut ArgsBuilder {
                 self._query_format_args = String::from(
                         INSTALLED_QUERYFORMAT
                 );
@@ -82,7 +82,7 @@ impl CmdArgsBuilder {
 pub fn get_updateinfo_output<'a>(_shell_cmd: ShellCmdClosure) -> Vec<&'a str> {
         println!("[i] getting updates list from remote...");
 
-        let cmd_args = CmdArgsBuilder::new()
+        let cmd_args = ArgsBuilder::new()
                 .add_base_arg("updateinfo")
                 .add_base_arg("list")
                 .add_base_arg("--updates")
@@ -114,7 +114,7 @@ pub fn get_repoquery_output<'a>(updates_list: &[&str], _shell_cmd: ShellCmdClosu
 
         println!("[i] getting details from repository for {} update ...", updates.len());
 
-        let cmd_args = CmdArgsBuilder::new()
+        let cmd_args = ArgsBuilder::new()
                 .add_base_arg("repoquery")
                 .toggle_cached_flag()
                 .toggle_quiet_flag()
@@ -139,7 +139,7 @@ pub fn get_rpm_output_for_local_packages<'a>(updates_list: &[&str], _shell_cmd: 
 
         println!("[i] getting details for {} installed packages ...", installed.len());
 
-        let cmd_args = CmdArgsBuilder::new()
+        let cmd_args = ArgsBuilder::new()
                 .toggle_quiet_flag()
                 .set_query_format_for_installed_pkgs()
                 .add_additional_args(&installed)

@@ -1,5 +1,5 @@
 use criterion::{black_box, criterion_group, criterion_main, Criterion};
-use stabl::{commons::string::{split_filter_and_deduplicate_string_list, split_string}, system::shell_cmd_facade::get_updateinfo_output};
+use stabl::{commons::string::{split_filter_and_deduplicate_string_list, split_string}, system::dnf::get_updateinfo_output};
 
 pub fn split_string_repoquery(c: &mut Criterion) {
     c.bench_function("split_string_repoquery", |b| b.iter(|| split_string(
