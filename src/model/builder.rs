@@ -2,11 +2,11 @@ use std::collections::HashMap;
 
 use chrono::{DateTime, NaiveDateTime, Utc};
 
-use crate::commons::string::split_string_using_delimiter;
+use crate::commons::string::split_string;
 use crate::model::semantic_version::compare;
 
 use super::partition::Partition;
-use super::update::Update;
+use crate::model::update::Update;
 use super::{semantic_version::SemanticVersion, release_type::ReleaseType, severity::Severity};
 use std::str::FromStr;
 
@@ -60,15 +60,14 @@ impl<'a> ModelBuilder<'a> {
                 }
         }
 
-        pub fn add_updateinfo_output(&mut self, line: &'a str) {
+        pub fn add_updateinfo_output_line(&mut self, line: &'a str) {
                 assert!(!line.is_empty());
 
-                let splitted_str = split_string_using_delimiter(line, " ");
+                let splitted_str = split_string(line, " ");
 
                 assert!(splitted_str.len() == 6);
                 
                 let signature: &str = splitted_str[3];
-
                 let partition: &str = splitted_str[0];
                 let release_type: ReleaseType = ReleaseType::from_str(splitted_str[1]).unwrap();
                 let severity: Severity = Severity::from_str(splitted_str[2]).unwrap();
@@ -83,7 +82,7 @@ impl<'a> ModelBuilder<'a> {
         pub fn add_repoquery_output(&mut self, line: &'a str) {
                 assert!(!line.is_empty());
 
-                let splitted_str = split_string_using_delimiter(line, "|#|");
+                let splitted_str = split_string(line, "|#|");
 
                 assert!(splitted_str.len() == 5);
 
@@ -114,7 +113,7 @@ impl<'a> ModelBuilder<'a> {
         pub fn add_rpm_output(&mut self, line: &'a str) {
                 assert!(!line.is_empty());
 
-                let splitted_str = split_string_using_delimiter(line, "|#|");
+                let splitted_str = split_string(line, "|#|");
 
                 assert!(splitted_str.len() == 3);
 

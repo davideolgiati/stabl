@@ -59,13 +59,13 @@ fn main() {
     println!("[i] enriching updates with additional informations...");
 
     let (partitions, updates) = {
-        let mut data_model_builder: ModelBuilder<'_> = ModelBuilder::new();
+        let mut data_model: ModelBuilder<'_> = ModelBuilder::new();
 
-        dnf_updates_list.iter().for_each(|line| data_model_builder.add_updateinfo_output(line));
-        repository_update_details.iter().for_each(|line| data_model_builder.add_repoquery_output(line));
-        packages_names.iter().for_each(|line| data_model_builder.add_rpm_output(line));
+        dnf_updates_list.iter().for_each(|line| data_model.add_updateinfo_output_line(line));
+        repository_update_details.iter().for_each(|line| data_model.add_repoquery_output(line));
+        packages_names.iter().for_each(|line| data_model.add_rpm_output(line));
 
-        data_model_builder.build()
+        data_model.build()
     };
 
     let mut selected_part_id: Vec<String> = Vec::new();

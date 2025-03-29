@@ -1,4 +1,4 @@
-use crate::commons::string::{split_filter_and_deduplicate_string_list, split_string_using_delimiter};
+use crate::commons::string::{split_filter_and_deduplicate_string_list, split_string};
 
 type ShellCmdClosure = fn(&str, &[String]) -> String;
 
@@ -99,7 +99,7 @@ pub fn get_updateinfo_output<'a>(_shell_cmd: ShellCmdClosure) -> Vec<&'a str> {
 
         let output = Box::leak(output.into_boxed_str());
 
-        split_string_using_delimiter(output, "\n")
+        split_string(output, "\n")
                 .iter()
                 .skip(1)
                 .copied()
@@ -128,7 +128,7 @@ pub fn get_repoquery_output<'a>(updates_list: &[&str], _shell_cmd: ShellCmdClosu
 
         let stdout: &str = Box::leak(stdout.into_boxed_str());
         
-        split_string_using_delimiter(stdout, "\n").to_vec()
+        split_string(stdout, "\n").to_vec()
 }
 
 pub fn get_rpm_output_for_local_packages<'a>(updates_list: &[&str], _shell_cmd: ShellCmdClosure) -> Vec<&'a str> {
@@ -150,7 +150,7 @@ pub fn get_rpm_output_for_local_packages<'a>(updates_list: &[&str], _shell_cmd: 
         assert!(!output.is_empty());
 
         let output: &str = Box::leak(output.into_boxed_str());
-        split_string_using_delimiter(output, "\n").to_vec()
+        split_string(output, "\n").to_vec()
 }
 
 #[cfg(test)]

@@ -1,6 +1,6 @@
 use regex::Regex;
 
-use crate::commons::string::split_string_using_delimiter;
+use crate::commons::string::split_string;
 use std::fmt::{self, Display, Formatter};
 
 use super::release_type::ReleaseType;
@@ -28,7 +28,7 @@ impl SemanticVersion {
                         if !filtered_version.contains(".") {
                                 vec![&filtered_version, "0", "0"]
                         } else {
-                                let mut splitted_str = split_string_using_delimiter(&filtered_version, ".");
+                                let mut splitted_str = split_string(&filtered_version, ".");
                                 while splitted_str.len() < 3 {
                                         splitted_str.push("0");
                                 }
