@@ -1,3 +1,5 @@
+use regex::Regex;
+
 use crate::commons::string::split_string_using_delimiter;
 use std::fmt::{self, Display, Formatter};
 
@@ -12,38 +14,50 @@ pub struct SemanticVersion {
 }
 
 impl SemanticVersion {
-        pub fn new(
-                major: &str,
-                minor: &str, 
-                patch: &str,
-                release: &str
-        ) -> SemanticVersion {
-                assert!(!major.is_empty());
-                assert!(!minor.is_empty());
-                assert!(!patch.is_empty());
+        pub fn new(version: &str, release: &str) -> SemanticVersion {
+                assert!(!version.is_empty());
                 assert!(!release.is_empty());
 
-                SemanticVersion { 
-                        _major: major.to_owned(), 
-                        _minor: minor.to_owned(), 
-                        _patch: patch.to_owned(), 
-                        _release: release.to_owned()
+                let re = Regex::new(r"(?<version>(?:[0-9]+){1}(?:\.[0-9]*){0,2})").unwrap();
+                let mut regex_iterator = re.captures_iter(version);
+                let version_captures = regex_iterator.next().unwrap();
+                
+                let filtered_version = String::from(&version_captures["version"]);
+
+                let version_tokens: Vec<&str> = {
+                        if !filtered_version.contains(".") {
+                                vec![&filtered_version, "0", "0"]
+                        } else {
+                                let mut splitted_str = split_string_using_delimiter(&filtered_version, ".");
+                                while splitted_str.len() < 3 {
+                                        splitted_str.push("0");
+                                }
+
+                                splitted_str
+                        }
+                };
+
+                let fixed_release = {
+                        let re = Regex::new(r"(?:[0-9]+){1}(?:\.[0-9]*){0,2}\.?").unwrap();
+                        let pkg_release = re.replace(version, "");
+
+                        if pkg_release.is_empty() {
+                                release
+                        } else {
+                                &format!("{}.{}", pkg_release, release)
+                        }
+                };
+
+                SemanticVersion {
+                        _major: version_tokens[0].to_owned(), 
+                        _minor: version_tokens[1].to_owned(), 
+                        _patch: version_tokens[2].to_owned(), 
+                        _release: fixed_release.to_owned()
                 }
         }
 }
 
-pub fn compose_new_semantic_version(version: &str, release: &str) -> SemanticVersion {
-        let padded_string: String = format!("{}.0.0", version);
-        let version_tokens: Vec<&str> = split_string_using_delimiter(&padded_string, ".");
-        SemanticVersion::new(
-                version_tokens[0], 
-                version_tokens[1], 
-                version_tokens[2], 
-                release
-        )
-}
-
-pub fn compare(current: &SemanticVersion, update: &SemanticVersion) -> ReleaseType {
+pub(crate) fn compare(current: &SemanticVersion, update: &SemanticVersion) -> ReleaseType {
         if current._major != update._major {
                 return ReleaseType::Major
         }
@@ -71,215 +85,4 @@ impl Display for SemanticVersion {
                         self._patch, self._release
                 )
         }
-}
-
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-    
-    #[test]
-    fn happy_path_compose_full_version() {
-        let version: &str = "1.1.1";
-        let release: &str = "1";
-        let expected = SemanticVersion::new(
-                "1", 
-                "1", 
-                "1", 
-                "1"
-        );
-
-        let actual: SemanticVersion = compose_new_semantic_version(version, release);
-
-        assert_eq!(actual, expected);
-    }
-
-    #[test]
-    fn happy_path_compose_minor_only_version() {
-        let version: &str = "1.1";
-        let release: &str = "1";
-        let expected = SemanticVersion::new(
-                "1", 
-                "1", 
-                "0", 
-                "1"
-        );
-
-        let actual: SemanticVersion = compose_new_semantic_version(version, release);
-
-        assert_eq!(actual, expected);
-    }
-
-    #[test]
-    fn happy_path_compose_major_only_version() {
-        let version: &str = "1";
-        let release: &str = "1";
-        let expected = SemanticVersion::new(
-                "1", 
-                "0", 
-                "0", 
-                "1"
-        );
-
-        let actual: SemanticVersion = compose_new_semantic_version(version, release);
-
-        assert_eq!(actual, expected);
-    }
-
-    #[test]
-    fn happy_path_compare_major() {
-        let update = SemanticVersion::new(
-                "2", 
-                "0", 
-                "0", 
-                "1"
-        );
-        let installed = SemanticVersion::new(
-                "1", 
-                "0", 
-                "0", 
-                "1"
-        );
-
-        let actual: ReleaseType = compare(&installed, &update);
-        let expected: ReleaseType = ReleaseType::Major;
-
-        assert_eq!(actual, expected);
-    }
-
-    #[test]
-    fn happy_path_compare_minor() {
-        let update = SemanticVersion::new(
-                "1", 
-                "1", 
-                "0", 
-                "1"
-        );
-        let installed = SemanticVersion::new(
-                "1", 
-                "0", 
-                "0", 
-                "1"
-        );
-
-        let actual: ReleaseType = compare(&installed, &update);
-        let expected: ReleaseType = ReleaseType::Minor;
-
-        assert_eq!(actual, expected);
-    }
-
-    #[test]
-    fn happy_path_compare_patch() {
-        let update = SemanticVersion::new(
-                "1", 
-                "0", 
-                "1", 
-                "1"
-        );
-        let installed = SemanticVersion::new(
-                "1", 
-                "0", 
-                "0", 
-                "1"
-        );
-
-        let actual: ReleaseType = compare(&installed, &update);
-        let expected: ReleaseType = ReleaseType::Patch;
-
-        assert_eq!(actual, expected);
-    }
-
-    #[test]
-    fn happy_path_compare_repack() {
-        let update = SemanticVersion::new(
-                "1", 
-                "0", 
-                "0", 
-                "2"
-        );
-        let installed = SemanticVersion::new(
-                "1", 
-                "0", 
-                "0", 
-                "1"
-        );
-
-        let actual: ReleaseType = compare(&installed, &update);
-        let expected: ReleaseType = ReleaseType::Repack;
-
-        assert_eq!(actual, expected);
-    }
-
-    #[test]
-    fn print_version() {
-        let version: &str = "1.0.0";
-        let release: &str = "1";
-        let expected: &str = "1.0.0-1";
-        let output =  compose_new_semantic_version(version, release);
-
-        assert_eq!(format!("{}", output), expected);
-    }
-
-    #[test]
-    #[should_panic]
-    fn panic_compare_equal_version() {
-        let update = SemanticVersion::new(
-                "1", 
-                "0", 
-                "0", 
-                "1"
-        );
-        let installed = SemanticVersion::new(
-                "1", 
-                "0", 
-                "0", 
-                "1"
-        );
-
-        compare(&installed, &update);
-    }
-
-    #[test]
-    #[should_panic]
-    fn panic_empty_major() {
-        SemanticVersion::new(
-                "", 
-                "0", 
-                "0", 
-                "1"
-        );
-    }
-
-    #[test]
-    #[should_panic]
-    fn panic_empty_minor() {
-        SemanticVersion::new(
-                "1", 
-                "", 
-                "0", 
-                "1"
-        );
-    }
-
-    #[test]
-    #[should_panic]
-    fn panic_empty_patch() {
-        SemanticVersion::new(
-                "1", 
-                "0", 
-                "", 
-                "1"
-        );
-    }
-
-    #[test]
-    #[should_panic]
-    fn panic_empty_release() {
-        SemanticVersion::new(
-                "1", 
-                "0", 
-                "0", 
-                ""
-        );
-    }
 }

@@ -35,13 +35,12 @@ impl Update {
 #[cfg(test)]
 mod tests {
         use super::*;
-        use crate::model::semantic_version::compose_new_semantic_version;
         
         #[test]
         fn happy_path_new_update() {
                 let name: String = "firefox".to_string();
                 let partition: String = "FEDORA-2025-1234".to_string();
-                let version: SemanticVersion = compose_new_semantic_version(
+                let version: SemanticVersion = SemanticVersion::new(
                         "1.0.0", "1.fc41"
                 );
 
@@ -60,7 +59,7 @@ mod tests {
         fn panic_empty_name() {
                 let name: String = "".to_string();
                 let partition: String = "FEDORA-2025-1234".to_string();
-                let version: SemanticVersion = compose_new_semantic_version(
+                let version: SemanticVersion = SemanticVersion::new(
                         "1.0.0", "1.fc41"
                 );
 
@@ -76,7 +75,7 @@ mod tests {
         fn panic_empty_partition() {
                 let name: String = "firefox".to_string();
                 let partition: String = "".to_string();
-                let version: SemanticVersion = compose_new_semantic_version(
+                let version: SemanticVersion = SemanticVersion::new(
                         "1.0.0", "1.fc41"
                 );
 

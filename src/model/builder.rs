@@ -3,10 +3,11 @@ use std::collections::HashMap;
 use chrono::{DateTime, NaiveDateTime, Utc};
 
 use crate::commons::string::split_string_using_delimiter;
-use crate::model::semantic_version::{compare, compose_new_semantic_version};
+use crate::model::semantic_version::compare;
 
 use super::partition::Partition;
-use super::{semantic_version::SemanticVersion, update::Update, release_type::ReleaseType, severity::Severity};
+use super::update::Update;
+use super::{semantic_version::SemanticVersion, release_type::ReleaseType, severity::Severity};
 use std::str::FromStr;
 
 #[derive(Default)]
@@ -90,7 +91,9 @@ impl<'a> ModelBuilder<'a> {
                 let version_str: &str = splitted_str[1];
                 let release_str: &str = splitted_str[2];
 
-                let version: SemanticVersion = compose_new_semantic_version(
+                //println!("[*] {} {}-{}", name, version_str, release_str);
+
+                let version: SemanticVersion = SemanticVersion::new(
                         version_str, release_str
                 );
 
@@ -119,11 +122,13 @@ impl<'a> ModelBuilder<'a> {
                 let version_str: &str = splitted_str[1];
                 let release_str: &str = splitted_str[2];
 
-                let current_version: SemanticVersion = compose_new_semantic_version(
+                let current_version: SemanticVersion = SemanticVersion::new(
                         version_str, release_str
                 );
 
                 let update_detail: &(&str, SemanticVersion) = self.packages_details.get(name).unwrap();
+
+                //println!("[*] {} {} -> {}", name, current_version, update_detail.1);
 
                 let release: ReleaseType = compare(&current_version, &update_detail.1);
                 let current_partition_release: &ReleaseType = self.partitions_type.get(&update_detail.0).unwrap_or_else(|| panic!("{}\n {:?}", update_detail.0, self.partitions_type));

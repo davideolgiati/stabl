@@ -4,7 +4,7 @@ use std::collections::HashSet;
 pub fn split_string_using_delimiter<'a>(string: &'a str, delimiter: &'a str) -> Vec<&'a str> {
         assert!(!string.is_empty());
         assert!(!delimiter.is_empty());
-        assert!(string.contains(delimiter));
+        assert!(string.contains(delimiter), "{}, {}", string, delimiter);
 
         let output: Vec<&str> = string
                 .split(delimiter)
