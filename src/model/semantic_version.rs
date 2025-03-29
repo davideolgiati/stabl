@@ -1,9 +1,6 @@
-use std::str::FromStr;
 use std::fmt::{self, Display, Formatter};
 
-#[derive(Clone)]
-#[derive(Debug)]
-#[derive(PartialEq, PartialOrd)]
+#[derive(Clone, Debug, PartialEq, PartialOrd)]
 pub enum SemanticVersion {
     Repack,
     Patch,
@@ -20,18 +17,16 @@ pub fn get_super(value: &SemanticVersion) -> SemanticVersion {
     }
 }
 
-impl FromStr for SemanticVersion {
-    type Err = String;
-
-    fn from_str(input: &str) -> Result<SemanticVersion, Self::Err> {
+impl<'a> From<&'a str> for SemanticVersion {
+    fn from(input: &'a str) -> Self {
         assert!(!input.is_empty());
     
         match input.to_lowercase().as_str() {
-            "security"      => Ok(SemanticVersion::Patch),
-            "bugfix"        => Ok(SemanticVersion::Patch),
-            "enhancement"   => Ok(SemanticVersion::Minor),
-            "unspecified"   => Ok(SemanticVersion::Major),
-            _               => Err(format!("'{}' is not a valid value for ReleaseType", input)),
+            "security"      => SemanticVersion::Patch,
+            "bugfix"        => SemanticVersion::Patch,
+            "enhancement"   => SemanticVersion::Minor,
+            "unspecified"   => SemanticVersion::Major,
+            _               => panic!("'{}' is not a valid value for ReleaseType", input),
         }
     }
 }
@@ -56,7 +51,7 @@ mod tests {
     fn happy_path_new_major() {
         let input: &str = "unspecified";
         let expected: SemanticVersion = SemanticVersion::Major;
-        let output = SemanticVersion::from_str(input).unwrap();
+        let output = SemanticVersion::from(input);
 
         assert!(output == expected);
     }
@@ -65,7 +60,7 @@ mod tests {
     fn happy_path_new_minor() {
         let input: &str = "enhancement";
         let expected: SemanticVersion = SemanticVersion::Minor;
-        let output = SemanticVersion::from_str(input).unwrap();
+        let output = SemanticVersion::from(input);
 
         assert!(output == expected);
     }
@@ -74,7 +69,7 @@ mod tests {
     fn happy_path_new_patch() {
         let input: &str = "bugfix";
         let expected: SemanticVersion = SemanticVersion::Patch;
-        let output = SemanticVersion::from_str(input).unwrap();
+        let output = SemanticVersion::from(input);
 
         assert!(output == expected);
     }
@@ -83,7 +78,7 @@ mod tests {
     fn happy_path_new_patch_security() {
         let input: &str = "security";
         let expected: SemanticVersion = SemanticVersion::Patch;
-        let output = SemanticVersion::from_str(input).unwrap();
+        let output = SemanticVersion::from(input);
 
         assert!(output == expected);
     }
@@ -128,7 +123,7 @@ mod tests {
     fn print_major() {
         let input: &str = "unspecified";
         let expected: &str = "MAJOR";
-        let output = SemanticVersion::from_str(input).unwrap();
+        let output = SemanticVersion::from(input);
 
         assert!(format!("{}", output) == expected);
     }
@@ -137,7 +132,7 @@ mod tests {
     fn print_minor() {
         let input: &str = "enhancement";
         let expected: &str = "MINOR";
-        let output = SemanticVersion::from_str(input).unwrap();
+        let output = SemanticVersion::from(input);
 
         assert!(format!("{}", output) == expected);
     }
@@ -146,7 +141,7 @@ mod tests {
     fn print_patch() {
         let input: &str = "bugfix";
         let expected: &str = "PATCH";
-        let output = SemanticVersion::from_str(input).unwrap();
+        let output = SemanticVersion::from(input);
 
         assert!(format!("{}", output) == expected);
     }
@@ -155,22 +150,21 @@ mod tests {
     fn print_patch_security() {
         let input: &str = "security";
         let expected: &str = "PATCH";
-        let output = SemanticVersion::from_str(input).unwrap();
+        let output = SemanticVersion::from(input);
 
         assert!(format!("{}", output) == expected);
     }
 
     #[test]
+    #[should_panic]
     fn panic_unknown_string() {
         let input: &str = "major";
-        let output = SemanticVersion::from_str(input);
-
-        assert!(output.is_err(), "'major' is not a valid value for ReleaseType");
+        let _ = SemanticVersion::from(input);
     }
 
     #[test]
     #[should_panic]
     fn panic_empty_string() {
-        SemanticVersion::from_str("").unwrap();
+        let _ = SemanticVersion::from("");
     }
 }

@@ -64,18 +64,17 @@ impl<'a> ModelBuilder<'a> {
                 assert!(!line.is_empty());
 
                 let splitted_str = split_string(line, " ");
-
                 assert!(splitted_str.len() == 6);
                 
                 let signature: &str = splitted_str[3];
                 let partition: &str = splitted_str[0];
-                let release_type: SemanticVersion = SemanticVersion::from_str(splitted_str[1]).unwrap();
-                let severity: SecurityClassification = SecurityClassification::from_str(splitted_str[2]).unwrap();
+                let release_type: SemanticVersion = SemanticVersion::from(splitted_str[1]);
+                let security_classification: SecurityClassification = SecurityClassification::from_str(splitted_str[2]).unwrap();
                 let datetime: &str = &format!("{} {}", splitted_str[4], splitted_str[5]);
                 let release_ts: DateTime<Utc> = NaiveDateTime::parse_from_str(datetime, "%F %X")
                         .unwrap().and_utc();
                 
-                self.update_partition_details(partition, &severity, &release_ts, &release_type);
+                self.update_partition_details(partition, &security_classification, &release_ts, &release_type);
                 self.updates_by_partition.insert(signature, partition);
         }
 
