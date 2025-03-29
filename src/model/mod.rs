@@ -1,10 +1,10 @@
 mod update;
-mod semantic_version;
+mod version_tag;
 mod partition;
 mod builder;
-mod severity;
-pub mod release_type;
+mod security_classification;
+pub mod semantic_version;
 
 pub use partition::Partition;
 pub use builder::ModelBuilder;
-pub use severity::Severity;
+pub use security_classification::SecurityClassification;

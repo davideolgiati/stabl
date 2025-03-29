@@ -1,88 +1,176 @@
-use regex::Regex;
-
-use crate::commons::string::split_string;
+use std::str::FromStr;
 use std::fmt::{self, Display, Formatter};
 
-use super::release_type::ReleaseType;
-
-#[derive(Clone, Debug, PartialEq)]
-pub struct SemanticVersion {
-        _major: String,
-        _minor: String,
-        _patch: String,
-        _release: String
+#[derive(Clone)]
+#[derive(Debug)]
+#[derive(PartialEq, PartialOrd)]
+pub enum SemanticVersion {
+    Repack,
+    Patch,
+    Minor,
+    Major
 }
 
-impl SemanticVersion {
-        pub fn new(version: &str, release: &str) -> SemanticVersion {
-                assert!(!version.is_empty());
-                assert!(!release.is_empty());
-
-                let re = Regex::new(r"(?<version>(?:[0-9]+){1}(?:\.[0-9]*){0,2})").unwrap();
-                let mut regex_iterator = re.captures_iter(version);
-                let version_captures = regex_iterator.next().unwrap();
-                
-                let filtered_version = String::from(&version_captures["version"]);
-
-                let version_tokens: Vec<&str> = {
-                        if !filtered_version.contains(".") {
-                                vec![&filtered_version, "0", "0"]
-                        } else {
-                                let mut splitted_str = split_string(&filtered_version, ".");
-                                while splitted_str.len() < 3 {
-                                        splitted_str.push("0");
-                                }
-
-                                splitted_str
-                        }
-                };
-
-                let fixed_release = {
-                        let re = Regex::new(r"(?:[0-9]+){1}(?:\.[0-9]*){0,2}\.?").unwrap();
-                        let pkg_release = re.replace(version, "");
-
-                        if pkg_release.is_empty() {
-                                release
-                        } else {
-                                &format!("{}.{}", pkg_release, release)
-                        }
-                };
-
-                SemanticVersion {
-                        _major: version_tokens[0].to_owned(), 
-                        _minor: version_tokens[1].to_owned(), 
-                        _patch: version_tokens[2].to_owned(), 
-                        _release: fixed_release.to_owned()
-                }
-        }
+pub fn get_super(value: &SemanticVersion) -> SemanticVersion {
+    match *value {
+        SemanticVersion::Major => SemanticVersion::Major,
+        SemanticVersion::Minor => SemanticVersion::Major,
+        SemanticVersion::Patch => SemanticVersion::Minor,
+        SemanticVersion::Repack => SemanticVersion::Patch
+    }
 }
 
-pub(crate) fn compare(current: &SemanticVersion, update: &SemanticVersion) -> ReleaseType {
-        if current._major != update._major {
-                return ReleaseType::Major
-        }
+impl FromStr for SemanticVersion {
+    type Err = String;
 
-        if current._minor != update._minor {
-                return ReleaseType::Minor
+    fn from_str(input: &str) -> Result<SemanticVersion, Self::Err> {
+        assert!(!input.is_empty());
+    
+        match input.to_lowercase().as_str() {
+            "security"      => Ok(SemanticVersion::Patch),
+            "bugfix"        => Ok(SemanticVersion::Patch),
+            "enhancement"   => Ok(SemanticVersion::Minor),
+            "unspecified"   => Ok(SemanticVersion::Major),
+            _               => Err(format!("'{}' is not a valid value for ReleaseType", input)),
         }
-
-        if current._patch != update._patch {
-                return ReleaseType::Patch
-        }
-
-        if current._release != update._release {
-                return ReleaseType::Repack
-        }
-
-        panic!("current and update cannot be equal!")
+    }
 }
 
 impl Display for SemanticVersion {
-        fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
-                write!(
-                        f, "{}.{}.{}-{}", 
-                        self._major, self._minor, 
-                        self._patch, self._release
-                )
+    fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
+        match self {
+            Self::Major  => write!(f, "MAJOR"),
+            Self::Minor  => write!(f, "MINOR"),
+            Self::Patch  => write!(f, "PATCH"),
+            Self::Repack => write!(f, "REPACK"),
         }
+    }
+}
+
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    
+    #[test]
+    fn happy_path_new_major() {
+        let input: &str = "unspecified";
+        let expected: SemanticVersion = SemanticVersion::Major;
+        let output = SemanticVersion::from_str(input).unwrap();
+
+        assert!(output == expected);
+    }
+
+    #[test]
+    fn happy_path_new_minor() {
+        let input: &str = "enhancement";
+        let expected: SemanticVersion = SemanticVersion::Minor;
+        let output = SemanticVersion::from_str(input).unwrap();
+
+        assert!(output == expected);
+    }
+
+    #[test]
+    fn happy_path_new_patch() {
+        let input: &str = "bugfix";
+        let expected: SemanticVersion = SemanticVersion::Patch;
+        let output = SemanticVersion::from_str(input).unwrap();
+
+        assert!(output == expected);
+    }
+
+    #[test]
+    fn happy_path_new_patch_security() {
+        let input: &str = "security";
+        let expected: SemanticVersion = SemanticVersion::Patch;
+        let output = SemanticVersion::from_str(input).unwrap();
+
+        assert!(output == expected);
+    }
+
+    #[test]
+    fn happy_path_get_super_for_major() {
+        let input:SemanticVersion = SemanticVersion::Major;
+        let expected: SemanticVersion  = SemanticVersion::Major;
+        let output: SemanticVersion = get_super(&input);
+
+        assert!(output == expected);
+    }
+
+    #[test]
+    fn happy_path_get_super_for_minor() {
+        let input: SemanticVersion  = SemanticVersion::Minor;
+        let expected: SemanticVersion  = SemanticVersion::Major;
+        let output: SemanticVersion = get_super(&input);
+
+        assert!(output == expected);
+    }
+
+    #[test]
+    fn happy_path_get_super_for_patch() {
+        let input: SemanticVersion = SemanticVersion::Patch;
+        let expected: SemanticVersion  = SemanticVersion::Minor;
+        let output: SemanticVersion = get_super(&input);
+
+        assert!(output == expected);
+    }
+
+    #[test]
+    fn happy_path_get_super_for_repack() {
+        let input: SemanticVersion = SemanticVersion::Repack;
+        let expected: SemanticVersion  = SemanticVersion::Patch;
+        let output: SemanticVersion = get_super(&input);
+
+        assert!(output == expected);
+    }
+
+    #[test]
+    fn print_major() {
+        let input: &str = "unspecified";
+        let expected: &str = "MAJOR";
+        let output = SemanticVersion::from_str(input).unwrap();
+
+        assert!(format!("{}", output) == expected);
+    }
+
+    #[test]
+    fn print_minor() {
+        let input: &str = "enhancement";
+        let expected: &str = "MINOR";
+        let output = SemanticVersion::from_str(input).unwrap();
+
+        assert!(format!("{}", output) == expected);
+    }
+
+    #[test]
+    fn print_patch() {
+        let input: &str = "bugfix";
+        let expected: &str = "PATCH";
+        let output = SemanticVersion::from_str(input).unwrap();
+
+        assert!(format!("{}", output) == expected);
+    }
+
+    #[test]
+    fn print_patch_security() {
+        let input: &str = "security";
+        let expected: &str = "PATCH";
+        let output = SemanticVersion::from_str(input).unwrap();
+
+        assert!(format!("{}", output) == expected);
+    }
+
+    #[test]
+    fn panic_unknown_string() {
+        let input: &str = "major";
+        let output = SemanticVersion::from_str(input);
+
+        assert!(output.is_err(), "'major' is not a valid value for ReleaseType");
+    }
+
+    #[test]
+    #[should_panic]
+    fn panic_empty_string() {
+        SemanticVersion::from_str("").unwrap();
+    }
 }

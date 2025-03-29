@@ -1,17 +1,17 @@
-use crate::model::release_type::ReleaseType;
+use crate::model::semantic_version::SemanticVersion;
 
 #[inline]
-fn convert_release(arg: &str) -> ReleaseType {
+fn convert_release(arg: &str) -> SemanticVersion {
         match arg {
-                "--patch"  => ReleaseType::Patch,
-                "--repack" => ReleaseType::Repack,
-                "--minor"  => ReleaseType::Minor,
-                "--major"  => ReleaseType::Major,
+                "--patch"  => SemanticVersion::Patch,
+                "--repack" => SemanticVersion::Repack,
+                "--minor"  => SemanticVersion::Minor,
+                "--major"  => SemanticVersion::Major,
                 _ => panic!("Invalid release type")
         }
 }
 
-pub fn get_release_arg(args: &[String]) -> ReleaseType {
+pub fn get_release_arg(args: &[String]) -> SemanticVersion {
         let valid_args = [
                 "--patch".to_string(),
                 "--repack".to_string(),
@@ -24,7 +24,7 @@ pub fn get_release_arg(args: &[String]) -> ReleaseType {
                 .collect();
 
         if release_args.is_empty() {
-                return ReleaseType::Repack
+                return SemanticVersion::Repack
         }
 
         convert_release(release_args.last().unwrap())

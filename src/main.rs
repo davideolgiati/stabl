@@ -1,9 +1,9 @@
 mod model;
-use model::Severity;
+use model::SecurityClassification;
 use model::Partition;
 use model::ModelBuilder;
-use model::release_type::get_super;
-use model::release_type::ReleaseType;
+use model::semantic_version::get_super;
+use model::semantic_version::SemanticVersion;
 
 mod system;
 use system::shell;
@@ -20,14 +20,14 @@ use std::process;
 
 use chrono::Utc;
 
-fn evaluate_partition(partition: &Partition, target_release: &ReleaseType) -> bool {
-    let super_release_type: ReleaseType = get_super(target_release);
+fn evaluate_partition(partition: &Partition, target_release: &SemanticVersion) -> bool {
+    let super_release_type: SemanticVersion = get_super(target_release);
     let additional_date_check: bool = (Utc::now() - *partition.get_date()).num_days() > 60;
 
     let is_release_type_valid: bool = target_release >= partition.get_release_type();
     let is_super_release_type_valid: bool = &super_release_type >= partition.get_release_type();
 
-    let is_partition_a_security_update: bool = partition.get_severity() > &Severity::None;
+    let is_partition_a_security_update: bool = partition.get_security_classification() > &SecurityClassification::None;
     let is_partition_ammissible_in_time_range: bool = is_super_release_type_valid && additional_date_check;
 
     is_partition_a_security_update || is_release_type_valid || is_partition_ammissible_in_time_range
@@ -39,7 +39,7 @@ fn main() {
     ui::display_stabl_logo();
     args::look_for_help(&input_args);
     
-    let max_release: ReleaseType = args::get_release_arg(&input_args);
+    let max_release: SemanticVersion = args::get_release_arg(&input_args);
     
     let dnf_updates_list: Vec<&str> = get_updateinfo_output(shell::run_command_and_read_stdout);
 
@@ -68,22 +68,22 @@ fn main() {
         data_model.build()
     };
 
-    let mut selected_part_id: Vec<String> = Vec::new();
-    let mut buffer = String::from("");
+    let mut selected_partition_ids: Vec<String> = Vec::new();
+    let mut stdout_buffer = String::from("");
 
     for partition in &partitions {
         if evaluate_partition(partition, &max_release) {
-            selected_part_id.push(partition.get_id().clone());
+            selected_partition_ids.push(partition.get_id().clone());
 
             let update_type_str = format!("{}", partition.get_release_type());
 
-            buffer = buffer + &format!(
+            stdout_buffer = stdout_buffer + &format!(
                 "\n\n\nPartition Id: {:30} Type: {:15} Security grade: {}\n\n", 
-                partition.get_id(), update_type_str, partition.get_severity()
+                partition.get_id(), update_type_str, partition.get_security_classification()
             );
 
             for _update in updates.get(partition.get_id()).unwrap().iter() {
-                buffer = buffer + &format!(
+                stdout_buffer = stdout_buffer + &format!(
                     "\t{:<35} {:^25} ({:^3} days ago)\n", 
                     _update.get_name(),
                     format!("{}", _update.get_version()),
@@ -93,14 +93,14 @@ fn main() {
         }
     }
 
-    let buffer = buffer;
-    let selected_part_id = selected_part_id;
+    let stdout_buffer = stdout_buffer;
+    let selected_partition_ids = selected_partition_ids;
 
-    println!("{}", buffer);
+    println!("{}", stdout_buffer);
     //ui::display_suggested_upgrades(&update_builder, buffer);
 
-    if !selected_part_id.is_empty() {
-        println!("\nsudo dnf update --advisory={}\n\n", selected_part_id.join(","));
+    if !selected_partition_ids.is_empty() {
+        println!("\nsudo dnf update --advisory={}\n\n", selected_partition_ids.join(","));
     } else {
         println!("\nno suggested updates found\n\n");
     }
