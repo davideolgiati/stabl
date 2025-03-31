@@ -1,6 +1,8 @@
 # stabl
 A DNF wrapper to selectively choose what packages to upgrade
 
+![stabl output](stabl.png?raw=true "Sample Run Output")
+
 # v0.1.2
 ### Feature
  - Implemented command-line argument parsing to show help (--help) and to set maximum allowed version bump (major, minor, ptch, release).

@@ -43,3 +43,60 @@ impl Partition {
         &self._id
     }
 }
+
+
+#[cfg(test)]
+mod tests {
+    use chrono::Days;
+
+    use super::*;
+    
+    #[test]
+    fn happy_path_new_partition() {
+            let partition_id: String = "FEDORA-2025-db6c37de88".to_string();
+            let release_type: SemanticVersion = SemanticVersion::Major;
+            let severity: SecurityClassification = SecurityClassification::None;
+            let release_ts: DateTime<Utc> = chrono::NaiveDateTime::parse_from_str("2025-03-17 01:37:24", "%F %X")
+                        .unwrap().and_utc();
+
+            let output = Partition::new(
+                    partition_id.clone(), release_type.clone(), 
+                    severity.clone(), release_ts
+            );
+
+            assert_eq!(*output.get_release_type(), release_type);
+            assert_eq!(*output.get_id(), partition_id);
+            assert_eq!(*output.get_security_classification(), severity);
+            assert_eq!(*output.get_date(), release_ts);
+    }
+
+    #[test]
+    #[should_panic]
+    fn panic_new_partition_empty_id() {
+            let partition_id: String = "".to_string();
+            let release_type: SemanticVersion = SemanticVersion::Major;
+            let severity: SecurityClassification = SecurityClassification::None;
+            let release_ts: DateTime<Utc> = chrono::NaiveDateTime::parse_from_str("2025-03-17 01:37:24", "%F %X")
+                        .unwrap().and_utc();
+
+            Partition::new(
+                    partition_id.clone(), release_type.clone(), 
+                    severity.clone(), release_ts
+            );
+    }
+
+    #[test]
+    #[should_panic]
+    fn panic_new_partition_release_ts_in_the_future() {
+            let partition_id: String = "FEDORA-2025-db6c37de88".to_string();
+            let release_type: SemanticVersion = SemanticVersion::Major;
+            let severity: SecurityClassification = SecurityClassification::None;
+            let release_ts: DateTime<Utc> = Utc::now()
+                .checked_add_days(Days::new(1)).unwrap();
+
+            Partition::new(
+                    partition_id.clone(), release_type.clone(), 
+                    severity.clone(), release_ts
+            );
+    }
+}
