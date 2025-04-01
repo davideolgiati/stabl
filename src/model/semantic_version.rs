@@ -8,15 +8,6 @@ pub enum SemanticVersion {
     Major
 }
 
-pub fn get_super(value: &SemanticVersion) -> SemanticVersion {
-    match *value {
-        SemanticVersion::Major => SemanticVersion::Major,
-        SemanticVersion::Minor => SemanticVersion::Major,
-        SemanticVersion::Patch => SemanticVersion::Minor,
-        SemanticVersion::Repack => SemanticVersion::Patch
-    }
-}
-
 impl<'a> From<&'a str> for SemanticVersion {
     fn from(input: &'a str) -> Self {
         assert!(!input.is_empty());
@@ -79,42 +70,6 @@ mod tests {
         let input: &str = "security";
         let expected: SemanticVersion = SemanticVersion::Patch;
         let output = SemanticVersion::from(input);
-
-        assert!(output == expected);
-    }
-
-    #[test]
-    fn happy_path_get_super_for_major() {
-        let input:SemanticVersion = SemanticVersion::Major;
-        let expected: SemanticVersion  = SemanticVersion::Major;
-        let output: SemanticVersion = get_super(&input);
-
-        assert!(output == expected);
-    }
-
-    #[test]
-    fn happy_path_get_super_for_minor() {
-        let input: SemanticVersion  = SemanticVersion::Minor;
-        let expected: SemanticVersion  = SemanticVersion::Major;
-        let output: SemanticVersion = get_super(&input);
-
-        assert!(output == expected);
-    }
-
-    #[test]
-    fn happy_path_get_super_for_patch() {
-        let input: SemanticVersion = SemanticVersion::Patch;
-        let expected: SemanticVersion  = SemanticVersion::Minor;
-        let output: SemanticVersion = get_super(&input);
-
-        assert!(output == expected);
-    }
-
-    #[test]
-    fn happy_path_get_super_for_repack() {
-        let input: SemanticVersion = SemanticVersion::Repack;
-        let expected: SemanticVersion  = SemanticVersion::Patch;
-        let output: SemanticVersion = get_super(&input);
 
         assert!(output == expected);
     }

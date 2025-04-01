@@ -11,20 +11,19 @@ fn convert_release(arg: &str) -> SemanticVersion {
         }
 }
 
-pub fn get_release_arg(args: &[String]) -> SemanticVersion {
-        let valid_args = [
-                "--patch".to_string(),
-                "--repack".to_string(),
-                "--minor".to_string(),
-                "--major" .to_string()
-        ];
+pub fn get_release_arg(args: &[String], default_bump: SemanticVersion) -> SemanticVersion {
+        let valid_args: [&str; 4] = ["--patch", "--repack", "--minor", "--major"];
 
-        let release_args: Vec<String> = args
-                .iter().filter(|&arg| valid_args.contains(arg)).cloned()
+        let release_args: Vec<String> = args.iter()
+                .filter(|arg| {
+                        let current_args: &str = arg.as_str();
+                        valid_args.contains(&current_args)
+                })
+                .cloned()
                 .collect();
 
         if release_args.is_empty() {
-                return SemanticVersion::Repack
+                return default_bump
         }
 
         convert_release(release_args.last().unwrap())
@@ -36,7 +35,7 @@ pub fn look_for_help(args: &[String]) {
 Help:
         --major         only major and lower release are considered valid
         --minor         only minor and lower release are considered valid
-        --patch         only patch and lower release are considered valid
+        --patch         only patch and lower release are considered valid (default)
         --repack        only repack and lower release are considered valid
         
         --help          display this help

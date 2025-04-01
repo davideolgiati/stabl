@@ -2,7 +2,6 @@ mod model;
 use model::SecurityClassification;
 use model::Partition;
 use model::ModelBuilder;
-use model::semantic_version::get_super;
 use model::semantic_version::SemanticVersion;
 
 mod system;
@@ -21,16 +20,13 @@ use std::process;
 use chrono::Utc;
 
 fn evaluate_partition(partition: &Partition, target_release: &SemanticVersion) -> bool {
-    let super_release_type: SemanticVersion = get_super(target_release);
-    let additional_date_check: bool = (Utc::now() - *partition.get_date()).num_days() > 60;
+    //let additional_date_check: bool = (Utc::now() - *partition.get_date()).num_days() > 60;
 
-    let is_release_type_valid: bool = target_release >= partition.get_release_type();
-    let is_super_release_type_valid: bool = &super_release_type >= partition.get_release_type();
+    let version_bump_check: bool = target_release >= partition.get_release_type();
+    let security_release_check: bool = *partition.get_security_classification() > SecurityClassification::None;
+    //let is_partition_ammissible_in_time_range: bool = additional_date_check;
 
-    let is_partition_a_security_update: bool = partition.get_security_classification() > &SecurityClassification::None;
-    let is_partition_ammissible_in_time_range: bool = is_super_release_type_valid && additional_date_check;
-
-    is_partition_a_security_update || is_release_type_valid || is_partition_ammissible_in_time_range
+    security_release_check || version_bump_check //|| is_partition_ammissible_in_time_range
 }
 
 fn main() {
@@ -39,7 +35,9 @@ fn main() {
     ui::display_stabl_logo();
     args::look_for_help(&input_args);
     
-    let max_release: SemanticVersion = args::get_release_arg(&input_args);
+    let max_release: SemanticVersion = args::get_release_arg(
+        &input_args, SemanticVersion::Patch
+    );
     
     let dnf_updates_list: Vec<&str> = get_updateinfo_output(shell::run_command_and_read_stdout);
 
