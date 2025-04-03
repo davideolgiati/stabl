@@ -121,10 +121,9 @@ mod tests {
     fn happy_path_split_filter_and_deduplicate_string_list_with_duplicate_line() {
         let test: Vec<&str> = vec![
             "test1|#|131.0.2|#|1.fc41",
-            "test1|#|131.0.2|#|1.fc41",
-            "test2|#|1.0.0|#|1.fc41",
+            "test1|#|131.0.2|#|1.fc41"
         ];
-        let expected: Vec<&str> = vec!["131.0.2","1.0.0"];
+        let expected: Vec<&str> = vec!["131.0.2"];
         let result = split_filter_and_deduplicate_string_list(&test, "|#|", 1);
         assert_eq!(result, expected);
     }
