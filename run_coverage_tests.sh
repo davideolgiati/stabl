@@ -1,2 +1,2 @@
 #!/bin/sh
-cargo llvm-cov
+cargo llvm-cov --show-missing-lines -j8

@@ -111,6 +111,14 @@ mod tests {
     }
 
     #[test]
+    fn print_release_repack() {
+        let expected = "REPACK";
+        let output = SemanticVersion::Repack;
+
+        assert!(format!("{}", output) == expected);
+    }
+
+    #[test]
     #[should_panic]
     fn panic_unknown_string() {
         let input: &str = "major";

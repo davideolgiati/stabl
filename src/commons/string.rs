@@ -116,4 +116,28 @@ mod tests {
         let test: &str  = "Hello World!";
         split_string(test, "\n");
     }
+
+    #[test]
+    fn happy_path_split_filter_and_deduplicate_string_list_with_duplicate_line() {
+        let test: Vec<&str> = vec![
+            "test1|#|131.0.2|#|1.fc41",
+            "test1|#|131.0.2|#|1.fc41",
+            "test2|#|1.0.0|#|1.fc41",
+        ];
+        let expected: Vec<&str> = vec!["131.0.2","1.0.0"];
+        let result = split_filter_and_deduplicate_string_list(&test, "|#|", 1);
+        assert_eq!(result, expected);
+    }
+
+    #[test]
+    #[should_panic]
+    fn panic_split_filter_and_deduplicate_string_list_empty_list() {
+        split_filter_and_deduplicate_string_list(&Vec::new(), " ", 0);
+    }
+
+    #[test]
+    #[should_panic]
+    fn panic_split_filter_and_deduplicate_string_list_empty_delimeiter() {
+        split_filter_and_deduplicate_string_list(&["test"], "", 0);
+    }
 }
