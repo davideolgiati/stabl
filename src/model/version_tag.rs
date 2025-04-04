@@ -86,3 +86,80 @@ impl Display for VersionTag {
                 )
         }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    
+    #[test]
+    fn happy_path_new_version_tag_full() {
+        let expected_major = "1";
+        let expected_minor = "2";
+        let expected_patch = "3";
+        let expected_release = "0.fc41";
+
+        let input_version = "1.2.3";
+        let input_release = "0.fc41";
+
+        let output = VersionTag::new(input_version, input_release);
+
+        assert!(output._major == expected_major);
+        assert!(output._minor == expected_minor);
+        assert!(output._patch == expected_patch);
+        assert!(output._release == expected_release);
+    }
+
+    #[test]
+    fn happy_path_new_version_tag_missing_patch() {
+        let expected_major = "1";
+        let expected_minor = "2";
+        let expected_patch = "0";
+        let expected_release = "0.fc41";
+
+        let input_version = "1.2";
+        let input_release = "0.fc41";
+
+        let output = VersionTag::new(input_version, input_release);
+
+        assert!(output._major == expected_major);
+        assert!(output._minor == expected_minor);
+        assert!(output._patch == expected_patch);
+        assert!(output._release == expected_release);
+    }
+
+    #[test]
+    fn happy_path_new_version_tag_only_major() {
+        let expected_major = "1";
+        let expected_minor = "0";
+        let expected_patch = "0";
+        let expected_release = "0.fc41";
+
+        let input_version = "1";
+        let input_release = "0.fc41";
+
+        let output = VersionTag::new(input_version, input_release);
+
+        assert!(output._major == expected_major);
+        assert!(output._minor == expected_minor);
+        assert!(output._patch == expected_patch);
+        assert!(output._release == expected_release);
+    }
+
+    #[test]
+    fn happy_path_new_version_tag_full_and_release() {
+        let expected_major = "1";
+        let expected_minor = "2";
+        let expected_patch = "3";
+        let expected_release = "4.0.fc41";
+
+        let input_version = "1.2.3.4";
+        let input_release = "0.fc41";
+
+        let output = VersionTag::new(input_version, input_release);
+
+        assert!(output._major == expected_major);
+        assert!(output._minor == expected_minor);
+        assert!(output._patch == expected_patch);
+        assert!(output._release == expected_release);
+    }
+}
