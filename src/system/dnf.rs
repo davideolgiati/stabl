@@ -172,6 +172,8 @@ mod tests {
     "FEDORA-2025-7755eec1cb unspecified None                  python3-regex-2024.11.6-1.fc41.x86_64 2025-03-12 02:01:22")
     .to_string();
 
+    static GET_EMPTY_UPDATE_LIST_MOCK: ShellCmdClosure = |_a, _b| concat!("").to_string();
+
     #[test]
     fn happy_path_get_updateinfo_output() {
         let expected = vec![
@@ -189,6 +191,14 @@ mod tests {
         ];
         let output = get_updateinfo_output(GET_UPDATE_LIST_MOCK);
         assert_eq!(output.len(), 11);
+        assert_eq!(output, expected);
+    }
+
+    #[test]
+    fn happy_path_get_updateinfo_empty_output() {
+        let expected: Vec<&str> = Vec::new();
+        let output: Vec<&str> = get_updateinfo_output(GET_EMPTY_UPDATE_LIST_MOCK);
+        assert_eq!(output.len(), 0);
         assert_eq!(output, expected);
     }
 }

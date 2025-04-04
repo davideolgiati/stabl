@@ -189,3 +189,4 @@ target/
 #.idea/
 *.profdata
 *.profraw
+*.info
