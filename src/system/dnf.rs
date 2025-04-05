@@ -123,10 +123,15 @@ pub fn get_repoquery_output<'a>(updates_list: &[&str], _shell_cmd: ShellCmdClosu
                 .build();
         assert!(!cmd_args.is_empty());
 
-        let stdout = _shell_cmd("dnf", &cmd_args);
-        assert!(!stdout.is_empty());
+        let output = _shell_cmd("dnf", &cmd_args);
 
-        let stdout: &str = Box::leak(stdout.into_boxed_str());
+        if output.is_empty() {
+                return Vec::new();
+        }
+
+        assert!(!output.is_empty());
+
+        let stdout: &str = Box::leak(output.into_boxed_str());
         
         split_string(stdout, "\n").to_vec()
 }
@@ -147,6 +152,11 @@ pub fn get_rpm_output_for_local_packages<'a>(updates_list: &[&str], _shell_cmd: 
         assert!(!cmd_args.is_empty());
 
         let output = _shell_cmd("rpm", &cmd_args);
+
+        if output.is_empty() {
+                return Vec::new();
+        }
+
         assert!(!output.is_empty());
 
         let output: &str = Box::leak(output.into_boxed_str());
@@ -172,7 +182,7 @@ mod tests {
     "FEDORA-2025-7755eec1cb unspecified None                  python3-regex-2024.11.6-1.fc41.x86_64 2025-03-12 02:01:22")
     .to_string();
 
-    static GET_EMPTY_UPDATE_LIST_MOCK: ShellCmdClosure = |_a, _b| concat!("").to_string();
+    static GET_EMPTY_LIST_MOCK: ShellCmdClosure = |_a, _b| concat!("").to_string();
 
     #[test]
     fn happy_path_get_updateinfo_output() {
@@ -197,7 +207,23 @@ mod tests {
     #[test]
     fn happy_path_get_updateinfo_empty_output() {
         let expected: Vec<&str> = Vec::new();
-        let output: Vec<&str> = get_updateinfo_output(GET_EMPTY_UPDATE_LIST_MOCK);
+        let output: Vec<&str> = get_updateinfo_output(GET_EMPTY_LIST_MOCK);
+        assert_eq!(output.len(), 0);
+        assert_eq!(output, expected);
+    }
+
+    #[test]
+    fn happy_path_get_repoquery_output_empty_output() {
+        let expected: Vec<&str> = Vec::new();
+        let output: Vec<&str> = get_repoquery_output(&["FEDORA-2025-7755eec1cb unspecified None                  python3-regex-2024.11.6-1.fc41.x86_64 2025-03-12 02:01:22"], GET_EMPTY_LIST_MOCK);
+        assert_eq!(output.len(), 0);
+        assert_eq!(output, expected);
+    }
+
+    #[test]
+    fn happy_path_get_rpm_output_for_local_packages_empty_output() {
+        let expected: Vec<&str> = Vec::new();
+        let output: Vec<&str> = get_rpm_output_for_local_packages(&["\"firefox\"|#|\"131.0.2\"|#|\"1.fc41\"|#|\"firefox-0:131.0.2-1.fc41.x86_64\"|#|\"firefox-131.0.2-1.fc41.x86_64\""],GET_EMPTY_LIST_MOCK);
         assert_eq!(output.len(), 0);
         assert_eq!(output, expected);
     }
