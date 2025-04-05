@@ -107,6 +107,8 @@ pub fn get_updateinfo_output<'a>(_shell_cmd: ShellCmdClosure) -> Vec<&'a str> {
 }
 
 pub fn get_repoquery_output<'a>(updates_list: &[&str], _shell_cmd: ShellCmdClosure) -> Vec<&'a str> {
+        assert!(!updates_list.is_empty());
+        
         let updates: Vec<&str> = split_filter_and_deduplicate_string_list(
                 updates_list, " ", 3
         );
@@ -137,6 +139,8 @@ pub fn get_repoquery_output<'a>(updates_list: &[&str], _shell_cmd: ShellCmdClosu
 }
 
 pub fn get_rpm_output_for_local_packages<'a>(updates_list: &[&str], _shell_cmd: ShellCmdClosure) -> Vec<&'a str> {
+        assert!(!updates_list.is_empty());
+
         let installed: Vec<&str> = split_filter_and_deduplicate_string_list(
                 updates_list, "|#|", 0
         );
@@ -226,5 +230,17 @@ mod tests {
         let output: Vec<&str> = get_rpm_output_for_local_packages(&["\"firefox\"|#|\"131.0.2\"|#|\"1.fc41\"|#|\"firefox-0:131.0.2-1.fc41.x86_64\"|#|\"firefox-131.0.2-1.fc41.x86_64\""],GET_EMPTY_LIST_MOCK);
         assert_eq!(output.len(), 0);
         assert_eq!(output, expected);
+    }
+
+    #[test]
+    #[should_panic]
+    fn panic_get_repoquery_output_empty_input() {
+        let _: Vec<&str> = get_repoquery_output(&[], GET_EMPTY_LIST_MOCK);
+    }
+
+    #[test]
+    #[should_panic]
+    fn panic_get_rpm_output_for_local_packages_empty_input() {
+        let _: Vec<&str> = get_rpm_output_for_local_packages(&[],GET_EMPTY_LIST_MOCK);
     }
 }
