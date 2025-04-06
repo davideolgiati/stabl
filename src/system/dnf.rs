@@ -186,6 +186,20 @@ mod tests {
     "FEDORA-2025-7755eec1cb unspecified None                  python3-regex-2024.11.6-1.fc41.x86_64 2025-03-12 02:01:22")
     .to_string();
 
+    static GET_REPOQUERY_LIST_MOCK: ShellCmdClosure = |_a, _b| concat!(
+    "container-selinux|#|2.236.0|#|1.fc41|#|container-selinux-4:2.236.0-1.fc41.noarch|#|container-selinux-2.236.0-1.fc41.noarch\n",
+    "dpkg-dev|#|1.22.15|#|1.fc41|#|dpkg-dev-0:1.22.15-1.fc41.noarch|#|dpkg-dev-1.22.15-1.fc41.noarch\n",
+    "dpkg-perl|#|1.22.15|#|1.fc41|#|dpkg-perl-0:1.22.15-1.fc41.noarch|#|dpkg-perl-1.22.15-1.fc41.noarch\n",
+    "dpkg|#|1.22.15|#|1.fc41|#|dpkg-0:1.22.15-1.fc41.x86_64|#|dpkg-1.22.15-1.fc41.x86_64\n",
+    "hwloc-libs|#|2.12.0|#|1.fc41|#|hwloc-libs-0:2.12.0-1.fc41.x86_64|#|hwloc-libs-2.12.0-1.fc41.x86_64\n",
+    "libfprint|#|1.94.9|#|1.fc41|#|libfprint-0:1.94.9-1.fc41.x86_64|#|libfprint-1.94.9-1.fc41.x86_64\n",
+    "python3-incremental|#|24.7.2|#|1.fc41|#|python3-incremental-0:24.7.2-1.fc41.noarch|#|python3-incremental-24.7.2-1.fc41.noarch\n",
+    "python3-regex|#|2024.11.6|#|1.fc41|#|python3-regex-0:2024.11.6-1.fc41.x86_64|#|python3-regex-2024.11.6-1.fc41.x86_64\n",
+    "vim-data|#|9.1.1227|#|1.fc41|#|vim-data-2:9.1.1227-1.fc41.noarch|#|vim-data-9.1.1227-1.fc41.noarch\n",
+    "vim-minimal|#|9.1.1227|#|1.fc41|#|vim-minimal-2:9.1.1227-1.fc41.x86_64|#|vim-minimal-9.1.1227-1.fc41.x86_64\n",
+    "xxd|#|9.1.1227|#|1.fc41|#|xxd-2:9.1.1227-1.fc41.x86_64|#|xxd-9.1.1227-1.fc41.x86_64")
+    .to_string();
+
     static GET_EMPTY_LIST_MOCK: ShellCmdClosure = |_a, _b| concat!("").to_string();
 
     #[test]
@@ -231,6 +245,34 @@ mod tests {
         assert_eq!(output.len(), 0);
         assert_eq!(output, expected);
     }
+
+    #[test]
+    fn happy_path_get_repoquery_output() {
+        let expected: Vec<&str> = vec![
+                "container-selinux|#|2.236.0|#|1.fc41|#|container-selinux-4:2.236.0-1.fc41.noarch|#|container-selinux-2.236.0-1.fc41.noarch",
+                "dpkg-dev|#|1.22.15|#|1.fc41|#|dpkg-dev-0:1.22.15-1.fc41.noarch|#|dpkg-dev-1.22.15-1.fc41.noarch",
+                "dpkg-perl|#|1.22.15|#|1.fc41|#|dpkg-perl-0:1.22.15-1.fc41.noarch|#|dpkg-perl-1.22.15-1.fc41.noarch",
+                "dpkg|#|1.22.15|#|1.fc41|#|dpkg-0:1.22.15-1.fc41.x86_64|#|dpkg-1.22.15-1.fc41.x86_64",
+                "hwloc-libs|#|2.12.0|#|1.fc41|#|hwloc-libs-0:2.12.0-1.fc41.x86_64|#|hwloc-libs-2.12.0-1.fc41.x86_64",
+                "libfprint|#|1.94.9|#|1.fc41|#|libfprint-0:1.94.9-1.fc41.x86_64|#|libfprint-1.94.9-1.fc41.x86_64",
+                "python3-incremental|#|24.7.2|#|1.fc41|#|python3-incremental-0:24.7.2-1.fc41.noarch|#|python3-incremental-24.7.2-1.fc41.noarch",
+                "python3-regex|#|2024.11.6|#|1.fc41|#|python3-regex-0:2024.11.6-1.fc41.x86_64|#|python3-regex-2024.11.6-1.fc41.x86_64",
+                "vim-data|#|9.1.1227|#|1.fc41|#|vim-data-2:9.1.1227-1.fc41.noarch|#|vim-data-9.1.1227-1.fc41.noarch",
+                "vim-minimal|#|9.1.1227|#|1.fc41|#|vim-minimal-2:9.1.1227-1.fc41.x86_64|#|vim-minimal-9.1.1227-1.fc41.x86_64",
+                "xxd|#|9.1.1227|#|1.fc41|#|xxd-2:9.1.1227-1.fc41.x86_64|#|xxd-9.1.1227-1.fc41.x86_64"
+        ];
+        let output: Vec<&str> = get_repoquery_output(&["FEDORA-2025-7755eec1cb unspecified None                  python3-regex-2024.11.6-1.fc41.x86_64 2025-03-12 02:01:22"], GET_REPOQUERY_LIST_MOCK);
+        assert_eq!(output.len(), 11);
+        assert_eq!(output, expected);
+    }
+
+//     #[test]
+//     fn happy_path_get_rpm_output_for_local_packages_empty_output() {
+//         let expected: Vec<&str> = Vec::new();
+//         let output: Vec<&str> = get_rpm_output_for_local_packages(&["\"firefox\"|#|\"131.0.2\"|#|\"1.fc41\"|#|\"firefox-0:131.0.2-1.fc41.x86_64\"|#|\"firefox-131.0.2-1.fc41.x86_64\""],GET_EMPTY_LIST_MOCK);
+//         assert_eq!(output.len(), 0);
+//         assert_eq!(output, expected);
+//     }
 
     #[test]
     #[should_panic]
