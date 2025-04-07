@@ -88,6 +88,7 @@ pub fn get_updateinfo_output<'a>(_shell_cmd: ShellCmdClosure) -> Vec<&'a str> {
                 .add_base_arg("--updates")
                 .toggle_quiet_flag()
                 .build();
+        
         assert!(!cmd_args.is_empty());
 
         let output = _shell_cmd("dnf", &cmd_args);

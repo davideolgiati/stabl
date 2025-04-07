@@ -20,13 +20,10 @@ use std::process;
 use chrono::Utc;
 
 fn evaluate_partition(partition: &Partition, target_release: &SemanticVersion) -> bool {
-    //let additional_date_check: bool = (Utc::now() - *partition.get_date()).num_days() > 60;
-
     let version_bump_check: bool = target_release >= partition.get_release_type();
     let security_release_check: bool = *partition.get_security_classification() > SecurityClassification::None;
-    //let is_partition_ammissible_in_time_range: bool = additional_date_check;
 
-    security_release_check || version_bump_check //|| is_partition_ammissible_in_time_range
+    security_release_check || version_bump_check
 }
 
 fn main() {
@@ -49,11 +46,22 @@ fn main() {
     let repository_update_details: Vec<&str> = get_repoquery_output(
         &dnf_updates_list, shell::run_command_and_read_stdout
     );
+
+    if repository_update_details.is_empty() {
+        println!("\nno suggested updates found\n\n");
+        process::exit(0);
+    }
+
     let packages_names: Vec<&str> = get_rpm_output_for_local_packages(
         &repository_update_details, 
         shell::run_command_and_read_stdout
     );
     
+    if packages_names.is_empty() {
+        println!("\nno suggested updates found\n\n");
+        process::exit(0);
+    }
+
     println!("[i] enriching updates with additional informations...");
 
     let (partitions, updates) = {
@@ -66,39 +74,43 @@ fn main() {
         data_model.build()
     };
 
-    let mut selected_partition_ids: Vec<String> = Vec::new();
-    let mut stdout_buffer = String::from("");
+    let selected_partitions: Vec<&Partition> = partitions
+        .iter()
+        .filter(|partition| evaluate_partition(partition, &max_release))
+        .collect();
 
-    for partition in &partitions {
-        if evaluate_partition(partition, &max_release) {
-            selected_partition_ids.push(partition.get_id().clone());
+    let selected_partitions_id: Vec<&str> = selected_partitions
+        .iter()
+        .map(|partition| partition.get_id().as_str())
+        .collect();
 
-            let update_type_str = format!("{}", partition.get_release_type());
+    for partition in &selected_partitions {
+        let id: &String = partition.get_id();
+        let update_type: String = format!("{}", partition.get_release_type());
+        let security_class: String = format!("{}", partition.get_security_classification());
 
-            stdout_buffer = stdout_buffer + &format!(
-                "\n\n\nPartition Id: {:30} Type: {:15} Security grade: {}\n\n", 
-                partition.get_id(), update_type_str, partition.get_security_classification()
+        let updates = updates.get(partition.get_id()).unwrap();
+
+        print!(
+            "\nPartition Id: {:30} Type: {:15} Security grade: {}\n\n", 
+            id, update_type, security_class
+        );
+
+        for _update in updates {
+            let package: &String =  _update.get_name();
+            let version: String =  format!("{}", _update.get_version());
+            let days_since_release: i64 = (Utc::now() - partition.get_date()).num_days();
+
+
+            println!(
+                "    {:<35} {:^25} ({:^3} days ago)", 
+                package, version, days_since_release
             );
-
-            for _update in updates.get(partition.get_id()).unwrap().iter() {
-                stdout_buffer = stdout_buffer + &format!(
-                    "\t{:<35} {:^25} ({:^3} days ago)\n", 
-                    _update.get_name(),
-                    format!("{}", _update.get_version()),
-                    (Utc::now() - partition.get_date()).num_days()
-                );
-            }
         }
     }
 
-    let stdout_buffer = stdout_buffer;
-    let selected_partition_ids = selected_partition_ids;
-
-    println!("{}", stdout_buffer);
-    //ui::display_suggested_upgrades(&update_builder, buffer);
-
-    if !selected_partition_ids.is_empty() {
-        println!("\nsudo dnf update --advisory={}\n\n", selected_partition_ids.join(","));
+    if !selected_partitions_id.is_empty() {
+        println!("\nsudo dnf update --advisory={}\n\n", selected_partitions_id.join(", "));
     } else {
         println!("\nno suggested updates found\n\n");
     }
