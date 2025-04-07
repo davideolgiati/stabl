@@ -110,7 +110,7 @@ fn main() {
     }
 
     if !selected_partitions_id.is_empty() {
-        println!("\nsudo dnf update --advisory={}\n\n", selected_partitions_id.join(", "));
+        println!("\nsudo dnf update --advisory={}\n\n", selected_partitions_id.join(","));
     } else {
         println!("\nno suggested updates found\n\n");
     }
