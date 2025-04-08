@@ -203,6 +203,25 @@ mod tests {
 
     static GET_EMPTY_LIST_MOCK: ShellCmdClosure = |_a, _b| concat!("").to_string();
 
+    static GET_RPM_LIST_MOCK: ShellCmdClosure = |_a, _b| {
+        assert!(_a == "rpm");
+        assert!(_b == ["-q", "--queryformat=%{name}|#|%{version}|#|%{release}\\n", "xxd"]);
+        concat!(
+                "container-selinux|#|2.235.0|#|2.fc41\n",
+                "dpkg-dev|#|1.22.11|#|1.fc41\n",
+                "dpkg-perl|#|1.22.11|#|1.fc41\n",
+                "dpkg|#|1.22.11|#|1.fc41\n",
+                "hwloc-libs|#|2.11.2|#|1.fc41\n",
+                "libfprint|#|1.94.8|#|1.fc41\n",
+                "python3-incremental|#|22.10.0|#|7.fc41\n",
+                "python3-regex|#|2024.9.11|#|1.fc41\n",
+                "vim-data|#|9.1.1202|#|1.fc41\n",
+                "vim-minimal|#|9.1.1202|#|1.fc41\n",
+                "xxd|#|9.1.1202|#|1.fc41"
+        ).to_string()
+    };
+
+
     #[test]
     fn happy_path_get_updateinfo_output() {
         let expected = vec![
@@ -267,13 +286,25 @@ mod tests {
         assert_eq!(output, expected);
     }
 
-//     #[test]
-//     fn happy_path_get_rpm_output_for_local_packages_empty_output() {
-//         let expected: Vec<&str> = Vec::new();
-//         let output: Vec<&str> = get_rpm_output_for_local_packages(&["\"firefox\"|#|\"131.0.2\"|#|\"1.fc41\"|#|\"firefox-0:131.0.2-1.fc41.x86_64\"|#|\"firefox-131.0.2-1.fc41.x86_64\""],GET_EMPTY_LIST_MOCK);
-//         assert_eq!(output.len(), 0);
-//         assert_eq!(output, expected);
-//     }
+    #[test]
+    fn happy_path_get_rpm_output() {
+        let expected: Vec<&str> = vec![
+                "container-selinux|#|2.235.0|#|2.fc41",
+                "dpkg-dev|#|1.22.11|#|1.fc41",
+                "dpkg-perl|#|1.22.11|#|1.fc41",
+                "dpkg|#|1.22.11|#|1.fc41",
+                "hwloc-libs|#|2.11.2|#|1.fc41",
+                "libfprint|#|1.94.8|#|1.fc41",
+                "python3-incremental|#|22.10.0|#|7.fc41",
+                "python3-regex|#|2024.9.11|#|1.fc41",
+                "vim-data|#|9.1.1202|#|1.fc41",
+                "vim-minimal|#|9.1.1202|#|1.fc41",
+                "xxd|#|9.1.1202|#|1.fc41"
+        ];
+        let output: Vec<&str> = get_rpm_output_for_local_packages(&["xxd|#|9.1.1227|#|1.fc41|#|xxd-2:9.1.1227-1.fc41.x86_64|#|xxd-9.1.1227-1.fc41.x86_64"], GET_RPM_LIST_MOCK);
+        assert_eq!(output.len(), 11);
+        assert_eq!(output, expected);
+    }
 
     #[test]
     #[should_panic]
