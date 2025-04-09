@@ -171,7 +171,13 @@ pub fn get_rpm_output_for_local_packages<'a>(updates_list: &[&str], _shell_cmd: 
 #[cfg(test)]
 mod tests {
     use super::*;
+    use std::{collections::HashSet, hash::Hash};
     
+    fn iters_equal_anyorder<T: Eq + Hash>(mut i1:impl Iterator<Item = T>, i2: impl Iterator<Item = T>) -> bool {
+        let set:HashSet<T> = i2.collect();
+        i1.all(|x| set.contains(&x))
+    }
+
     static GET_UPDATE_LIST_MOCK: ShellCmdClosure = |_a, _b| concat!(
     "Name                   Type        Severity                                            Package              Issued\n",
     "FEDORA-2025-0738949695 unspecified None               python3-incremental-24.7.2-1.fc41.noarch 2025-03-18 02:17:53\n",
@@ -187,35 +193,36 @@ mod tests {
     "FEDORA-2025-7755eec1cb unspecified None                  python3-regex-2024.11.6-1.fc41.x86_64 2025-03-12 02:01:22")
     .to_string();
 
-    static GET_REPOQUERY_LIST_MOCK: ShellCmdClosure = |_a, _b| concat!(
-    "container-selinux|#|2.236.0|#|1.fc41|#|container-selinux-4:2.236.0-1.fc41.noarch|#|container-selinux-2.236.0-1.fc41.noarch\n",
-    "dpkg-dev|#|1.22.15|#|1.fc41|#|dpkg-dev-0:1.22.15-1.fc41.noarch|#|dpkg-dev-1.22.15-1.fc41.noarch\n",
-    "dpkg-perl|#|1.22.15|#|1.fc41|#|dpkg-perl-0:1.22.15-1.fc41.noarch|#|dpkg-perl-1.22.15-1.fc41.noarch\n",
-    "dpkg|#|1.22.15|#|1.fc41|#|dpkg-0:1.22.15-1.fc41.x86_64|#|dpkg-1.22.15-1.fc41.x86_64\n",
-    "hwloc-libs|#|2.12.0|#|1.fc41|#|hwloc-libs-0:2.12.0-1.fc41.x86_64|#|hwloc-libs-2.12.0-1.fc41.x86_64\n",
-    "libfprint|#|1.94.9|#|1.fc41|#|libfprint-0:1.94.9-1.fc41.x86_64|#|libfprint-1.94.9-1.fc41.x86_64\n",
-    "python3-incremental|#|24.7.2|#|1.fc41|#|python3-incremental-0:24.7.2-1.fc41.noarch|#|python3-incremental-24.7.2-1.fc41.noarch\n",
-    "python3-regex|#|2024.11.6|#|1.fc41|#|python3-regex-0:2024.11.6-1.fc41.x86_64|#|python3-regex-2024.11.6-1.fc41.x86_64\n",
-    "vim-data|#|9.1.1227|#|1.fc41|#|vim-data-2:9.1.1227-1.fc41.noarch|#|vim-data-9.1.1227-1.fc41.noarch\n",
-    "vim-minimal|#|9.1.1227|#|1.fc41|#|vim-minimal-2:9.1.1227-1.fc41.x86_64|#|vim-minimal-9.1.1227-1.fc41.x86_64\n",
-    "xxd|#|9.1.1227|#|1.fc41|#|xxd-2:9.1.1227-1.fc41.x86_64|#|xxd-9.1.1227-1.fc41.x86_64")
-    .to_string();
+    static GET_REPOQUERY_LIST_MOCK: ShellCmdClosure = |_a, _b| {
+        let expected_a: &str = "dnf";
+        let expected_b: Vec<String> = [
+                "repoquery", "-q", "-C",
+                "--queryformat=%{name}|#|%{version}|#|%{release}|#|%{full_nevra}|#|%{name}-%{version}-%{release}.%{arch}\\n", 
+                "vim-minimal-2:9.1.1227-1.fc41.x86_64",
+                "xxd-2:9.1.1227-1.fc41.x86_64"
+        ].iter().map(|x| x.to_string()).collect();
+
+        assert!(_a == expected_a, "{}", format!("actual:   {:?}\nexpected: {:?}", _b, expected_b));
+        assert!(iters_equal_anyorder(_b.iter(), expected_b.iter()), "{}", format!("actual:   {:?}\nexpected: {:?}", _b, expected_b));
+
+        concat!(
+                "vim-minimal|#|9.1.1227|#|1.fc41|#|vim-minimal-2:9.1.1227-1.fc41.x86_64|#|vim-minimal-9.1.1227-1.fc41.x86_64\n",
+                "xxd|#|9.1.1227|#|1.fc41|#|xxd-2:9.1.1227-1.fc41.x86_64|#|xxd-9.1.1227-1.fc41.x86_64"
+        ).to_string()
+     };
 
     static GET_EMPTY_LIST_MOCK: ShellCmdClosure = |_a, _b| concat!("").to_string();
 
     static GET_RPM_LIST_MOCK: ShellCmdClosure = |_a, _b| {
-        assert!(_a == "rpm");
-        assert!(_b == ["-q", "--queryformat=%{name}|#|%{version}|#|%{release}\\n", "xxd"]);
+        let expected_a: &str = "rpm";
+        let expected_b:Vec<String> = ["-q", "--queryformat=%{name}|#|%{version}|#|%{release}\\n", 
+                "vim-minimal",
+                "xxd"].iter().map(|x| x.to_string()).collect();
+
+        assert!(_a == expected_a, "{}", format!("actual:   {:?}\n expected: {:?}", _b, expected_b));
+        assert!(iters_equal_anyorder(_b.iter(), expected_b.iter()), "{}", format!("actual:   {:?}\n expected: {:?}", _b, expected_b));
+        
         concat!(
-                "container-selinux|#|2.235.0|#|2.fc41\n",
-                "dpkg-dev|#|1.22.11|#|1.fc41\n",
-                "dpkg-perl|#|1.22.11|#|1.fc41\n",
-                "dpkg|#|1.22.11|#|1.fc41\n",
-                "hwloc-libs|#|2.11.2|#|1.fc41\n",
-                "libfprint|#|1.94.8|#|1.fc41\n",
-                "python3-incremental|#|22.10.0|#|7.fc41\n",
-                "python3-regex|#|2024.9.11|#|1.fc41\n",
-                "vim-data|#|9.1.1202|#|1.fc41\n",
                 "vim-minimal|#|9.1.1202|#|1.fc41\n",
                 "xxd|#|9.1.1202|#|1.fc41"
         ).to_string()
@@ -269,40 +276,28 @@ mod tests {
     #[test]
     fn happy_path_get_repoquery_output() {
         let expected: Vec<&str> = vec![
-                "container-selinux|#|2.236.0|#|1.fc41|#|container-selinux-4:2.236.0-1.fc41.noarch|#|container-selinux-2.236.0-1.fc41.noarch",
-                "dpkg-dev|#|1.22.15|#|1.fc41|#|dpkg-dev-0:1.22.15-1.fc41.noarch|#|dpkg-dev-1.22.15-1.fc41.noarch",
-                "dpkg-perl|#|1.22.15|#|1.fc41|#|dpkg-perl-0:1.22.15-1.fc41.noarch|#|dpkg-perl-1.22.15-1.fc41.noarch",
-                "dpkg|#|1.22.15|#|1.fc41|#|dpkg-0:1.22.15-1.fc41.x86_64|#|dpkg-1.22.15-1.fc41.x86_64",
-                "hwloc-libs|#|2.12.0|#|1.fc41|#|hwloc-libs-0:2.12.0-1.fc41.x86_64|#|hwloc-libs-2.12.0-1.fc41.x86_64",
-                "libfprint|#|1.94.9|#|1.fc41|#|libfprint-0:1.94.9-1.fc41.x86_64|#|libfprint-1.94.9-1.fc41.x86_64",
-                "python3-incremental|#|24.7.2|#|1.fc41|#|python3-incremental-0:24.7.2-1.fc41.noarch|#|python3-incremental-24.7.2-1.fc41.noarch",
-                "python3-regex|#|2024.11.6|#|1.fc41|#|python3-regex-0:2024.11.6-1.fc41.x86_64|#|python3-regex-2024.11.6-1.fc41.x86_64",
-                "vim-data|#|9.1.1227|#|1.fc41|#|vim-data-2:9.1.1227-1.fc41.noarch|#|vim-data-9.1.1227-1.fc41.noarch",
                 "vim-minimal|#|9.1.1227|#|1.fc41|#|vim-minimal-2:9.1.1227-1.fc41.x86_64|#|vim-minimal-9.1.1227-1.fc41.x86_64",
                 "xxd|#|9.1.1227|#|1.fc41|#|xxd-2:9.1.1227-1.fc41.x86_64|#|xxd-9.1.1227-1.fc41.x86_64"
         ];
-        let output: Vec<&str> = get_repoquery_output(&["FEDORA-2025-7755eec1cb unspecified None                  python3-regex-2024.11.6-1.fc41.x86_64 2025-03-12 02:01:22"], GET_REPOQUERY_LIST_MOCK);
-        assert_eq!(output.len(), 11);
+        let output: Vec<&str> = get_repoquery_output(&[
+                "FEDORA-2025-1a0c45a564 enhancement None                   vim-minimal-2:9.1.1227-1.fc41.x86_64 2025-03-23 01:13:07\n",
+                "FEDORA-2025-1a0c45a564 enhancement None                           xxd-2:9.1.1227-1.fc41.x86_64 2025-03-23 01:13:07\n"
+        ], GET_REPOQUERY_LIST_MOCK);
+        assert_eq!(output.len(), 2);
         assert_eq!(output, expected);
     }
 
     #[test]
     fn happy_path_get_rpm_output() {
         let expected: Vec<&str> = vec![
-                "container-selinux|#|2.235.0|#|2.fc41",
-                "dpkg-dev|#|1.22.11|#|1.fc41",
-                "dpkg-perl|#|1.22.11|#|1.fc41",
-                "dpkg|#|1.22.11|#|1.fc41",
-                "hwloc-libs|#|2.11.2|#|1.fc41",
-                "libfprint|#|1.94.8|#|1.fc41",
-                "python3-incremental|#|22.10.0|#|7.fc41",
-                "python3-regex|#|2024.9.11|#|1.fc41",
-                "vim-data|#|9.1.1202|#|1.fc41",
                 "vim-minimal|#|9.1.1202|#|1.fc41",
                 "xxd|#|9.1.1202|#|1.fc41"
         ];
-        let output: Vec<&str> = get_rpm_output_for_local_packages(&["xxd|#|9.1.1227|#|1.fc41|#|xxd-2:9.1.1227-1.fc41.x86_64|#|xxd-9.1.1227-1.fc41.x86_64"], GET_RPM_LIST_MOCK);
-        assert_eq!(output.len(), 11);
+        let output: Vec<&str> = get_rpm_output_for_local_packages(&[
+                "vim-minimal|#|9.1.1227|#|1.fc41|#|vim-minimal-2:9.1.1227-1.fc41.x86_64|#|vim-minimal-9.1.1227-1.fc41.x86_64\n",
+                "xxd|#|9.1.1227|#|1.fc41|#|xxd-2:9.1.1227-1.fc41.x86_64|#|xxd-9.1.1227-1.fc41.x86_64"
+        ], GET_RPM_LIST_MOCK);
+        assert_eq!(output.len(), 2);
         assert_eq!(output, expected);
     }
 
