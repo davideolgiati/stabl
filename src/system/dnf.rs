@@ -237,7 +237,7 @@ mod tests {
                 "FEDORA-2025-1a0c45a564 enhancement None                           xxd-2:9.1.1227-1.fc41.x86_64 2025-03-23 01:13:07"
         ];
         let output = get_updateinfo_output(GET_UPDATE_LIST_MOCK);
-        assert_eq!(output.len(), 11);
+        assert_eq!(output.len(), 2);
         assert_eq!(output, expected);
     }
 
