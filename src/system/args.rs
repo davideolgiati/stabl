@@ -45,3 +45,55 @@ Help:
                 std::process::exit(0)
         }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    
+    #[test]
+    fn happy_path_convert_release_patch() {
+        let expected: SemanticVersion = SemanticVersion::Patch;
+        let input: &str = "--patch";
+
+        let output = convert_release(input);
+
+        assert!(expected == output)
+    }
+
+    #[test]
+    fn happy_path_convert_release_repack() {
+        let expected: SemanticVersion = SemanticVersion::Repack;
+        let input: &str = "--repack";
+
+        let output = convert_release(input);
+
+        assert!(expected == output)
+    }
+
+    #[test]
+    fn happy_path_convert_release_minor() {
+        let expected: SemanticVersion = SemanticVersion::Minor;
+        let input: &str = "--minor";
+
+        let output = convert_release(input);
+
+        assert!(expected == output)
+    }
+
+    #[test]
+    fn happy_path_convert_release_major() {
+        let expected: SemanticVersion = SemanticVersion::Major;
+        let input: &str = "--major";
+
+        let output = convert_release(input);
+
+        assert!(expected == output)
+    }
+
+    #[test]
+    #[should_panic]
+    fn should_panic_convert_release() {
+        let input: &str = "--bugfix";
+        convert_release(input);
+    }
+}
