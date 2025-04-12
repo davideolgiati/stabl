@@ -167,3 +167,30 @@ impl<'a> ModelBuilder<'a> {
         }
 
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    
+    #[test]
+    fn happy_path_new_datamodel() {
+        let mut data_model: ModelBuilder<'_> = ModelBuilder::new();
+        let dnf_updates_list = ["FEDORA-2025-1a0c45a564 enhancement None                   vim-minimal-2:9.1.1227-1.fc41.x86_64 2025-03-23 01:13:07",
+                "FEDORA-2025-1a0c45a564 enhancement None                           xxd-2:9.1.1227-1.fc41.x86_64 2025-03-23 01:13:07"];
+        let repository_update_details = ["vim-minimal|#|9.1.1227|#|1.fc41|#|vim-minimal-2:9.1.1227-1.fc41.x86_64|#|vim-minimal-9.1.1227-1.fc41.x86_64",
+                "xxd|#|9.1.1227|#|1.fc41|#|xxd-2:9.1.1227-1.fc41.x86_64|#|xxd-9.1.1227-1.fc41.x86_64"];
+        let packages_names = ["vim-minimal|#|9.1.1202|#|1.fc41",
+                "xxd|#|9.1.1202|#|1.fc41"];
+
+        let part_date = NaiveDateTime::parse_from_str("2025-03-23 01:13:07", "%F %X").unwrap().and_utc();
+        let expected_partitions = vec![Partition::new("FEDORA-2025-1a0c45a564".to_string(), SemanticVersion::Minor, SecurityClassification::None, part_date)];
+
+        dnf_updates_list.iter().for_each(|line| data_model.add_updateinfo_output_line(line));
+        repository_update_details.iter().for_each(|line| data_model.add_repoquery_output(line));
+        packages_names.iter().for_each(|line| data_model.add_rpm_output(line));
+
+        let (partitions, _updates) = data_model.build();
+
+        assert!(partitions == expected_partitions);
+    }
+}

@@ -3,7 +3,7 @@ use chrono::DateTime;
 
 use crate::model::{semantic_version::SemanticVersion, security_classification::SecurityClassification};
 
-#[derive(Clone)]
+#[derive(Clone, Debug, PartialEq)]
 pub struct Partition {
         _id: String,
         _release_type: SemanticVersion,
