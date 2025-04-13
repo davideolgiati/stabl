@@ -5,12 +5,14 @@ use model::ModelBuilder;
 use model::semantic_version::SemanticVersion;
 
 mod system;
+use system::logger::Logger;
 use system::shell;
 use system::dnf::get_repoquery_output;
 use system::dnf::get_rpm_output_for_local_packages;
 use system::dnf::get_updateinfo_output;
 use system::ui;
 use system::args;
+use system::logger;
 
 mod commons;
 
@@ -27,6 +29,7 @@ fn evaluate_partition(partition: &Partition, target_release: &SemanticVersion) -
 }
 
 fn main() {
+    let logger: logger::Logger = Logger::new(logger::LoggingLevel::Trace);
     let input_args: Vec<String> = env::args().collect();
     
     ui::display_stabl_logo();
@@ -35,34 +38,45 @@ fn main() {
     let max_release: SemanticVersion = args::get_release_arg(
         &input_args, SemanticVersion::Patch
     );
+
+    debug!(logger, "Release upper limit set to {}", max_release);
     
+    info!(logger, "getting updates list from remote...");
+    let start = start_timer!();
     let dnf_updates_list: Vec<&str> = get_updateinfo_output(shell::run_command_and_read_stdout);
+    let elapsed = stop_timer!(start);
+    trace!(logger, "get_updateinfo_output ran in {} ms", elapsed);
 
     if dnf_updates_list.is_empty() {
-        println!("\nno suggested updates found\n\n");
+        info!(logger, "\nno suggested updates found\n\n");
         process::exit(0);
     }
+    info!(logger, "found {} updates from remote repository", dnf_updates_list.len());
 
+    info!(logger, "getting details from repository for updates ...");
     let repository_update_details: Vec<&str> = get_repoquery_output(
         &dnf_updates_list, shell::run_command_and_read_stdout
     );
 
     if repository_update_details.is_empty() {
-        println!("\nno suggested updates found\n\n");
+        info!(logger, "\nno details found for suggested updates in repository\n\n");
         process::exit(0);
     }
+    info!(logger, "found {} unique updates details from remote repository", repository_update_details.len());
 
+    info!(logger, "getting details from installed packages ...");
     let packages_names: Vec<&str> = get_rpm_output_for_local_packages(
         &repository_update_details, 
         shell::run_command_and_read_stdout
     );
     
     if packages_names.is_empty() {
-        println!("\nno suggested updates found\n\n");
+        info!(logger, "\nno installed packages fuond for suggested updates\n\n");
         process::exit(0);
     }
+    info!(logger, "found details from {} installed packages", packages_names.len());
 
-    println!("[i] enriching updates with additional informations...");
+    info!(logger, "enriching updates with additional informations...");
 
     let (partitions, updates) = {
         let mut data_model: ModelBuilder<'_> = ModelBuilder::new();

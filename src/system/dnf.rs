@@ -80,8 +80,6 @@ impl ArgsBuilder {
 
 
 pub fn get_updateinfo_output<'a>(_shell_cmd: ShellCmdClosure) -> Vec<&'a str> {
-        println!("[i] getting updates list from remote...");
-
         let cmd_args = ArgsBuilder::new()
                 .add_base_arg("updateinfo")
                 .add_base_arg("list")
@@ -115,8 +113,6 @@ pub fn get_repoquery_output<'a>(updates_list: &[&str], _shell_cmd: ShellCmdClosu
         );
         assert!(!updates.is_empty());
 
-        println!("[i] getting details from repository for {} update ...", updates.len());
-
         let cmd_args = ArgsBuilder::new()
                 .add_base_arg("repoquery")
                 .toggle_cached_flag()
@@ -146,8 +142,6 @@ pub fn get_rpm_output_for_local_packages<'a>(updates_list: &[&str], _shell_cmd: 
                 updates_list, "|#|", 0
         );
         assert!(!installed.is_empty());
-
-        println!("[i] getting details for {} installed packages ...", installed.len());
 
         let cmd_args = ArgsBuilder::new()
                 .toggle_quiet_flag()
