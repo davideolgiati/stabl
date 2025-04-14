@@ -29,23 +29,28 @@ fn evaluate_partition(partition: &Partition, target_release: &SemanticVersion) -
 }
 
 fn main() {
-    let logger: logger::Logger = Logger::new(logger::LoggingLevel::Trace);
     let input_args: Vec<String> = env::args().collect();
     
     ui::display_stabl_logo();
     args::look_for_help(&input_args);
     
+    let logger: logger::Logger = Logger::new(logger::LoggingLevel::Trace);
+    
+    debug!(logger, "stabl started!");
+    
     let max_release: SemanticVersion = args::get_release_arg(
         &input_args, SemanticVersion::Patch
     );
 
-    debug!(logger, "Release upper limit set to {}", max_release);
+    debug!(logger, "Release upper limit for version bump set to {}", max_release);
     
     info!(logger, "getting updates list from remote...");
+    debug!(logger, "get_updateinfo_output(shell::run_command_and_read_stdout) IN");
     let start = start_timer!();
     let dnf_updates_list: Vec<&str> = get_updateinfo_output(shell::run_command_and_read_stdout);
     let elapsed = stop_timer!(start);
-    trace!(logger, "get_updateinfo_output ran in {} ms", elapsed);
+    debug!(logger, "get_updateinfo_output(shell::run_command_and_read_stdout) OUT");
+    trace!(logger, "get_updateinfo_output(shell::run_command_and_read_stdout) ran in {} ms", elapsed);
 
     if dnf_updates_list.is_empty() {
         info!(logger, "\nno suggested updates found\n\n");
@@ -54,9 +59,14 @@ fn main() {
     info!(logger, "found {} updates from remote repository", dnf_updates_list.len());
 
     info!(logger, "getting details from repository for updates ...");
+    debug!(logger, "get_repoquery_output(&dnf_updates_list, shell::run_command_and_read_stdout) IN");
+    let start = start_timer!();
     let repository_update_details: Vec<&str> = get_repoquery_output(
         &dnf_updates_list, shell::run_command_and_read_stdout
     );
+    let elapsed = stop_timer!(start);
+    debug!(logger, "get_repoquery_output(&dnf_updates_list, shell::run_command_and_read_stdout) OUT");
+    trace!(logger, "get_repoquery_output(&dnf_updates_list, shell::run_command_and_read_stdout) ran in {} ms", elapsed);
 
     if repository_update_details.is_empty() {
         info!(logger, "\nno details found for suggested updates in repository\n\n");
@@ -65,10 +75,15 @@ fn main() {
     info!(logger, "found {} unique updates details from remote repository", repository_update_details.len());
 
     info!(logger, "getting details from installed packages ...");
+    debug!(logger, "get_rpm_output_for_local_packages(&repository_update_details, shell::run_command_and_read_stdout) IN");
+    let start = start_timer!();
     let packages_names: Vec<&str> = get_rpm_output_for_local_packages(
         &repository_update_details, 
         shell::run_command_and_read_stdout
     );
+    let elapsed = stop_timer!(start);
+    debug!(logger, "get_rpm_output_for_local_packages(&repository_update_details, shell::run_command_and_read_stdout) OUT");
+    trace!(logger, "get_rpm_output_for_local_packages(&repository_update_details, shell::run_command_and_read_stdout) ran in {} ms", elapsed);
     
     if packages_names.is_empty() {
         info!(logger, "\nno installed packages fuond for suggested updates\n\n");
@@ -104,21 +119,20 @@ fn main() {
         let security_class: String = format!("{}", partition.get_security_classification());
 
         let updates = updates.get(partition.get_id()).unwrap();
+        let days_since_release: i64 = (Utc::now() - partition.get_date()).num_days();
 
-        print!(
-            "\nPartition Id: {:30} Type: {:15} Security grade: {}\n\n", 
-            id, update_type, security_class
+        println!(
+            "\n\x1b[1mPartition Id\x1b[0m: {:>25} \x1b[1mPublished\x1b[0m: {:>3} days ago\n\x1b[1mSeverity\x1b[0m: {:>29} \x1b[1mType\x1b[0m: {:>17}", 
+            id,  days_since_release, security_class, update_type
         );
 
         for _update in updates {
             let package: &String =  _update.get_name();
             let version: String =  format!("{}", _update.get_version());
-            let days_since_release: i64 = (Utc::now() - partition.get_date()).num_days();
 
 
             println!(
-                "    {:<35} {:^25} ({:^3} days ago)", 
-                package, version, days_since_release
+                "    \x1b[1m{:<35}\x1b[0m {:<20}", package, version, 
             );
         }
     }

@@ -26,7 +26,7 @@ macro_rules! trace {
         ($logger:expr, $($args:tt)*) => {
                 if($logger.get_level() == $crate::system::logger::LoggingLevel::Trace) {
                         print!(
-                                "{} [\x1b[1mTRACE\x1b[0m] ", 
+                                "{:<35} [\x1b[1mTRACE\x1b[0m] ", 
                                 chrono::DateTime::<chrono::Utc>::from(std::time::SystemTime::now()).to_rfc3339()
                         );
                         println!($($args)*);
@@ -39,7 +39,7 @@ macro_rules! debug {
         ($logger:expr, $($args:tt)*) => {
                 if($logger.get_level() <= $crate::system::logger::LoggingLevel::Debug) {
                         print!(
-                                "{} [\x1b[97;1mDEBUG\x1b[0m] ", 
+                                "{:<35} [\x1b[97;1mDEBUG\x1b[0m] ", 
                                 chrono::DateTime::<chrono::Utc>::from(std::time::SystemTime::now()).to_rfc3339()
                         );
                         println!($($args)*);
@@ -52,7 +52,7 @@ macro_rules! info {
         ($logger:expr, $($args:tt)*) => {
                 if($logger.get_level() <= $crate::system::logger::LoggingLevel::Info) {
                         print!(
-                                "{} [\x1b[94;1mINFO\x1b[0m ] ", 
+                                "{:<35} [\x1b[94;1mINFO\x1b[0m ] ", 
                                 chrono::DateTime::<chrono::Utc>::from(std::time::SystemTime::now()).to_rfc3339()
                         );
                         println!($($args)*);
@@ -65,7 +65,7 @@ macro_rules! warn {
         ($logger:expr, $($args:tt)*) => {
                 if($logger.get_level() <= $crate::system::logger::LoggingLevel::Warn) {
                         print!(
-                                "{} [\x1b[93;1mWARN\x1b[0m ] ",
+                                "{:<35} [\x1b[93;1mWARN\x1b[0m ] ",
                                 chrono::DateTime::<chrono::Utc>::from(std::time::SystemTime::now()).to_rfc3339()
                         );
                         println!($($args)*);
@@ -78,7 +78,7 @@ macro_rules! error {
         ($logger:expr, $($args:tt)*) => {
                 if($logger.get_level() <= $crate::system::logger::LoggingLevel::Error) {
                         print!(
-                                "{} [\x1b[91;1mERROR\x1b[0m] ",
+                                "{:<35} [\x1b[91;1mERROR\x1b[0m] ",
                                 chrono::DateTime::<chrono::Utc>::from(std::time::SystemTime::now()).to_rfc3339()
                         );
                         println!($($args)*);
