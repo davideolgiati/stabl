@@ -113,6 +113,27 @@ fn main() {
         .map(|partition| partition.get_id().as_str())
         .collect();
 
+    let (major, minor, patch, release) = {
+        let mut patch: usize = 0;
+        let mut minor: usize = 0;
+        let mut major: usize = 0;
+        let mut release: usize = 0;
+
+        for partition in &partitions {
+            let id = partition.get_id();
+            let updates_count = updates.get(id).unwrap().len();
+
+            match partition.get_release_type() {
+                SemanticVersion::Major  => major += updates_count,
+                SemanticVersion::Minor  => minor += updates_count,
+                SemanticVersion::Patch  => patch += updates_count,
+                SemanticVersion::Repack => release += updates_count,
+            }
+        }
+
+        (major, minor, patch, release)
+    };
+
     for partition in &selected_partitions {
         let id: &String = partition.get_id();
         let update_type: String = format!("{}", partition.get_release_type());
@@ -127,15 +148,19 @@ fn main() {
         );
 
         for _update in updates {
-            let package: &String =  _update.get_name();
-            let version: String =  format!("{}", _update.get_version());
-
+            let package: &String = _update.get_name();
+            let version: String = format!("{}", _update.get_version());
 
             println!(
                 "    \x1b[1m{:<35}\x1b[0m {:<20}", package, version, 
             );
         }
     }
+
+    println!(
+        "\nFound:\n\t{} major updates\n\t{} minor updates\n\t{} bugfix upadtes\n\t{} repack updates\n", 
+        major, minor, patch, release
+    );
 
     if !selected_partitions_id.is_empty() {
         println!("\nsudo dnf update --advisory={}\n\n", selected_partitions_id.join(","));
