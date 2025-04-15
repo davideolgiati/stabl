@@ -103,21 +103,21 @@ fn main() {
         data_model.build()
     };
 
-    let selected_partitions: Vec<&Partition> = partitions
-        .iter()
-        .filter(|partition| evaluate_partition(partition, &max_release))
-        .collect();
-
-    let selected_partitions_id: Vec<&str> = selected_partitions
-        .iter()
-        .map(|partition| partition.get_id().as_str())
-        .collect();
-
-    let (major, minor, patch, release) = {
+    let (
+        major, 
+        minor, 
+        patch, 
+        release,
+        selected_partitions,
+        selected_partitions_id
+    ) = {
         let mut patch: usize = 0;
         let mut minor: usize = 0;
         let mut major: usize = 0;
         let mut release: usize = 0;
+        let mut selected_partitions: Vec<&Partition> = Vec::new();
+        let mut selected_partitions_id: Vec<&str> = Vec::new();
+
 
         for partition in &partitions {
             let id = partition.get_id();
@@ -129,9 +129,14 @@ fn main() {
                 SemanticVersion::Patch  => patch += updates_count,
                 SemanticVersion::Repack => release += updates_count,
             }
+
+            if evaluate_partition(partition, &max_release) {
+                selected_partitions.push(partition);
+                selected_partitions_id.push(id);
+            }
         }
 
-        (major, minor, patch, release)
+        (major, minor, patch, release, selected_partitions, selected_partitions_id)
     };
 
     for partition in &selected_partitions {
