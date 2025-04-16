@@ -137,19 +137,6 @@ impl<'a> ModelBuilder<'a> {
         }
 
         pub fn build(self) -> (Vec<Partition>, HashMap<String, Vec<Update>>) {
-                let partitions: Vec<Partition> = self.partitions_severity
-                        .iter()
-                        .map(|(id, severity)| {
-                                let date = self.partitions_date.get(id).unwrap();
-                                let release_type = self.partitions_type.get(id).unwrap();
-
-                                Partition::new(
-                                        id.to_string(), release_type.clone(), 
-                                        severity.clone(), *date
-                                )
-                        })
-                        .collect();
-
                 let updates: HashMap<String, Vec<Update>> = 
                         self.updates_list.iter()
                         .fold(HashMap::new(), |mut result, elem| {
@@ -162,6 +149,21 @@ impl<'a> ModelBuilder<'a> {
 
                                 result
                         });
+                
+                let partitions: Vec<Partition> = self.partitions_severity
+                        .iter()
+                        .filter(|(id, _)| updates.contains_key(**id))
+                        .map(|(id, severity)| {
+                                        let date = self.partitions_date.get(id).unwrap();
+                                        let release_type = self.partitions_type.get(id).unwrap();
+
+                                        Partition::new(
+                                                id.to_string(), release_type.clone(), 
+                                                severity.clone(), *date
+                                        )
+                        })
+                        .collect();
+
 
                 (partitions, updates)
         }

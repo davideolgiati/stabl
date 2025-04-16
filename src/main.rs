@@ -121,7 +121,7 @@ fn main() {
 
         for partition in &partitions {
             let id = partition.get_id();
-            let updates_count = updates.get(id).unwrap().len();
+            let updates_count = updates.get(id).unwrap().len(); // BUG: potrebbe non esserci nessun aggiornamento associato all'id 
 
             match partition.get_release_type() {
                 SemanticVersion::Major  => major += updates_count,
