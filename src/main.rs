@@ -41,9 +41,7 @@ fn main() {
     
     debug!(logger, "stabl started!");
     
-    let max_release: SemanticVersion = args::get_release_arg(
-        &input_args, SemanticVersion::Patch
-    );
+    let max_release: SemanticVersion = args::get_release_arg(&input_args[1]);
 
     debug!(logger, "Release upper limit for version bump set to {}", max_release);
     
