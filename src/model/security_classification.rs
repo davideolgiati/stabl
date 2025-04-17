@@ -1,4 +1,3 @@
-use std::str::FromStr;
 use std::fmt::{self, Display, Formatter};
 
 #[derive(Clone, PartialEq, PartialOrd, Debug)]
@@ -10,19 +9,17 @@ pub enum SecurityClassification {
     Critical
 }
 
-impl FromStr for SecurityClassification {
-    type Err = String;
-
-    fn from_str(input: &str) -> Result<SecurityClassification, Self::Err> {
+impl<'a> From<&'a str> for SecurityClassification {
+    fn from(input: &'a str) -> Self {
         assert!(!input.is_empty());
 
         match &*input.to_lowercase() {
-            "critical"      => Ok(SecurityClassification::Critical),
-            "important"     => Ok(SecurityClassification::Important),
-            "moderate"      => Ok(SecurityClassification::Moderate),
-            "low"           => Ok(SecurityClassification::Low),
-            "none"          => Ok(SecurityClassification::None),
-            _               => Err(format!("'{}' is not a valid value for Severity", input)),
+            "critical"      => SecurityClassification::Critical,
+            "important"     => SecurityClassification::Important,
+            "moderate"      => SecurityClassification::Moderate,
+            "low"           => SecurityClassification::Low,
+            "none"          => SecurityClassification::None,
+            _               => panic!("'{}' is not a valid value for SecurityClassification", input),
         }
     }
 }
@@ -47,7 +44,7 @@ mod tests {
     fn happy_path_severity_critical() {
         let input: &str = "critical";
         let expected: SecurityClassification = SecurityClassification::Critical;
-        let output = SecurityClassification::from_str(input).unwrap();
+        let output = SecurityClassification::from(input);
 
         assert_eq!(output, expected);
     }
@@ -56,7 +53,7 @@ mod tests {
     fn happy_path_severity_important() {
         let input: &str = "important";
         let expected: SecurityClassification = SecurityClassification::Important;
-        let output = SecurityClassification::from_str(input).unwrap();
+        let output = SecurityClassification::from(input);
 
         assert_eq!(output, expected);
     }
@@ -65,7 +62,7 @@ mod tests {
     fn happy_path_severity_moderate() {
         let input: &str = "moderate";
         let expected: SecurityClassification = SecurityClassification::Moderate;
-        let output = SecurityClassification::from_str(input).unwrap();
+        let output = SecurityClassification::from(input);
 
         assert_eq!(output, expected);
     }
@@ -74,7 +71,7 @@ mod tests {
     fn happy_path_severity_low() {
         let input: &str = "low";
         let expected: SecurityClassification = SecurityClassification::Low;
-        let output = SecurityClassification::from_str(input).unwrap();
+        let output = SecurityClassification::from(input);
 
         assert_eq!(output, expected);
     }
@@ -83,7 +80,7 @@ mod tests {
     fn happy_path_severity_none() {
         let input: &str = "none";
         let expected: SecurityClassification = SecurityClassification::None;
-        let output = SecurityClassification::from_str(input).unwrap();
+        let output = SecurityClassification::from(input);
 
         assert_eq!(output, expected);
     }
@@ -92,7 +89,7 @@ mod tests {
     fn print_critical() {
         let input: &str = "critical";
         let expected: &str = "CRITICAL";
-        let output = SecurityClassification::from_str(input).unwrap();
+        let output = SecurityClassification::from(input);
 
         assert_eq!(format!("{}", output), expected);
     }
@@ -101,7 +98,7 @@ mod tests {
     fn print_important() {
         let input: &str = "important";
         let expected: &str = "IMPORTANT";
-        let output = SecurityClassification::from_str(input).unwrap();
+        let output = SecurityClassification::from(input);
 
         assert_eq!(format!("{}", output), expected);
     }
@@ -110,7 +107,7 @@ mod tests {
     fn print_moderate() {
         let input: &str = "moderate";
         let expected: &str = "MODERATE";
-        let output = SecurityClassification::from_str(input).unwrap();
+        let output = SecurityClassification::from(input);
 
         assert_eq!(format!("{}", output), expected);
     }
@@ -119,7 +116,7 @@ mod tests {
     fn print_low() {
         let input: &str = "low";
         let expected: &str = "LOW";
-        let output = SecurityClassification::from_str(input).unwrap();
+        let output = SecurityClassification::from(input);
 
         assert_eq!(format!("{}", output), expected);
     }
@@ -128,23 +125,22 @@ mod tests {
     fn print_none() {
         let input: &str = "none";
         let expected: &str = "NONE";
-        let output = SecurityClassification::from_str(input).unwrap();
+        let output = SecurityClassification::from(input);
 
         assert_eq!(format!("{}", output), expected);
     }
 
     #[test]
+    #[should_panic]
     fn panic_unknown_string() {
         let input: &str = "major";
-        let output = SecurityClassification::from_str(input);
-
-        assert!(output.is_err(), "'major' is not a valid value for Severity");
+        let _ = SecurityClassification::from(input);
     }
 
     #[test]
     #[should_panic]
     fn panic_empty_string() {
-        SecurityClassification::from_str("").unwrap();
+        let _ = SecurityClassification::from("");
     }
 }
     

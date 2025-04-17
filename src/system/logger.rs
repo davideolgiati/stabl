@@ -1,3 +1,8 @@
+use chrono::DateTime;
+use chrono::Utc;
+use std::time::SystemTime;
+use chrono::format::SecondsFormat;
+
 #[derive(PartialEq, PartialOrd, Clone, Copy)]
 pub enum LoggingLevel {
     Trace,
@@ -21,13 +26,18 @@ impl Logger {
         }
 }
 
+pub fn get_current_ts_string() -> String {
+        let current_ts = DateTime::<Utc>::from(SystemTime::now());
+        current_ts.to_rfc3339_opts(SecondsFormat::Millis, true)
+}
+
 #[macro_export]
 macro_rules! trace {
         ($logger:expr, $($args:tt)*) => {
                 if($logger.get_level() == $crate::system::logger::LoggingLevel::Trace) {
                         print!(
-                                "{:<35} [\x1b[1mTRACE\x1b[0m] ", 
-                                chrono::DateTime::<chrono::Utc>::from(std::time::SystemTime::now()).to_rfc3339()
+                                "{:<24}  [\x1b[1mTRACE\x1b[0m]  ", 
+                                $crate::system::logger::get_current_ts_string()
                         );
                         println!($($args)*);
                 }
@@ -39,8 +49,8 @@ macro_rules! debug {
         ($logger:expr, $($args:tt)*) => {
                 if($logger.get_level() <= $crate::system::logger::LoggingLevel::Debug) {
                         print!(
-                                "{:<35} [\x1b[97;1mDEBUG\x1b[0m] ", 
-                                chrono::DateTime::<chrono::Utc>::from(std::time::SystemTime::now()).to_rfc3339()
+                                "{:<24}  [\x1b[97;1mDEBUG\x1b[0m]  ", 
+                                $crate::system::logger::get_current_ts_string()
                         );
                         println!($($args)*);
                 }
@@ -52,8 +62,8 @@ macro_rules! info {
         ($logger:expr, $($args:tt)*) => {
                 if($logger.get_level() <= $crate::system::logger::LoggingLevel::Info) {
                         print!(
-                                "{:<35} [\x1b[94;1mINFO\x1b[0m ] ", 
-                                chrono::DateTime::<chrono::Utc>::from(std::time::SystemTime::now()).to_rfc3339()
+                                "{:<24}  [\x1b[94;1mINFO\x1b[0m ]  ", 
+                                $crate::system::logger::get_current_ts_string()
                         );
                         println!($($args)*);
                 }
@@ -65,8 +75,8 @@ macro_rules! warn {
         ($logger:expr, $($args:tt)*) => {
                 if($logger.get_level() <= $crate::system::logger::LoggingLevel::Warn) {
                         print!(
-                                "{:<35} [\x1b[93;1mWARN\x1b[0m ] ",
-                                chrono::DateTime::<chrono::Utc>::from(std::time::SystemTime::now()).to_rfc3339()
+                                "{:<24}  [\x1b[93;1mWARN\x1b[0m ]  ",
+                                $crate::system::logger::get_current_ts_string()
                         );
                         println!($($args)*);
                 }
@@ -78,8 +88,8 @@ macro_rules! error {
         ($logger:expr, $($args:tt)*) => {
                 if($logger.get_level() <= $crate::system::logger::LoggingLevel::Error) {
                         print!(
-                                "{:<35} [\x1b[91;1mERROR\x1b[0m] ",
-                                chrono::DateTime::<chrono::Utc>::from(std::time::SystemTime::now()).to_rfc3339()
+                                "{:<24}  [\x1b[91;1mERROR\x1b[0m]  ",
+                                $crate::system::logger::get_current_ts_string()
                         );
                         println!($($args)*);
                 }

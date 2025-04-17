@@ -12,13 +12,12 @@ use super::{
         semantic_version::SemanticVersion, 
         security_classification::SecurityClassification
 };
-use std::str::FromStr;
 
 #[derive(Default)]
 pub struct ModelBuilder<'a>{
-        partitions_severity: HashMap<&'a str, SecurityClassification>,
-        partitions_type: HashMap<&'a str, SemanticVersion>,
-        partitions_date: HashMap<&'a str, DateTime<Utc>>,
+        partitions_severities: HashMap<&'a str, SecurityClassification>,
+        partitions_release_types: HashMap<&'a str, SemanticVersion>,
+        partitions_publication_datetimes: HashMap<&'a str, DateTime<Utc>>,
         updates_by_partition: HashMap<&'a str, &'a str>,
         packages_details: HashMap<&'a str, (&'a str, VersionTag)>,
         updates_list: Vec<Update>
@@ -29,43 +28,41 @@ impl<'a> ModelBuilder<'a> {
                 Self::default()
         }
 
-        fn update_partition_details(
-                &mut self, id: &'a str, 
-                severity: &SecurityClassification, 
-                release_ts: &DateTime<Utc>, 
-                release_type: &SemanticVersion
-        ) {
-                if !self.partitions_date.contains_key(id) {
-                        self.partitions_date.insert(id, *release_ts);
-                } else {
-                        let current_release_ts: &DateTime<Utc> = 
-                                self.partitions_date.get(id).unwrap();
+        fn update_severity(&mut self, partition_id: &'a str, new_severity_level_str: &str) {
+                let new_severity_level: SecurityClassification = SecurityClassification::from(new_severity_level_str);
 
-                        if release_ts > current_release_ts {
-                                *self.partitions_date.get_mut(id).unwrap() = *release_ts;
+                if let Some(current_severity_level) = self.partitions_severities.get_mut(partition_id) {
+                        if new_severity_level > *current_severity_level {
+                                *current_severity_level = new_severity_level;
+                        }
+                } else {
+                        self.partitions_severities.insert(partition_id, new_severity_level);
+                }
+        }
+
+        fn update_publish_datetime(&mut self, partition_id: &'a str, new_publish_date_str: &str, new_publish_time_str: &str) {
+                let new_publish_datetime_str: &str = &format!("{} {}", new_publish_date_str, new_publish_time_str);
+                let new_publish_datetime: DateTime<Utc> = NaiveDateTime::parse_from_str(new_publish_datetime_str, "%F %X")
+                        .unwrap().and_utc();
+
+                if let Some(current_publish_datetime ) = self.partitions_publication_datetimes.get_mut(partition_id) {
+                        if new_publish_datetime > *current_publish_datetime {
+                                *current_publish_datetime = new_publish_datetime;
                         } 
-                }
-
-                if !self.partitions_severity.contains_key(id) {
-                        self.partitions_severity.insert(id, severity.clone());
                 } else {
-                        let current_severity: &SecurityClassification = self.partitions_severity
-                                .get(id).unwrap();
-
-                        if severity > current_severity {
-                                *self.partitions_severity.get_mut(id).unwrap() = severity.clone();
-                        }
+                        self.partitions_publication_datetimes.insert(partition_id, new_publish_datetime);
                 }
+        }
 
-                if !self.partitions_type.contains_key(id) {
-                        self.partitions_type.insert(id, release_type.clone());
+        fn update_release_type(&mut self, partition_id: &'a str, new_release_type_str: &str) {
+                let new_release_type: SemanticVersion = SemanticVersion::from(new_release_type_str);
+
+                if let Some(current_release_type ) = self.partitions_release_types.get_mut(partition_id) {
+                        if new_release_type > *current_release_type {
+                                *current_release_type = new_release_type;
+                        } 
                 } else {
-                        let current_release_type: &SemanticVersion = self.partitions_type
-                                .get(id).unwrap();
-
-                        if release_type > current_release_type {
-                                *self.partitions_type.get_mut(id).unwrap() = release_type.clone();
-                        }
+                        self.partitions_release_types.insert(partition_id, new_release_type);
                 }
         }
 
@@ -75,16 +72,17 @@ impl<'a> ModelBuilder<'a> {
                 let splitted_str = split_string(line, " ");
                 assert!(splitted_str.len() == 6);
                 
+                let partition_id: &str = splitted_str[0];
+                let new_release_type_str: &str = splitted_str[1];
+                let new_severity_level_str: &str = splitted_str[2];
                 let signature: &str = splitted_str[3];
-                let partition: &str = splitted_str[0];
-                let release_type: SemanticVersion = SemanticVersion::from(splitted_str[1]);
-                let security_classification: SecurityClassification = SecurityClassification::from_str(splitted_str[2]).unwrap();
-                let datetime: &str = &format!("{} {}", splitted_str[4], splitted_str[5]);
-                let release_ts: DateTime<Utc> = NaiveDateTime::parse_from_str(datetime, "%F %X")
-                        .unwrap().and_utc();
-                
-                self.update_partition_details(partition, &security_classification, &release_ts, &release_type);
-                self.updates_by_partition.insert(signature, partition);
+                let new_publish_date_str: &str = splitted_str[4];
+                let new_publish_time_str: &str = splitted_str[5];
+
+                self.update_release_type(partition_id, new_release_type_str);
+                self.update_severity(partition_id, new_severity_level_str);
+                self.update_publish_datetime(partition_id, new_publish_date_str, new_publish_time_str);
+                self.updates_by_partition.insert(signature, partition_id);
         }
 
         pub fn add_repoquery_output(&mut self, line: &'a str) {
@@ -97,8 +95,6 @@ impl<'a> ModelBuilder<'a> {
                 let name: &str = splitted_str[0];
                 let version_str: &str = splitted_str[1];
                 let release_str: &str = splitted_str[2];
-
-                //println!("[*] {} {}-{}", name, version_str, release_str);
 
                 let version: VersionTag = VersionTag::new(
                         version_str, release_str
@@ -135,13 +131,11 @@ impl<'a> ModelBuilder<'a> {
 
                 let update_detail: &(&str, VersionTag) = self.packages_details.get(name).unwrap();
 
-                //println!("[*] {} {} -> {}", name, current_version, update_detail.1);
-
                 let release: SemanticVersion = compare(&current_version, &update_detail.1);
-                let current_partition_release: &SemanticVersion = self.partitions_type.get(&update_detail.0).unwrap_or_else(|| panic!("{}\n {:?}", update_detail.0, self.partitions_type));
+                let current_partition_release: &SemanticVersion = self.partitions_release_types.get(&update_detail.0).unwrap_or_else(|| panic!("{}\n {:?}", update_detail.0, self.partitions_release_types));
 
                 if &release > current_partition_release {
-                        *self.partitions_type.get_mut(&update_detail.0).unwrap() = release;
+                        *self.partitions_release_types.get_mut(&update_detail.0).unwrap() = release;
                 }
         }
 
@@ -159,12 +153,12 @@ impl<'a> ModelBuilder<'a> {
                                 result
                         });
                 
-                let partitions: Vec<Partition> = self.partitions_severity
+                let partitions: Vec<Partition> = self.partitions_severities
                         .iter()
                         .filter(|(id, _)| updates.contains_key(**id))
                         .map(|(id, severity)| {
-                                        let date = self.partitions_date.get(id).unwrap();
-                                        let release_type = self.partitions_type.get(id).unwrap();
+                                        let date = self.partitions_publication_datetimes.get(id).unwrap();
+                                        let release_type = self.partitions_release_types.get(id).unwrap();
 
                                         Partition::new(
                                                 id.to_string(), release_type.clone(), 
