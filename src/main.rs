@@ -5,6 +5,7 @@ use model::ModelBuilder;
 use model::semantic_version::SemanticVersion;
 
 mod system;
+use system::args::get_verbosity_arg;
 use system::logger::Logger;
 use system::shell;
 use system::dnf::get_repoquery_output;
@@ -33,8 +34,10 @@ fn main() {
     
     ui::display_stabl_logo();
     args::look_for_help(&input_args);
+
+    let verbosity: logger::LoggingLevel = get_verbosity_arg(&input_args);
     
-    let logger: logger::Logger = Logger::new(logger::LoggingLevel::Trace);
+    let logger: logger::Logger = Logger::new(verbosity);
     
     debug!(logger, "stabl started!");
     

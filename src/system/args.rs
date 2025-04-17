@@ -1,4 +1,5 @@
 use crate::model::semantic_version::SemanticVersion;
+use crate::system::logger;
 
 #[inline]
 fn convert_release(arg: &str) -> SemanticVersion {
@@ -8,6 +9,18 @@ fn convert_release(arg: &str) -> SemanticVersion {
                 "--minor"  => SemanticVersion::Minor,
                 "--major"  => SemanticVersion::Major,
                 _ => panic!("Invalid release type")
+        }
+}
+
+#[inline]
+fn convert_verbosity(arg: &str) -> logger::LoggingLevel {
+        match arg {
+                "--trace"  => logger::LoggingLevel::Trace,
+                "--debug" => logger::LoggingLevel::Debug,
+                "--info"  => logger::LoggingLevel::Info,
+                "--warn"  => logger::LoggingLevel::Warn,
+                "--error"  => logger::LoggingLevel::Error,
+                _ => panic!("Invalid verbosity level")
         }
 }
 
@@ -27,6 +40,24 @@ pub fn get_release_arg(args: &[String], default_bump: SemanticVersion) -> Semant
         }
 
         convert_release(release_args.last().unwrap())
+}
+
+pub fn get_verbosity_arg(args: &[String]) -> logger::LoggingLevel {
+        let valid_args: [&str; 5] = ["--trace", "--debug", "--info", "--warn", "--error"];
+
+        let release_args: Vec<String> = args.iter()
+                .filter(|arg| {
+                        let current_args: &str = arg.as_str();
+                        valid_args.contains(&current_args)
+                })
+                .cloned()
+                .collect();
+
+        if release_args.is_empty() {
+                return logger::LoggingLevel::Info
+        }
+
+        convert_verbosity(release_args.last().unwrap())
 }
 
 pub fn look_for_help(args: &[String]) {
