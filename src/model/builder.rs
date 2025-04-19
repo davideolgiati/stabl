@@ -20,10 +20,10 @@ struct PartitionDetails {
 }
 
 struct UpdateinfoOutput<'a> {
-        release_type_str: &'a str,
-        severity_level_str: &'a str,
-        publish_date_str: &'a str,
-        publish_time_str: &'a str,
+        release_type: &'a str,
+        severity_level: &'a str,
+        publish_date: &'a str,
+        publish_time: &'a str,
 }
 
 #[derive(Default)]
@@ -34,62 +34,62 @@ pub struct ModelBuilder<'a>{
         updates_list: Vec<Update>
 }
 
+fn compose_datetime_from_string(date: &str, time: &str) -> DateTime<Utc> {
+        let datetime: &str = &format!("{} {}", date, time);
+        NaiveDateTime::parse_from_str(datetime, "%F %X").unwrap().and_utc()
+}
+
 impl<'a> ModelBuilder<'a> {
         pub fn new() -> ModelBuilder<'a> {
                 Self::default()
         }
 
-        fn update_partition_details(&mut self, partition_id: &'a str, updateinfo_output: UpdateinfoOutput<'a>) {
-                let new_severity_level = SecurityClassification::from(updateinfo_output.severity_level_str);
-
-                let new_release_type = SemanticVersion::from(updateinfo_output.release_type_str);
-
-                let new_publish_datetime_str: &str = &format!(
-                        "{} {}", updateinfo_output.publish_date_str, 
-                        updateinfo_output.publish_time_str
+        fn update_partition_details(&mut self, partition_id: &'a str, updateinfo: UpdateinfoOutput<'a>) {
+                let input_severity_level = SecurityClassification::from(updateinfo.severity_level);
+                let input_release_type = SemanticVersion::from(updateinfo.release_type);
+                let input_publish_datetime = compose_datetime_from_string(
+                        updateinfo.publish_date, 
+                        updateinfo.publish_time
                 );
-                let new_publish_datetime: DateTime<Utc> = NaiveDateTime::parse_from_str(
-                        new_publish_datetime_str, "%F %X"
-                ).unwrap().and_utc();
 
                 if let Some(current_partition_details) = self.partitions.get_mut(partition_id) {
-                        if new_severity_level > current_partition_details.severity {
-                                current_partition_details.severity = new_severity_level;
+                        if input_severity_level > current_partition_details.severity {
+                                current_partition_details.severity = input_severity_level;
                         }
 
-                        if new_release_type > current_partition_details.release_type {
-                                current_partition_details.release_type = new_release_type;
+                        if input_release_type > current_partition_details.release_type {
+                                current_partition_details.release_type = input_release_type;
                         }
 
-                        if new_publish_datetime > current_partition_details.publication_datetime {
-                                current_partition_details.publication_datetime = new_publish_datetime;
+                        if input_publish_datetime > current_partition_details.publication_datetime {
+                                current_partition_details.publication_datetime = input_publish_datetime;
                         }
                 } else {
                         let partition_details = PartitionDetails {
-                                severity: new_severity_level,
-                                release_type: new_release_type,
-                                publication_datetime: new_publish_datetime
+                                severity: input_severity_level,
+                                release_type: input_release_type,
+                                publication_datetime: input_publish_datetime
                         };
 
                         self.partitions.insert(partition_id, partition_details);
                 }
         }
 
-        pub fn add_updateinfo_output_line(&mut self, updateinfo_entry: &'a str) {
-                assert!(!updateinfo_entry.is_empty());
+        pub fn add_updateinfo_output_line(&mut self, updateinfo_stdout: &'a str) {
+                assert!(!updateinfo_stdout.is_empty());
 
-                let tokenized_update_info_entry: Vec<&str> = split_string(updateinfo_entry, " ");
-                assert!(tokenized_update_info_entry.len() == 6);
+                let updateinfo_tokens: Vec<&str> = split_string(updateinfo_stdout, " ");
+                assert!(updateinfo_tokens.len() == 6);
                 
                 let updateinfo_output = UpdateinfoOutput {
-                        release_type_str: tokenized_update_info_entry[1],
-                        severity_level_str: tokenized_update_info_entry[2],
-                        publish_date_str: tokenized_update_info_entry[4],
-                        publish_time_str: tokenized_update_info_entry[5]
+                        release_type: updateinfo_tokens[1],
+                        severity_level: updateinfo_tokens[2],
+                        publish_date: updateinfo_tokens[4],
+                        publish_time: updateinfo_tokens[5]
                 };
 
-                let partition_id = tokenized_update_info_entry[0];
-                let package_signature = tokenized_update_info_entry[3];
+                let partition_id = updateinfo_tokens[0];
+                let package_signature = updateinfo_tokens[3];
                 
                 self.update_partition_details(partition_id, updateinfo_output);
 
@@ -99,26 +99,26 @@ impl<'a> ModelBuilder<'a> {
                 );
         }
 
-        pub fn add_repoquery_output(&mut self, line: &'a str) {
-                assert!(!line.is_empty());
+        pub fn add_repoquery_output(&mut self, repoquery_stdout: &'a str) {
+                assert!(!repoquery_stdout.is_empty());
 
-                let splitted_str: Vec<&str> = split_string(line, "|#|");
+                let repoquery_tokens: Vec<&str> = split_string(repoquery_stdout, "|#|");
 
-                assert!(splitted_str.len() == 5);
+                assert!(repoquery_tokens.len() == 5);
 
-                let name: &str = splitted_str[0];
-                let version_str: &str = splitted_str[1];
-                let release_str: &str = splitted_str[2];
+                let name: &str = repoquery_tokens[0];
+                let version_str: &str = repoquery_tokens[1];
+                let release_str: &str = repoquery_tokens[2];
 
                 let version: VersionTag = VersionTag::new(
                         version_str, release_str
                 );
 
                 let partition = {
-                        if self.updates_by_partition.contains_key(&splitted_str[3]) {
-                                self.updates_by_partition.get(&splitted_str[3])
+                        if self.updates_by_partition.contains_key(&repoquery_tokens[3]) {
+                                self.updates_by_partition.get(&repoquery_tokens[3])
                         } else {
-                                self.updates_by_partition.get(&splitted_str[4])
+                                self.updates_by_partition.get(&repoquery_tokens[4])
                         }
                 }.unwrap();
 
