@@ -11,6 +11,7 @@ use system::shell;
 use system::dnf::get_repoquery_output;
 use system::dnf::get_rpm_output_for_local_packages;
 use system::dnf::get_updateinfo_output;
+use system::args::get_skip_security_updates_arg;
 use system::ui;
 use system::args;
 use system::logger;
@@ -22,11 +23,11 @@ use std::process;
 
 use chrono::Utc;
 
-fn evaluate_partition(partition: &Partition, target_release: &SemanticVersion) -> bool {
+fn evaluate_partition(partition: &Partition, target_release: &SemanticVersion, get_security_updates: bool) -> bool {
     let version_bump_check: bool = target_release >= partition.get_release_type();
     let security_release_check: bool = *partition.get_security_classification() > SecurityClassification::None;
 
-    security_release_check || version_bump_check
+    (get_security_updates && security_release_check) || version_bump_check
 }
 
 fn main() {
@@ -36,14 +37,15 @@ fn main() {
     args::look_for_help(&input_args);
 
     let verbosity: logger::LoggingLevel = get_verbosity_arg(&input_args);
+    let get_security_updates: bool = get_skip_security_updates_arg(&input_args);
     
     let logger: logger::Logger = Logger::new(verbosity);
     
     debug!(logger, "stabl started!");
     
-    let max_release: SemanticVersion = args::get_release_arg(&input_args[1]);
+    let target_release: SemanticVersion = args::get_release_arg(&input_args[1]);
 
-    debug!(logger, "Release upper limit for version bump set to {}", max_release);
+    debug!(logger, "Release upper limit for version bump set to {}", target_release);
     
     info!(logger, "getting updates list from remote...");
     debug!(logger, "get_updateinfo_output(shell::run_command_and_read_stdout) IN");
@@ -131,7 +133,7 @@ fn main() {
                 SemanticVersion::Repack => release += updates_count,
             }
 
-            if evaluate_partition(partition, &max_release) {
+            if evaluate_partition(partition, &target_release, get_security_updates) {
                 selected_partitions.push(partition);
                 selected_partitions_id.push(id);
             }

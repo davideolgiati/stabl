@@ -42,18 +42,27 @@ pub fn get_verbosity_arg(args: &[String]) -> logger::LoggingLevel {
         convert_verbosity(verbosity_args.last().unwrap())
 }
 
+pub fn get_skip_security_updates_arg(args: &[String]) -> bool {
+        let verbosity_args: Vec<String> = args.iter()
+                .filter(|arg| arg.starts_with("--skip-security-updates"))
+                .cloned()
+                .collect();
+
+        verbosity_args.is_empty()
+}
+
 pub fn look_for_help(args: &[String]) {
         if args.contains(&"--help".to_string()){
                 let help:&str = r"          
 Help:
-        stabl major         only major and lower release are considered valid
-        stabl minor         only minor and lower release are considered valid
-        stabl patch         only patch and lower release are considered valid (default)
-        stabl repack        only repack and lower release are considered valid
+        stabl major               only major and lower release are considered valid
+        stabl minor               only minor and lower release are considered valid
+        stabl patch               only patch and lower release are considered valid (default)
+        stabl repack              only repack and lower release are considered valid
         
-        --help              display this help
-        --loglevel=<level>  set satbl verbosity. valid options are: trace, debug, info, warn, error
-    
+        --help                    display this help
+        --loglevel=<level>        set satbl verbosity. valid options are: trace, debug, info, warn, error
+        --skip-security-updates   skip security updates check
         ";
                 println!("{}", help);
                 std::process::exit(0)
