@@ -92,6 +92,28 @@ mod tests {
     use super::*;
     
     #[test]
+    fn happy_path_compare() {
+        let base = VersionTag::new("1.0.0", "0.fc41");
+        let repack = VersionTag::new("1.0.0", "1.fc41");
+        let patch = VersionTag::new("1.0.1", "0.fc41");
+        let minor = VersionTag::new("1.1.0", "0.fc41");
+        let major = VersionTag::new("2.0.0", "0.fc41");
+
+        assert!(compare(&base, &repack) == SemanticVersion::Repack);
+        assert!(compare(&base, &patch) == SemanticVersion::Patch);
+        assert!(compare(&base, &minor) == SemanticVersion::Minor);
+        assert!(compare(&base, &major) == SemanticVersion::Major);
+    }
+
+    #[test]
+    #[should_panic]
+    fn panic_compare_same_version() {
+        let base = VersionTag::new("1.0.0", "0.fc41");
+
+        compare(&base, &base);
+    }
+
+    #[test]
     fn happy_path_new_version_tag_full() {
         let expected_major = "1";
         let expected_minor = "2";
