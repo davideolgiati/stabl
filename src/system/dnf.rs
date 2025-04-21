@@ -80,7 +80,7 @@ impl ArgsBuilder {
 
 
 pub fn get_updateinfo_output<'a>(_shell_cmd: ShellCmdClosure) -> Vec<&'a str> {
-        crate::debug!("get_updateinfo_output(shell::run_command_and_read_stdout) IN");
+        crate::debug!("get_updateinfo_output() IN");
         let start = crate::start_timer!();
 
         let cmd_args = ArgsBuilder::new()
@@ -97,8 +97,8 @@ pub fn get_updateinfo_output<'a>(_shell_cmd: ShellCmdClosure) -> Vec<&'a str> {
         if output.is_empty() {
                 crate::warn!("dnf updateinfo command returned an empty output!");
                 let elapsed = crate::stop_timer!(start);
-                crate::trace!("get_updateinfo_output(shell::run_command_and_read_stdout) ran in {} ms", elapsed);
-                crate::debug!("get_updateinfo_output(shell::run_command_and_read_stdout) OUT");
+                crate::trace!("get_updateinfo_output() ran in {} ms", elapsed);
+                crate::debug!("get_updateinfo_output() OUT");
                 return Vec::new();
         }
         assert!(!output.is_empty());
@@ -112,14 +112,14 @@ pub fn get_updateinfo_output<'a>(_shell_cmd: ShellCmdClosure) -> Vec<&'a str> {
                 .collect();
 
         let elapsed = crate::stop_timer!(start);
-        crate::trace!("get_updateinfo_output(shell::run_command_and_read_stdout) ran in {} ms", elapsed);
-        crate::debug!("get_updateinfo_output(shell::run_command_and_read_stdout) OUT");
+        crate::trace!("get_updateinfo_output() ran in {} ms", elapsed);
+        crate::debug!("get_updateinfo_output() OUT");
 
         result
 }
 
 pub fn get_repoquery_output<'a>(updates_list: &[&str], _shell_cmd: ShellCmdClosure) -> Vec<&'a str> {
-        crate::debug!("get_repoquery_output(&dnf_updates_list, shell::run_command_and_read_stdout) IN");
+        crate::debug!("get_repoquery_output() IN");
         let start = crate::start_timer!();
         assert!(!updates_list.is_empty());
         
@@ -142,8 +142,8 @@ pub fn get_repoquery_output<'a>(updates_list: &[&str], _shell_cmd: ShellCmdClosu
         if output.is_empty() {
                 crate::warn!("dnf repoquery command returned an empty output!");
                 let elapsed = crate::stop_timer!(start);
-                crate::debug!("get_repoquery_output(&dnf_updates_list, shell::run_command_and_read_stdout) OUT");
-                crate::trace!("get_repoquery_output(&dnf_updates_list, shell::run_command_and_read_stdout) ran in {} ms", elapsed);
+                crate::debug!("get_repoquery_output() OUT");
+                crate::trace!("get_repoquery_output() ran in {} ms", elapsed);
                 return Vec::new();
         }
 
@@ -158,13 +158,16 @@ pub fn get_repoquery_output<'a>(updates_list: &[&str], _shell_cmd: ShellCmdClosu
         }
 
         let elapsed = crate::stop_timer!(start);
-        crate::debug!("get_repoquery_output(&dnf_updates_list, shell::run_command_and_read_stdout) OUT");
-        crate::trace!("get_repoquery_output(&dnf_updates_list, shell::run_command_and_read_stdout) ran in {} ms", elapsed);
+        crate::debug!("get_repoquery_output() OUT");
+        crate::trace!("get_repoquery_output() ran in {} ms", elapsed);
 
         result
 }
 
 pub fn get_rpm_output_for_local_packages<'a>(updates_list: &[&str], _shell_cmd: ShellCmdClosure) -> Vec<&'a str> {
+        crate::debug!("get_rpm_output_for_local_packages() IN");
+        let start = crate::start_timer!();
+
         assert!(!updates_list.is_empty());
 
         let installed: Vec<&str> = split_filter_and_deduplicate_string_list(
@@ -182,13 +185,23 @@ pub fn get_rpm_output_for_local_packages<'a>(updates_list: &[&str], _shell_cmd: 
         let output = _shell_cmd("rpm", &cmd_args);
 
         if output.is_empty() {
+                crate::warn!("rpm -q command returned an empty output!");
+                let elapsed = crate::stop_timer!(start);
+                crate::debug!("get_rpm_output_for_local_packages() OUT");
+                crate::trace!("get_rpm_output_for_local_packages() ran in {} ms", elapsed);
                 return Vec::new();
         }
 
         assert!(!output.is_empty());
 
         let output: &str = Box::leak(output.into_boxed_str());
-        split_string(output, "\n").to_vec()
+        let result = split_string(output, "\n").to_vec();
+
+        let elapsed = crate::stop_timer!(start);
+        crate::debug!("get_rpm_output_for_local_packages() OUT");
+        crate::trace!("get_rpm_output_for_local_packages() ran in {} ms", elapsed);
+
+        result
 }
 
 #[cfg(test)]
