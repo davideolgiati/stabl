@@ -96,6 +96,9 @@ pub fn get_updateinfo_output<'a>(_shell_cmd: ShellCmdClosure) -> Vec<&'a str> {
 
         if output.is_empty() {
                 crate::warn!("dnf updateinfo command returned an empty output!");
+                let elapsed = crate::stop_timer!(start);
+                crate::trace!("get_updateinfo_output(shell::run_command_and_read_stdout) ran in {} ms", elapsed);
+                crate::debug!("get_updateinfo_output(shell::run_command_and_read_stdout) OUT");
                 return Vec::new();
         }
         assert!(!output.is_empty());
@@ -116,6 +119,8 @@ pub fn get_updateinfo_output<'a>(_shell_cmd: ShellCmdClosure) -> Vec<&'a str> {
 }
 
 pub fn get_repoquery_output<'a>(updates_list: &[&str], _shell_cmd: ShellCmdClosure) -> Vec<&'a str> {
+        crate::debug!("get_repoquery_output(&dnf_updates_list, shell::run_command_and_read_stdout) IN");
+        let start = crate::start_timer!();
         assert!(!updates_list.is_empty());
         
         let updates: Vec<&str> = split_filter_and_deduplicate_string_list(
@@ -135,6 +140,10 @@ pub fn get_repoquery_output<'a>(updates_list: &[&str], _shell_cmd: ShellCmdClosu
         let output = _shell_cmd("dnf", &cmd_args);
 
         if output.is_empty() {
+                crate::warn!("dnf repoquery command returned an empty output!");
+                let elapsed = crate::stop_timer!(start);
+                crate::debug!("get_repoquery_output(&dnf_updates_list, shell::run_command_and_read_stdout) OUT");
+                crate::trace!("get_repoquery_output(&dnf_updates_list, shell::run_command_and_read_stdout) ran in {} ms", elapsed);
                 return Vec::new();
         }
 
@@ -142,7 +151,17 @@ pub fn get_repoquery_output<'a>(updates_list: &[&str], _shell_cmd: ShellCmdClosu
 
         let stdout: &str = Box::leak(output.into_boxed_str());
         
-        split_string(stdout, "\n").to_vec()
+        let result = split_string(stdout, "\n").to_vec();
+
+        if result.len() != updates_list.len() {
+                crate::warn!("Mismatch between input and output update count. IN: {} OUT: {}", updates_list.len(), result.len())
+        }
+
+        let elapsed = crate::stop_timer!(start);
+        crate::debug!("get_repoquery_output(&dnf_updates_list, shell::run_command_and_read_stdout) OUT");
+        crate::trace!("get_repoquery_output(&dnf_updates_list, shell::run_command_and_read_stdout) ran in {} ms", elapsed);
+
+        result
 }
 
 pub fn get_rpm_output_for_local_packages<'a>(updates_list: &[&str], _shell_cmd: ShellCmdClosure) -> Vec<&'a str> {

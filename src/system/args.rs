@@ -92,7 +92,7 @@ mod tests {
     #[test]
     fn happy_path_get_release_arg_patch() {
         let expected: SemanticVersion = SemanticVersion::Patch;
-        let input: &[String] = ["stabl", "patch"];
+        let input: &[String] = &["stabl".to_string(), "patch".to_string()];
 
         let output = get_release_arg(input);
 
@@ -102,17 +102,17 @@ mod tests {
     #[test]
     fn happy_path_get_release_arg_repack() {
         let expected: SemanticVersion = SemanticVersion::Repack;
-        let input: &[String] = ["stabl", "repack"];
-
+        let input: &[String] = &["stabl".to_string(), "repack".to_string()];
+    
         let output = get_release_arg(input);
-
+    
         assert!(expected == output)
     }
 
     #[test]
     fn happy_path_get_release_arg_minor() {
         let expected: SemanticVersion = SemanticVersion::Minor;
-        let input: &[String] = ["stabl", "minor"];
+        let input: &[String] = &["stabl".to_string(), "minor".to_string()];
 
         let output = get_release_arg(input);
 
@@ -122,7 +122,7 @@ mod tests {
     #[test]
     fn happy_path_get_release_arg_major() {
         let expected: SemanticVersion = SemanticVersion::Major;
-        let input: &[String] = ["stabl", "major"];
+        let input: &[String] = &["stabl".to_string(), "major".to_string()];
 
         let output = get_release_arg(input);
 
@@ -132,7 +132,7 @@ mod tests {
     #[test]
     #[should_panic]
     fn should_panic_get_release_arg() {
-        let input: &[String] = ["stabl",  "bugfix";
+        let input: &[String] = &["stabl".to_string(),  "bugfix".to_string()];
         get_release_arg(input);
     }
 
