@@ -80,6 +80,9 @@ impl ArgsBuilder {
 
 
 pub fn get_updateinfo_output<'a>(_shell_cmd: ShellCmdClosure) -> Vec<&'a str> {
+        crate::debug!("get_updateinfo_output(shell::run_command_and_read_stdout) IN");
+        let start = crate::start_timer!();
+
         let cmd_args = ArgsBuilder::new()
                 .add_base_arg("updateinfo")
                 .add_base_arg("list")
@@ -92,17 +95,24 @@ pub fn get_updateinfo_output<'a>(_shell_cmd: ShellCmdClosure) -> Vec<&'a str> {
         let output = _shell_cmd("dnf", &cmd_args);
 
         if output.is_empty() {
+                crate::warn!("dnf updateinfo command returned an empty output!");
                 return Vec::new();
         }
         assert!(!output.is_empty());
 
         let output = Box::leak(output.into_boxed_str());
 
-        split_string(output, "\n")
+        let result = split_string(output, "\n")
                 .iter()
                 .skip(1)
                 .copied()
-                .collect()
+                .collect();
+
+        let elapsed = crate::stop_timer!(start);
+        crate::trace!("get_updateinfo_output(shell::run_command_and_read_stdout) ran in {} ms", elapsed);
+        crate::debug!("get_updateinfo_output(shell::run_command_and_read_stdout) OUT");
+
+        result
 }
 
 pub fn get_repoquery_output<'a>(updates_list: &[&str], _shell_cmd: ShellCmdClosure) -> Vec<&'a str> {

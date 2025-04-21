@@ -43,16 +43,11 @@ fn main() {
     debug!("stabl started!");
     
     let target_release: SemanticVersion = args::get_release_arg(&input_args[1]);
-
     debug!("Release upper limit for version bump set to {}", target_release);
     
     info!("getting updates list from remote...");
-    debug!("get_updateinfo_output(shell::run_command_and_read_stdout) IN");
-    let start = start_timer!();
+
     let dnf_updates_list: Vec<&str> = get_updateinfo_output(shell::run_command_and_read_stdout);
-    let elapsed = stop_timer!(start);
-    debug!("get_updateinfo_output(shell::run_command_and_read_stdout) OUT");
-    trace!("get_updateinfo_output(shell::run_command_and_read_stdout) ran in {} ms", elapsed);
 
     if dnf_updates_list.is_empty() {
         info!("\nno suggested updates found\n\n");
