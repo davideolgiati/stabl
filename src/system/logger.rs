@@ -2,6 +2,8 @@ use chrono::DateTime;
 use chrono::Utc;
 use std::time::SystemTime;
 use chrono::format::SecondsFormat;
+use lazy_static::lazy_static;
+use std::sync::Mutex;
 
 #[derive(PartialEq, PartialOrd, Clone, Copy)]
 pub enum LoggingLevel {
@@ -12,18 +14,16 @@ pub enum LoggingLevel {
     Error
 }
 
-pub struct Logger {
-        level: LoggingLevel
+lazy_static! {
+    static ref LOGGER: Mutex<Vec<LoggingLevel>> = Mutex::new(Vec::new());
 }
 
-impl Logger {
-        pub fn new(level: LoggingLevel) -> Logger {
-                Logger { level }
-        }
+pub fn set_logging_level(level: LoggingLevel) {
+        LOGGER.lock().unwrap().push(level);
+}
 
-        pub fn get_level(&self) -> LoggingLevel {
-                self.level
-        }
+pub fn get_logging_level() -> LoggingLevel {
+        *LOGGER.lock().unwrap().last().unwrap_or(&LoggingLevel::Info)
 }
 
 pub fn get_current_ts_string() -> String {
@@ -33,8 +33,8 @@ pub fn get_current_ts_string() -> String {
 
 #[macro_export]
 macro_rules! trace {
-        ($logger:expr, $($args:tt)*) => {
-                if($logger.get_level() == $crate::system::logger::LoggingLevel::Trace) {
+        ($($args:tt)*) => {
+                if($crate::system::logger::get_logging_level() == $crate::system::logger::LoggingLevel::Trace) {
                         print!(
                                 "{:<24}  [\x1b[1mTRACE\x1b[0m]  ", 
                                 $crate::system::logger::get_current_ts_string()
@@ -46,8 +46,8 @@ macro_rules! trace {
 
 #[macro_export]
 macro_rules! debug {
-        ($logger:expr, $($args:tt)*) => {
-                if($logger.get_level() <= $crate::system::logger::LoggingLevel::Debug) {
+        ($($args:tt)*) => {
+                if($crate::system::logger::get_logging_level() <= $crate::system::logger::LoggingLevel::Debug) {
                         print!(
                                 "{:<24}  [\x1b[97;1mDEBUG\x1b[0m]  ", 
                                 $crate::system::logger::get_current_ts_string()
@@ -59,8 +59,8 @@ macro_rules! debug {
 
 #[macro_export]
 macro_rules! info {
-        ($logger:expr, $($args:tt)*) => {
-                if($logger.get_level() <= $crate::system::logger::LoggingLevel::Info) {
+        ($($args:tt)*) => {
+                if($crate::system::logger::get_logging_level()  <= $crate::system::logger::LoggingLevel::Info) {
                         print!(
                                 "{:<24}  [\x1b[94;1mINFO\x1b[0m ]  ", 
                                 $crate::system::logger::get_current_ts_string()
@@ -72,8 +72,8 @@ macro_rules! info {
 
 #[macro_export]
 macro_rules! warn {
-        ($logger:expr, $($args:tt)*) => {
-                if($logger.get_level() <= $crate::system::logger::LoggingLevel::Warn) {
+        ($($args:tt)*) => {
+                if($crate::system::logger::get_logging_level()  <= $crate::system::logger::LoggingLevel::Warn) {
                         print!(
                                 "{:<24}  [\x1b[93;1mWARN\x1b[0m ]  ",
                                 $crate::system::logger::get_current_ts_string()
@@ -85,8 +85,8 @@ macro_rules! warn {
 
 #[macro_export]
 macro_rules! error {
-        ($logger:expr, $($args:tt)*) => {
-                if($logger.get_level() <= $crate::system::logger::LoggingLevel::Error) {
+        ($($args:tt)*) => {
+                if($crate::system::logger::get_logging_level() <= $crate::system::logger::LoggingLevel::Error) {
                         print!(
                                 "{:<24}  [\x1b[91;1mERROR\x1b[0m]  ",
                                 $crate::system::logger::get_current_ts_string()

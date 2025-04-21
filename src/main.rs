@@ -6,7 +6,6 @@ use model::semantic_version::SemanticVersion;
 
 mod system;
 use system::args::get_verbosity_arg;
-use system::logger::Logger;
 use system::shell;
 use system::dnf::get_repoquery_output;
 use system::dnf::get_rpm_output_for_local_packages;
@@ -29,72 +28,72 @@ fn evaluate_partition(partition: &Partition, target_release: &SemanticVersion, g
 
     (get_security_updates && security_release_check) || version_bump_check
 }
-
 fn main() {
     let input_args: Vec<String> = env::args().collect();
     
     ui::display_stabl_logo();
     args::look_for_help(&input_args);
+    args::look_for_help(&input_args);
 
     let verbosity: logger::LoggingLevel = get_verbosity_arg(&input_args);
     let get_security_updates: bool = get_skip_security_updates_arg(&input_args);
     
-    let logger: logger::Logger = Logger::new(verbosity);
+    crate::system::logger::set_logging_level(verbosity);
     
-    debug!(logger, "stabl started!");
+    debug!("stabl started!");
     
     let target_release: SemanticVersion = args::get_release_arg(&input_args[1]);
 
-    debug!(logger, "Release upper limit for version bump set to {}", target_release);
+    debug!("Release upper limit for version bump set to {}", target_release);
     
-    info!(logger, "getting updates list from remote...");
-    debug!(logger, "get_updateinfo_output(shell::run_command_and_read_stdout) IN");
+    info!("getting updates list from remote...");
+    debug!("get_updateinfo_output(shell::run_command_and_read_stdout) IN");
     let start = start_timer!();
     let dnf_updates_list: Vec<&str> = get_updateinfo_output(shell::run_command_and_read_stdout);
     let elapsed = stop_timer!(start);
-    debug!(logger, "get_updateinfo_output(shell::run_command_and_read_stdout) OUT");
-    trace!(logger, "get_updateinfo_output(shell::run_command_and_read_stdout) ran in {} ms", elapsed);
+    debug!("get_updateinfo_output(shell::run_command_and_read_stdout) OUT");
+    trace!("get_updateinfo_output(shell::run_command_and_read_stdout) ran in {} ms", elapsed);
 
     if dnf_updates_list.is_empty() {
-        info!(logger, "\nno suggested updates found\n\n");
+        info!("\nno suggested updates found\n\n");
         process::exit(0);
     }
-    info!(logger, "found {} updates from remote repository", dnf_updates_list.len());
+    info!("found {} updates from remote repository", dnf_updates_list.len());
 
-    info!(logger, "getting details from repository for updates ...");
-    debug!(logger, "get_repoquery_output(&dnf_updates_list, shell::run_command_and_read_stdout) IN");
+    info!("getting details from repository for updates ...");
+    debug!("get_repoquery_output(&dnf_updates_list, shell::run_command_and_read_stdout) IN");
     let start = start_timer!();
     let repository_update_details: Vec<&str> = get_repoquery_output(
         &dnf_updates_list, shell::run_command_and_read_stdout
     );
     let elapsed = stop_timer!(start);
-    debug!(logger, "get_repoquery_output(&dnf_updates_list, shell::run_command_and_read_stdout) OUT");
-    trace!(logger, "get_repoquery_output(&dnf_updates_list, shell::run_command_and_read_stdout) ran in {} ms", elapsed);
+    debug!("get_repoquery_output(&dnf_updates_list, shell::run_command_and_read_stdout) OUT");
+    trace!("get_repoquery_output(&dnf_updates_list, shell::run_command_and_read_stdout) ran in {} ms", elapsed);
 
     if repository_update_details.is_empty() {
-        info!(logger, "\nno details found for suggested updates in repository\n\n");
+        info!("\nno details found for suggested updates in repository\n\n");
         process::exit(0);
     }
-    info!(logger, "found {} unique updates details from remote repository", repository_update_details.len());
+    info!("found {} unique updates details from remote repository", repository_update_details.len());
 
-    info!(logger, "getting details from installed packages ...");
-    debug!(logger, "get_rpm_output_for_local_packages(&repository_update_details, shell::run_command_and_read_stdout) IN");
+    info!("getting details from installed packages ...");
+    debug!("get_rpm_output_for_local_packages(&repository_update_details, shell::run_command_and_read_stdout) IN");
     let start = start_timer!();
     let packages_names: Vec<&str> = get_rpm_output_for_local_packages(
         &repository_update_details, 
         shell::run_command_and_read_stdout
     );
     let elapsed = stop_timer!(start);
-    debug!(logger, "get_rpm_output_for_local_packages(&repository_update_details, shell::run_command_and_read_stdout) OUT");
-    trace!(logger, "get_rpm_output_for_local_packages(&repository_update_details, shell::run_command_and_read_stdout) ran in {} ms", elapsed);
+    debug!("get_rpm_output_for_local_packages(&repository_update_details, shell::run_command_and_read_stdout) OUT");
+    trace!("get_rpm_output_for_local_packages(&repository_update_details, shell::run_command_and_read_stdout) ran in {} ms", elapsed);
     
     if packages_names.is_empty() {
-        info!(logger, "\nno installed packages fuond for suggested updates\n\n");
+        info!("\nno installed packages fuond for suggested updates\n\n");
         process::exit(0);
     }
-    info!(logger, "found details from {} installed packages", packages_names.len());
+    info!("found details from {} installed packages", packages_names.len());
 
-    info!(logger, "enriching updates with additional informations...");
+    info!("enriching updates with additional informations...");
 
     let (partitions, updates) = {
         let mut data_model: ModelBuilder<'_> = ModelBuilder::new();
