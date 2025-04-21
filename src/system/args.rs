@@ -8,7 +8,10 @@ fn convert_release(arg: &str) -> SemanticVersion {
                 "repack" => SemanticVersion::Repack,
                 "minor"  => SemanticVersion::Minor,
                 "major"  => SemanticVersion::Major,
-                _ => panic!("Invalid release type - {}", arg)
+                _ => { 
+                        crate::error!("Invalid release type - {}", arg);
+                        std::process::exit(1)
+                }
         }
 }
 
@@ -21,11 +24,22 @@ fn convert_verbosity(arg: &str) -> logger::LoggingLevel {
                 "info"  => logger::LoggingLevel::Info,
                 "warn"  => logger::LoggingLevel::Warn,
                 "error"  => logger::LoggingLevel::Error,
-                _ => panic!("Invalid verbosity level - {}", parsed_arg)
+                _ => { 
+                        crate::error!("Invalid verbosity level - {}", arg);
+                        std::process::exit(1)
+                }
         }
 }
 
-pub fn get_release_arg(release_arg: &str) -> SemanticVersion {
+pub fn get_release_arg(release_args: &[String]) -> SemanticVersion {
+        let release_arg: &str = {
+                if release_args.len() >= 2 {
+                        &release_args[1]
+                } else {
+                        ""
+                }
+        };
+
         convert_release(release_arg)
 }
 
@@ -78,7 +92,7 @@ mod tests {
     #[test]
     fn happy_path_get_release_arg_patch() {
         let expected: SemanticVersion = SemanticVersion::Patch;
-        let input: &str = "patch";
+        let input: &[String] = ["stabl", "patch"];
 
         let output = get_release_arg(input);
 
@@ -88,7 +102,7 @@ mod tests {
     #[test]
     fn happy_path_get_release_arg_repack() {
         let expected: SemanticVersion = SemanticVersion::Repack;
-        let input: &str = "repack";
+        let input: &[String] = ["stabl", "repack"];
 
         let output = get_release_arg(input);
 
@@ -98,7 +112,7 @@ mod tests {
     #[test]
     fn happy_path_get_release_arg_minor() {
         let expected: SemanticVersion = SemanticVersion::Minor;
-        let input: &str = "minor";
+        let input: &[String] = ["stabl", "minor"];
 
         let output = get_release_arg(input);
 
@@ -108,7 +122,7 @@ mod tests {
     #[test]
     fn happy_path_get_release_arg_major() {
         let expected: SemanticVersion = SemanticVersion::Major;
-        let input: &str = "major";
+        let input: &[String] = ["stabl", "major"];
 
         let output = get_release_arg(input);
 
@@ -118,7 +132,7 @@ mod tests {
     #[test]
     #[should_panic]
     fn should_panic_get_release_arg() {
-        let input: &str = "bugfix";
+        let input: &[String] = ["stabl",  "bugfix";
         get_release_arg(input);
     }
 

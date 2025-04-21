@@ -33,7 +33,6 @@ fn main() {
     
     ui::display_stabl_logo();
     args::look_for_help(&input_args);
-    args::look_for_help(&input_args);
 
     let verbosity: logger::LoggingLevel = get_verbosity_arg(&input_args);
     let get_security_updates: bool = get_skip_security_updates_arg(&input_args);
@@ -42,7 +41,7 @@ fn main() {
     
     debug!("stabl started!");
     
-    let target_release: SemanticVersion = args::get_release_arg(&input_args[1]);
+    let target_release: SemanticVersion = args::get_release_arg(&input_args);
     debug!("Release upper limit for version bump set to {}", target_release);
     
     info!("getting updates list from remote...");
