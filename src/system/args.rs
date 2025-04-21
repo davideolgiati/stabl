@@ -71,52 +71,121 @@ Help:
 
 #[cfg(test)]
 mod tests {
+    use crate::system::logger::LoggingLevel;
+
     use super::*;
     
     #[test]
-    fn happy_path_convert_release_patch() {
+    fn happy_path_get_release_arg_patch() {
         let expected: SemanticVersion = SemanticVersion::Patch;
         let input: &str = "patch";
 
-        let output = convert_release(input);
+        let output = get_release_arg(input);
 
         assert!(expected == output)
     }
 
     #[test]
-    fn happy_path_convert_release_repack() {
+    fn happy_path_get_release_arg_repack() {
         let expected: SemanticVersion = SemanticVersion::Repack;
         let input: &str = "repack";
 
-        let output = convert_release(input);
+        let output = get_release_arg(input);
 
         assert!(expected == output)
     }
 
     #[test]
-    fn happy_path_convert_release_minor() {
+    fn happy_path_get_release_arg_minor() {
         let expected: SemanticVersion = SemanticVersion::Minor;
         let input: &str = "minor";
 
-        let output = convert_release(input);
+        let output = get_release_arg(input);
 
         assert!(expected == output)
     }
 
     #[test]
-    fn happy_path_convert_release_major() {
+    fn happy_path_get_release_arg_major() {
         let expected: SemanticVersion = SemanticVersion::Major;
         let input: &str = "major";
 
-        let output = convert_release(input);
+        let output = get_release_arg(input);
 
         assert!(expected == output)
     }
 
     #[test]
     #[should_panic]
-    fn should_panic_convert_release() {
+    fn should_panic_get_release_arg() {
         let input: &str = "bugfix";
-        convert_release(input);
+        get_release_arg(input);
+    }
+
+    #[test]
+    fn happy_path_get_verbosity_arg_trace() {
+        let expected: LoggingLevel = LoggingLevel::Trace;
+        let input = vec!["patch".to_string(), "--loglevel=trace".to_string()];
+
+        let output = get_verbosity_arg(&input);
+
+        assert!(expected == output)
+    }
+
+    #[test]
+    fn happy_path_get_verbosity_arg_debug() {
+        let expected: LoggingLevel = LoggingLevel::Debug;
+        let input = vec!["patch".to_string(), "--loglevel=debug".to_string()];
+
+        let output = get_verbosity_arg(&input);
+
+        assert!(expected == output)
+    }
+
+    #[test]
+    fn happy_path_get_verbosity_arg_info() {
+        let expected: LoggingLevel = LoggingLevel::Info;
+        let input = vec!["patch".to_string(), "--loglevel=info".to_string()];
+
+        let output = get_verbosity_arg(&input);
+
+        assert!(expected == output)
+    }
+
+    #[test]
+    fn happy_path_get_verbosity_arg_warn() {
+        let expected: LoggingLevel = LoggingLevel::Warn;
+        let input = vec!["patch".to_string(), "--loglevel=warn".to_string()];
+
+        let output = get_verbosity_arg(&input);
+
+        assert!(expected == output)
+    }
+
+    #[test]
+    fn happy_path_get_verbosity_arg_error() {
+        let expected: LoggingLevel = LoggingLevel::Error;
+        let input = vec!["patch".to_string(), "--loglevel=error".to_string()];
+
+        let output = get_verbosity_arg(&input);
+
+        assert!(expected == output)
+    }
+
+    #[test]
+    fn happy_path_get_verbosity_arg_default() {
+        let expected: LoggingLevel = LoggingLevel::Info;
+        let input = vec!["patch".to_string()];
+
+        let output = get_verbosity_arg(&input);
+
+        assert!(expected == output)
+    }
+
+    #[test]
+    #[should_panic]
+    fn should_panic_get_verbosity_arg() {
+        let input = vec!["patch".to_string(), "--loglevel=pippo".to_string()];
+        let _ = get_verbosity_arg(&input);
     }
 }
