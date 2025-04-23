@@ -53,15 +53,28 @@ impl<'a> ModelBuilder<'a> {
                 );
 
                 if let Some(current_partition_details) = self.partitions.get_mut(partition_id) {
+                        crate::trace!("Partition {:20} found in datamodel", partition_id);
                         if input_severity_level > current_partition_details.severity {
+                                crate::trace!(
+                                        "Upadating Severity from {} to {} for partition {:20}", 
+                                        current_partition_details.severity, input_severity_level, partition_id
+                                );
                                 current_partition_details.severity = input_severity_level;
                         }
 
                         if input_release_type > current_partition_details.release_type {
+                                crate::trace!(
+                                        "Upadating Release type from {} to {} for partition {:20}", 
+                                        current_partition_details.release_type, input_release_type, partition_id
+                                );
                                 current_partition_details.release_type = input_release_type;
                         }
 
                         if input_publish_datetime > current_partition_details.publication_datetime {
+                                crate::trace!(
+                                        "Upadating Publish datetime from {} to {} for partition {:20}", 
+                                        current_partition_details.publication_datetime, input_publish_datetime, partition_id
+                                );
                                 current_partition_details.publication_datetime = input_publish_datetime;
                         }
                 } else {
@@ -91,6 +104,11 @@ impl<'a> ModelBuilder<'a> {
                 let partition_id = updateinfo_tokens[0];
                 let package_signature = updateinfo_tokens[3];
                 
+                crate::debug!(
+                        "Adding to datamodel - PartitionId: {:15}, Severity: {}, Package: {}", 
+                        partition_id, updateinfo_output.severity_level, package_signature
+                );
+
                 self.update_partition_details(partition_id, updateinfo_output);
 
                 self.updates_by_partition.insert(
@@ -160,10 +178,10 @@ impl<'a> ModelBuilder<'a> {
                         self.updates_list.iter()
                         .fold(HashMap::new(), |mut result, elem| {
                                 let partition = elem.get_partition_id();
-                                if !result.contains_key(partition) {
-                                        result.insert(partition.clone(), vec![elem.clone()]);
+                                if let Some(current_partition) = result.get_mut(partition) {
+                                        current_partition.push(elem.clone());
                                 } else {
-                                        result.get_mut(partition).unwrap().push(elem.clone());
+                                        result.insert(partition.clone(), vec![elem.clone()]);
                                 }
 
                                 result

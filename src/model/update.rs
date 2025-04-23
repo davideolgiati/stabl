@@ -1,7 +1,6 @@
 use crate::model::version_tag::VersionTag;
 
-#[derive(Clone)]
-#[derive(Debug)]
+#[derive(Clone, Debug)]
 pub struct Update {
         _partition: String,
         _version: VersionTag,
