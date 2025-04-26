@@ -190,3 +190,5 @@ target/
 *.profdata
 *.profraw
 *.info
+perf.*
+*.svg

@@ -1,8 +1,8 @@
 mod update;
-mod version_tag;
 mod partition;
 mod builder;
 mod security_classification;
+pub mod version_tag;
 pub mod semantic_version;
 
 pub use partition::Partition;

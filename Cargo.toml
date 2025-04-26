@@ -5,7 +5,6 @@ edition = "2021"
 
 [dependencies]
 chrono = "0.4.40"
-regex = "1.11.1"
 lazy_static = "1.4"
 
 [lints.rust]

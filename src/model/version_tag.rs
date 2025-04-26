@@ -1,5 +1,3 @@
-use regex::Regex;
-
 use crate::commons::string::split_string;
 use std::fmt::{self, Display, Formatter};
 
@@ -18,40 +16,39 @@ impl VersionTag {
                 assert!(!version.is_empty());
                 assert!(!release.is_empty());
 
-                let re = Regex::new(r"(?<version>(?:[0-9]+){1}(?:\.[0-9]*){0,2})").unwrap();
-                let mut regex_iterator = re.captures_iter(version);
-                let version_captures = regex_iterator.next().unwrap();
-                
-                let filtered_version = String::from(&version_captures["version"]);
+                crate::trace!("Parsing version: \"{}\" - release: \"{}\"", version, release);
 
-                let version_tokens: Vec<&str> = {
-                        if !filtered_version.contains(".") {
-                                vec![&filtered_version, "0", "0"]
+                let (version_tokens, residuals)  = {
+                        if !version.contains(".") {
+                                (vec![&version, "0", "0"], "".to_string())
                         } else {
-                                let mut splitted_str = split_string(&filtered_version, ".");
+                                let mut splitted_str: Vec<&str> = split_string(version, ".");
                                 while splitted_str.len() < 3 {
                                         splitted_str.push("0");
                                 }
 
-                                splitted_str
+                                if splitted_str.len() <= 3 {
+                                        (splitted_str, "".to_string())
+                                } else {
+                                        (splitted_str[0..3].to_vec(), splitted_str[3..].join("."))
+                                }
+
+                                
                         }
                 };
 
                 let fixed_release = {
-                        let re = Regex::new(r"(?:[0-9]+){1}(?:\.[0-9]*){0,2}\.?").unwrap();
-                        let pkg_release = re.replace(version, "");
-
-                        if pkg_release.is_empty() {
+                        if residuals.is_empty() {
                                 release
                         } else {
-                                &format!("{}.{}", pkg_release, release)
+                                &format!("{}.{}", residuals, release)
                         }
                 };
 
                 VersionTag {
-                        _major: version_tokens[0].to_owned(), 
-                        _minor: version_tokens[1].to_owned(), 
-                        _patch: version_tokens[2].to_owned(), 
+                        _major: version_tokens[0].to_string(), 
+                        _minor: version_tokens[1].to_string(), 
+                        _patch: version_tokens[2].to_string(), 
                         _release: fixed_release.to_owned()
                 }
         }

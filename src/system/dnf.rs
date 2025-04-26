@@ -78,9 +78,26 @@ impl ArgsBuilder {
         }
 }
 
+pub fn build_cache(_shell_cmd: ShellCmdClosure) {
+        crate::debug!("crate::system::dnf::build_cache() IN");
+        let start = crate::start_timer!();
+
+        let cmd_args = ArgsBuilder::new()
+                .add_base_arg("makecache")
+                .toggle_quiet_flag()
+                .build();
+        
+        assert!(!cmd_args.is_empty());
+
+        let _ = _shell_cmd("dnf", &cmd_args);
+
+        let elapsed = crate::stop_timer!(start);
+        crate::trace!("crate::system::dnf::build_cache() ran in {} ms", elapsed);
+        crate::debug!("crate::system::dnf::build_cache() OUT");
+}
 
 pub fn get_updateinfo_output<'a>(_shell_cmd: ShellCmdClosure) -> Vec<&'a str> {
-        crate::debug!("get_updateinfo_output() IN");
+        crate::debug!("crate::system::dnf::get_updateinfo_output() IN");
         let start = crate::start_timer!();
 
         let cmd_args = ArgsBuilder::new()
@@ -97,8 +114,8 @@ pub fn get_updateinfo_output<'a>(_shell_cmd: ShellCmdClosure) -> Vec<&'a str> {
         if output.is_empty() {
                 crate::warn!("dnf updateinfo command returned an empty output!");
                 let elapsed = crate::stop_timer!(start);
-                crate::trace!("get_updateinfo_output() ran in {} ms", elapsed);
-                crate::debug!("get_updateinfo_output() OUT");
+                crate::trace!("crate::system::dnf::get_updateinfo_output() ran in {} ms", elapsed);
+                crate::debug!("crate::system::dnf::get_updateinfo_output() OUT");
                 return Vec::new();
         }
         assert!(!output.is_empty());
@@ -112,14 +129,14 @@ pub fn get_updateinfo_output<'a>(_shell_cmd: ShellCmdClosure) -> Vec<&'a str> {
                 .collect();
 
         let elapsed = crate::stop_timer!(start);
-        crate::trace!("get_updateinfo_output() ran in {} ms", elapsed);
-        crate::debug!("get_updateinfo_output() OUT");
+        crate::trace!("crate::system::dnf::get_updateinfo_output() ran in {} ms", elapsed);
+        crate::debug!("crate::system::dnf::get_updateinfo_output() OUT");
 
         result
 }
 
 pub fn get_repoquery_output<'a>(updates_list: &[&str], _shell_cmd: ShellCmdClosure) -> Vec<&'a str> {
-        crate::debug!("get_repoquery_output() IN");
+        crate::debug!("crate::system::dnf::get_repoquery_output() IN");
         let start = crate::start_timer!();
         assert!(!updates_list.is_empty());
         
@@ -142,8 +159,8 @@ pub fn get_repoquery_output<'a>(updates_list: &[&str], _shell_cmd: ShellCmdClosu
         if output.is_empty() {
                 crate::warn!("dnf repoquery command returned an empty output!");
                 let elapsed = crate::stop_timer!(start);
-                crate::debug!("get_repoquery_output() OUT");
-                crate::trace!("get_repoquery_output() ran in {} ms", elapsed);
+                crate::debug!("crate::system::dnf::get_repoquery_output() OUT");
+                crate::trace!("crate::system::dnf::get_repoquery_output() ran in {} ms", elapsed);
                 return Vec::new();
         }
 
@@ -158,14 +175,14 @@ pub fn get_repoquery_output<'a>(updates_list: &[&str], _shell_cmd: ShellCmdClosu
         }
 
         let elapsed = crate::stop_timer!(start);
-        crate::debug!("get_repoquery_output() OUT");
-        crate::trace!("get_repoquery_output() ran in {} ms", elapsed);
+        crate::debug!("crate::system::dnf::get_repoquery_output() OUT");
+        crate::trace!("crate::system::dnf::get_repoquery_output() ran in {} ms", elapsed);
 
         result
 }
 
 pub fn get_rpm_output_for_local_packages<'a>(updates_list: &[&str], _shell_cmd: ShellCmdClosure) -> Vec<&'a str> {
-        crate::debug!("get_rpm_output_for_local_packages() IN");
+        crate::debug!("crate::system::dnf::get_rpm_output_for_local_packages() IN");
         let start = crate::start_timer!();
 
         assert!(!updates_list.is_empty());
@@ -187,8 +204,8 @@ pub fn get_rpm_output_for_local_packages<'a>(updates_list: &[&str], _shell_cmd: 
         if output.is_empty() {
                 crate::warn!("rpm -q command returned an empty output!");
                 let elapsed = crate::stop_timer!(start);
-                crate::debug!("get_rpm_output_for_local_packages() OUT");
-                crate::trace!("get_rpm_output_for_local_packages() ran in {} ms", elapsed);
+                crate::debug!("crate::system::dnf::get_rpm_output_for_local_packages() OUT");
+                crate::trace!("crate::system::dnf::get_rpm_output_for_local_packages() ran in {} ms", elapsed);
                 return Vec::new();
         }
 
@@ -198,8 +215,8 @@ pub fn get_rpm_output_for_local_packages<'a>(updates_list: &[&str], _shell_cmd: 
         let result = split_string(output, "\n").to_vec();
 
         let elapsed = crate::stop_timer!(start);
-        crate::debug!("get_rpm_output_for_local_packages() OUT");
-        crate::trace!("get_rpm_output_for_local_packages() ran in {} ms", elapsed);
+        crate::debug!("crate::system::dnf::get_rpm_output_for_local_packages() OUT");
+        crate::trace!("crate::system::dnf::get_rpm_output_for_local_packages() ran in {} ms", elapsed);
 
         result
 }

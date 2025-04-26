@@ -5,6 +5,7 @@ use model::ModelBuilder;
 use model::semantic_version::SemanticVersion;
 
 mod system;
+use stabl::system::dnf::build_cache;
 use system::args::get_verbosity_arg;
 use system::shell;
 use system::dnf::get_repoquery_output;
@@ -29,12 +30,11 @@ fn evaluate_partition(partition: &Partition, target_release: &SemanticVersion, g
     (get_security_updates && security_release_check) || version_bump_check
 }
 
-fn get_rpm_packages_details<'a>(repository_update_details: &Vec<&str>) -> Vec<&'a str> {
+fn get_rpm_packages_details<'a>(repository_update_details: &Vec<&str>, _shell_cmd: fn(&str, &[String]) -> String) -> Vec<&'a str> {
     info!("getting details from installed packages ...");
     
     let packages_names: Vec<&str> = get_rpm_output_for_local_packages(
-        repository_update_details, 
-        shell::run_command_and_read_stdout
+        repository_update_details, _shell_cmd
     );
     
     if packages_names.is_empty() {
@@ -45,10 +45,10 @@ fn get_rpm_packages_details<'a>(repository_update_details: &Vec<&str>) -> Vec<&'
     packages_names
 }
 
-fn get_dnf_repoquery<'a>(dnf_updates_list: &Vec<&str>) -> Vec<&'a str> {
+fn get_dnf_repoquery<'a>(dnf_updates_list: &Vec<&str>, _shell_cmd: fn(&str, &[String]) -> String) -> Vec<&'a str> {
     info!("getting details from repository for updates ...");
     let repository_update_details: Vec<&str> = get_repoquery_output(
-        dnf_updates_list, shell::run_command_and_read_stdout
+        dnf_updates_list, _shell_cmd
     );
 
     if repository_update_details.is_empty() {
@@ -59,9 +59,9 @@ fn get_dnf_repoquery<'a>(dnf_updates_list: &Vec<&str>) -> Vec<&'a str> {
     repository_update_details
 }
 
-fn get_dnf_updateinfo<'a>() -> Vec<&'a str> {
+fn get_dnf_updateinfo<'a>(_shell_cmd: fn(&str, &[String]) -> String) -> Vec<&'a str> {
     info!("getting updates list from remote...");
-    let dnf_updates_list: Vec<&str> = get_updateinfo_output(shell::run_command_and_read_stdout);
+    let dnf_updates_list: Vec<&str> = get_updateinfo_output(_shell_cmd);
     
     if dnf_updates_list.is_empty() {
         info!("\nno suggested updates found\n\n");
@@ -69,6 +69,35 @@ fn get_dnf_updateinfo<'a>() -> Vec<&'a str> {
     }
     info!("found {} updates from remote repository", dnf_updates_list.len());
     dnf_updates_list
+}
+
+fn mock_shell_cmds(cmd: &str, args: &[String]) -> String {
+    let updateinfo_output = concat!(
+            "Name                   Type        Severity                                            Package              Issued\n",
+            "FEDORA-2025-1a0c45a564 enhancement None                   vim-minimal-2:9.1.1227-1.fc41.x86_64 2025-03-23 01:13:07\n",
+            "FEDORA-2025-1a0c45a564 enhancement None                           xxd-2:9.1.1227-1.fc41.x86_64 2025-03-23 01:13:07\n",
+    ).to_string();
+    let repoquery_output = concat!(
+            "vim-minimal|#|9.1.1227|#|1.fc41|#|vim-minimal-2:9.1.1227-1.fc41.x86_64|#|vim-minimal-9.1.1227-1.fc41.x86_64\n",
+            "xxd|#|9.1.1227|#|1.fc41|#|xxd-2:9.1.1227-1.fc41.x86_64|#|xxd-9.1.1227-1.fc41.x86_64"
+    ).to_string();
+    let rpm_output = concat!(
+            "vim-minimal|#|9.1.1202|#|1.fc41\n",
+            "xxd|#|9.1.1202|#|1.fc41"
+    ).to_string();
+
+    match cmd {
+        "dnf" => {
+            match args[0].as_str() {
+                "updateinfo" => updateinfo_output,
+                "makecache" => "done.".to_string(),
+                "repoquery" => repoquery_output,
+                _ => panic!("unknown branch!")
+            }
+        },
+        "rpm" => rpm_output,
+        _ => panic!("unknown branch!")
+    }
 }
 
 fn main() {
@@ -84,15 +113,28 @@ fn main() {
     
     trace!("Total arg count provided to stabl: {}", input_args.len());
 
+    let shell_cmd: fn(&str, &[String]) -> String = {
+        if input_args.contains(&"--profile=profiler".to_string()) {
+            info!("Using profile profiler");
+            mock_shell_cmds
+        } else {
+            shell::run_command_and_read_stdout
+        }
+    };
+
     let target_release: SemanticVersion = args::get_release_arg(&input_args);
     debug!("Release upper limit for version bump set to: {}", target_release);
 
     let get_security_updates: bool = get_skip_security_updates_arg(&input_args);
     debug!("Security update flag is set to: {}", get_security_updates);
     
-    let dnf_updates_list = get_dnf_updateinfo();
-    let repository_update_details = get_dnf_repoquery(&dnf_updates_list);
-    let packages_names = get_rpm_packages_details(&repository_update_details);
+    info!("Updating DNF cache!");
+    build_cache(shell_cmd);
+    info!("DNF cache updated successfully!");
+
+    let dnf_updates_list = get_dnf_updateinfo(shell_cmd);
+    let repository_update_details = get_dnf_repoquery(&dnf_updates_list, shell_cmd);
+    let packages_names = get_rpm_packages_details(&repository_update_details, shell_cmd);
 
     info!("enriching updates with additional informations...");
 

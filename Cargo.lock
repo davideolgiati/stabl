@@ -474,7 +474,6 @@ dependencies = [
  "chrono",
  "criterion",
  "lazy_static",
- "regex",
 ]
 
 [[package]]
