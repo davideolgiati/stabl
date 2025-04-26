@@ -1,7 +1,19 @@
 # stabl
 A DNF wrapper to selectively choose what packages to upgrade
 
-![stabl output](stabl.png?raw=true "Sample Run Output")
+<img src="./stabl.png" height="900">
+
+# v0.1.3
+### Features
+ - Implemented a logging system with configurable verbosity levels (trace, debug, info, warn, error) using the `--loglevel` argument.
+ - Added a command-line option (`--skip-security-updates`) to allow skipping the inclusion of security updates.
+
+### Enhancements
+ - Refactored command-line argument parsing.
+ - Updated the internal data model (`Partition`, `Update`, `VersionTag`, `SemanticVersion`, `SecurityClassification`, `ModelBuilder`) for better logic, maintainability, and validation.
+ - Improved DNF/RPM command execution logic.
+ - Updated console output formatting and added color to the logo.
+ - Added unit tests for core components and utilities.
 
 # v0.1.2
 ### Feature
