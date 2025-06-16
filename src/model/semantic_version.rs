@@ -17,6 +17,7 @@ impl<'a> From<&'a str> for SemanticVersion {
             "bugfix"        => SemanticVersion::Patch,
             "enhancement"   => SemanticVersion::Minor,
             "unspecified"   => SemanticVersion::Major,
+            "newpackage"    => SemanticVersion::Major,
             _               => panic!("'{}' is not a valid value for ReleaseType", input),
         }
     }
